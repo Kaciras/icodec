@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"outDir": "lib",
+		"strict": true,
+		"declaration": true,
+		"removeComments": true,
+		"sourceMap": true,
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"skipLibCheck": true,
+		"useUnknownInCatchVariables": false
+	}
+}
