@@ -1,0 +1,24 @@
+.DS_Store
+.esbench-tmp
+node_modules
+debug.js
+/vendor
+/coverage
+
+# Log files
+*.log
+logs
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+/bench-data
+!/test/node_modules
