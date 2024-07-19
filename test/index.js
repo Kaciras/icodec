@@ -1,12 +1,12 @@
-import loadAVIF from "./lib/avif-enc.js";
-import loadWebP from "./lib/webp-enc.js";
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { test } from "node:test";
 import * as assert from "assert";
 import { join } from "path";
+import loadAVIF from "./lib/avif-enc.js";
+import loadWebP from "./lib/webp-enc.js";
 
-const rawBuffer = readFileSync("image.bin");
-const snapshotDirectory = "snapshot";
+const rawBuffer = readFileSync("test/image.bin");
+const snapshotDirectory = "test/snapshot";
 
 mkdirSync(snapshotDirectory, { recursive: true });
 
@@ -37,7 +37,6 @@ test("AVIF encode", async () => {
 	writeFileSync(join(snapshotDirectory, "image.avif"), encoded);
 	assert.ok(encoded.length < 10 * 1024);
 })
-
 
 test("WebP encode", async () => {
 	const wasmBinary = readFileSync("lib/webp-enc.wasm");

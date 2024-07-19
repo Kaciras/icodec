@@ -1,10 +1,9 @@
 .DS_Store
 .esbench-tmp
 node_modules
-debug.js
+snapshot
 /vendor
 /lib
-/snapshot
 /coverage
 
 # Log files
@@ -21,3 +20,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Temp files
+/debug.[jt]s
