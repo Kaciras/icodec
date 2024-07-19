@@ -28,7 +28,7 @@ async function buildWebpEncoder() {
 	const args1 = [
 		"emcmake", "cmake", ".",
 
-		"-DCMAKE_CXX_STANDARD=17",
+		// "-DCMAKE_CXX_STANDARD=17",
 
 		// Only build libsharpyuv, libwebp, libwebpdecoder, libwebpdemux
 		"-DWEBP_BUILD_ANIM_UTILS=0",
@@ -71,18 +71,20 @@ async function buildWebpEncoder() {
 
 // Must build WebP before to generate libsharpyuv.a
 async function buildAVIF() {
-	await downloadSource("libaom", "https://aomedia.googlesource.com/aom/+archive/v3.8.3.tar.gz", 0)
+	await downloadSource("libavif/ext/aom", "https://aomedia.googlesource.com/aom/+archive/v3.9.1.tar.gz", 0)
 	await downloadSource("libavif", "https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.1.0.tar.gz")
 
-	mkdirSync("vendor/aom_build", { recursive: true });
+	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
 
 	const argsAom = [
-		"emcmake", "cmake", "../libaom",
+		"emcmake", "cmake",
+		"-S .",
+		"-B build.libavif",
 
 		// "-DCMAKE_CXX_STANDARD=17",
 
 		"-DCMAKE_BUILD_TYPE=Release",
-		"-DENABLE_CCACHE=1",
+		"-DENABLE_CCACHE=0",
 		"-DAOM_TARGET_CPU=generic",
 		"-DAOM_EXTRA_C_FLAGS=-UNDEBUG",
 		"-DAOM_EXTRA_CXX_FLAGS=-UNDEBUG",
@@ -98,22 +100,20 @@ async function buildAVIF() {
 		"-DCONFIG_MULTITHREAD=0",
 		"-DCONFIG_AV1_HIGHBITDEPTH=0",
 	];
-	execSync(argsAom.join(" "), { cwd: "vendor/aom_build", stdio: "inherit" })
-	execSync("cmake --build .", { cwd: "vendor/aom_build", stdio: "inherit" })
+	// execSync(argsAom.join(" "), { cwd: "vendor/libavif/ext/aom", stdio: "inherit" })
+	// execSync("cmake --build .", { cwd: "vendor/libavif/ext/aom/build.libavif", stdio: "inherit" })
 
 	const argsAvif = [
 		"emcmake", "cmake", ".",
 
-		// "-DCMAKE_CXX_STANDARD=17",
-
-		"-DCMAKE_BUILD_TYPE=Release",
+		// "-DCMAKE_BUILD_TYPE=Release",
 		"-DBUILD_SHARED_LIBS=0",
-		"-DAVIF_CODEC_AOM=1",
-		"-DAVIF_LOCAL_AOM=1",
+		"-DAVIF_CODEC_AOM=LOCAL",
+		// "-DAVIF_LOCAL_AOM=1",
 		"-DAVIF_LOCAL_LIBSHARPYUV=1",
 
-		"-DAOM_LIBRARY=../aom_build/libaom.a",
-		"-DAOM_INCLUDE_DIR=../libaom",
+		// "-DAOM_LIBRARY=vendor/ext/aom/build.libavif/libaom.a",
+		// "-DAOM_INCLUDE_DIR=../libaom",
 
 		"-DLIBYUV_LIBRARY=../libwebp/libsharpyuv.a",
 		"-DLIBYUV_INCLUDE_DIR=../libwebp/sharpyuv",
@@ -134,7 +134,7 @@ async function buildAVIF() {
 
 		"src/avif_enc.cpp",
 		"vendor/libavif/libavif.a",
-		"vendor/aom_build/libaom.a",
+		"vendor/libavif/ext/aom/build.libavif/libaom.a",
 	];
 
 	execSync(args2.join(" "), { stdio: "inherit" })
@@ -214,3 +214,5 @@ async function buildWebP2(){
 
 	execSync(args2.join(" "), { stdio: "inherit" })
 }
+
+buildAVIF()
