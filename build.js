@@ -30,6 +30,8 @@ async function buildWebpEncoder() {
 
 		// "-DCMAKE_CXX_STANDARD=17",
 
+		"-G Ninja",
+
 		// Only build libsharpyuv, libwebp, libwebpdecoder, libwebpdemux
 		"-DWEBP_BUILD_ANIM_UTILS=0",
 		"-DWEBP_BUILD_CWEBP=0",
@@ -215,4 +217,35 @@ async function buildWebP2(){
 	execSync(args2.join(" "), { stdio: "inherit" })
 }
 
-buildAVIF()
+// await buildWebpEncoder();
+// await buildAVIF();
+
+await downloadSource("mozjpeg", "https://github.com/mozilla/mozjpeg/archive/refs/tags/v4.1.5.tar.gz")
+const args1 = [
+	"emcmake", "cmake", ".",
+
+	"-DENABLE_SHARED=0",
+	"-DPNG_SUPPORTED=0",
+	"-DWITH_TURBOJPEG=0",
+	"-DWITH_SIMD=0",
+];
+// execSync(args1.join(" "), { cwd: "vendor/mozjpeg", stdio: "inherit" })
+// execSync("cmake --build .", { cwd: "vendor/mozjpeg", stdio: "inherit" })
+
+const args2 = [
+	"emcc",
+	"-O3",
+	"--bind",
+	"-s ALLOW_MEMORY_GROWTH=1",
+	"-s ENVIRONMENT=web",
+	"-s EXPORT_ES6=1",
+
+	"-I vendor/mozjpeg",
+	"-o lib/mozjpeg-enc.js",
+
+	"src/mozjpeg_enc.cpp",
+	"vendor/mozjpeg/rdswitch.c",
+	"vendor/mozjpeg/libjpeg.a",
+];
+
+execSync(args2.join(" "), { stdio: "inherit" })
