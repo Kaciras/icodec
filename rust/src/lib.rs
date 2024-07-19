@@ -32,3 +32,21 @@ pub fn quantize(data: Vec<u8>, width: usize, height: usize) -> Vec<u32> {
 	}
 	return output;
 }
+
+#[wasm_bindgen]
+pub fn encodePNG(data: Vec<u8>, width: u32, height: u32, level: u8, interlace: bool) -> Vec<u8> {
+	let mut options = oxipng::Options::from_preset(level);
+    options.optimize_alpha = true;
+    options.interlace = Some(if interlace {
+		oxipng::Interlacing::Adam7
+    } else {
+		oxipng::Interlacing::None
+    });
+
+    let raw = oxipng::RawImage::new(
+		width, height, 
+		oxipng::ColorType::RGBA, 
+		oxipng::BitDepth::Eight, data).unwrap_throw();
+
+    return raw.create_optimized_png(&options).unwrap_throw()
+}
