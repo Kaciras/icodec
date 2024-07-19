@@ -3,6 +3,8 @@
 node_modules
 debug.js
 /vendor
+/lib
+/snapshot
 /coverage
 
 # Log files
@@ -19,6 +21,3 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
-
-/bench-data
-!/test/node_modules
