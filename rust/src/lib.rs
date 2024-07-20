@@ -1,16 +1,27 @@
-use imagequant::RGBA;
 use wasm_bindgen::prelude::*;
+use serde::{Serialize, Deserialize};
+use imagequant::RGBA;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+#[derive(Serialize, Deserialize)]
+pub struct QuantizeOptions {
+	pub speed: i32,
+	pub quality: u8,
+	pub min_quality: u8,
+	pub dithering: f32,
+}
+
 #[wasm_bindgen]
-pub fn quantize(data: Vec<u8>, width: usize, height: usize) -> Vec<u32> {
+pub fn quantize(data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u32> {
+	let options: QuantizeOptions = serde_wasm_bindgen::from_value(options).unwrap();
+
     // Configure the library
     let mut quantizer = imagequant::new();
-    quantizer.set_speed(5).unwrap();
-    quantizer.set_quality(70, 99).unwrap();
+    quantizer.set_speed(options.speed).unwrap();
+    quantizer.set_quality(options.min_quality, options.quality).unwrap();
 
 	let pixels: &[RGBA] = bytemuck::cast_slice(data.as_slice());
     let mut image = quantizer.new_image(pixels, width, height, 0.0).unwrap();
@@ -22,7 +33,7 @@ pub fn quantize(data: Vec<u8>, width: usize, height: usize) -> Vec<u32> {
     };
 
     // Enable dithering for subsequent remappings
-    res.set_dithering_level(1.0).unwrap();
+    res.set_dithering_level(options.dithering).unwrap();
 
     // You can reuse the result to generate several images with the same palette
     let (palette, pixels) = res.remapped(&mut image).unwrap();
@@ -33,11 +44,19 @@ pub fn quantize(data: Vec<u8>, width: usize, height: usize) -> Vec<u32> {
 	return output;
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct EncodeOptions {
+	pub level: u8, 
+	pub interlace: bool,
+}
+
 #[wasm_bindgen]
-pub fn encodePNG(data: Vec<u8>, width: u32, height: u32, level: u8, interlace: bool) -> Vec<u8> {
-	let mut options = oxipng::Options::from_preset(level);
-    options.optimize_alpha = true;
-    options.interlace = Some(if interlace {
+pub fn encode_png(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> Vec<u8> {
+	let options: EncodeOptions = serde_wasm_bindgen::from_value(options).unwrap();
+
+	let mut optimization = oxipng::Options::from_preset(options.level);
+    optimization.optimize_alpha = true;
+    optimization.interlace = Some(if options.interlace {
 		oxipng::Interlacing::Adam7
     } else {
 		oxipng::Interlacing::None
@@ -48,5 +67,5 @@ pub fn encodePNG(data: Vec<u8>, width: u32, height: u32, level: u8, interlace: b
 		oxipng::ColorType::RGBA, 
 		oxipng::BitDepth::Eight, data).unwrap_throw();
 
-    return raw.create_optimized_png(&options).unwrap_throw()
+    return raw.create_optimized_png(&optimization).unwrap_throw()
 }
