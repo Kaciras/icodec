@@ -199,6 +199,17 @@ const mozjpeg = {
 	],
 };
 
+const qoi = {
+	repository: "https://github.com/phoboslab/qoi",
+	branch: "master",
+	emccArgs: [
+		"-I vendor/qoi",
+		"-o dist/qoi-enc.js",
+
+		"cpp/qoi_enc.cpp",
+	],
+};
+
 const libjxl = {
 	repository: "https://github.com/libjxl/libjxl",
 	branch: "v0.8.3",
@@ -236,7 +247,7 @@ function cmake(name, item, rebuild = false) {
 		execSync(`git clone --depth 1 --branch ${item.branch} ${item.repository} ${name}`);
 		execSync("git submodule update --init --depth 1 --recursive", { cwd: name });
 	}
-	if (rebuild || item.buildOutput && !existsSync(item.buildOutput)) {
+	if (item.buildOutput && (rebuild || !existsSync(item.buildOutput))) {
 		const args = [
 			"emcmake", "cmake", `-S ${name}`, `-B ${name}`,
 		];
@@ -250,8 +261,8 @@ function cmake(name, item, rebuild = false) {
 		execSync("cmake --build .", { cwd: name, stdio: "inherit" });
 	}
 
-	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
-	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
+	// execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
+	// execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
 
 	const args = [
 		"emcc", "-O3", "--bind",
@@ -293,4 +304,5 @@ if (process.platform === "win32") {
 // console.log(detectVisualStudio().clang)
 
 // cmake("vendor/mozjpeg", mozjpeg, true);
-cmake("vendor/libjxl", libjxl);
+// cmake("vendor/libjxl", libjxl);
+cmake("vendor/qoi", qoi);
