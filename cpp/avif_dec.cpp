@@ -10,8 +10,8 @@ thread_local const val ImageData = val::global("ImageData");
 val decode(std::string avifimage) {
   avifImage* image = avifImageCreateEmpty();
   avifDecoder* decoder = avifDecoderCreate();
-  avifResult decodeResult =
-      avifDecoderReadMemory(decoder, image, (uint8_t*)avifimage.c_str(), avifimage.length());
+  avifResult decodeResult = avifDecoderReadMemory(decoder, image, (uint8_t*)avifimage.c_str(), avifimage.length());
+
   // image is an independent copy of decoded data, decoder may be destroyed here
   avifDecoderDestroy(decoder);
 

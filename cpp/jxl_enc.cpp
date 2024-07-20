@@ -54,14 +54,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   // Quality settings roughly match libjpeg qualities.
   if (options.lossyModular || quality == 100) {
     cparams.modular_mode = true;
-    // Internal modular quality to roughly match VarDCT size.
-    if (quality < 7) {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 3.0f, 100.0f);
-    } else {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 65.f / 93.f, 100.0f);
-    }
+
   } else {
     cparams.modular_mode = false;
     if (quality >= 30) {
@@ -76,14 +69,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.responsive = 1;
     if (!cparams.modular_mode) {
       cparams.progressive_dc = 1;
-    }
-  }
-
-  if (cparams.modular_mode) {
-    if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
-      cparams.color_transform = jxl::ColorTransform::kXYB;
-    } else {
-      cparams.color_transform = jxl::ColorTransform::kNone;
     }
   }
 

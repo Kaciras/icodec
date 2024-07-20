@@ -1,6 +1,6 @@
 import { createGunzip } from "zlib";
 import * as tar from "tar-fs";
-import { execSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { Readable } from "stream";
 import { once } from "events";
 import { existsSync, mkdirSync } from "fs";
@@ -142,45 +142,7 @@ async function buildAVIF() {
 	execSync(args2.join(" "), { stdio: "inherit" })
 }
 
-async function buildJXL() {
-	await downloadSource("libjxl", "https://github.com/libjxl/libjxl/archive/refs/tags/v0.8.3.tar.gz")
-
-	const args1 = [
-		"emcmake",
-		"cmake",
-		".",
-
-		"-DCMAKE_CXX_STANDARD=17",
-
-		"-DBUILD_SHARED_LIBS=0",
-		"-DJPEGXL_ENABLE_BENCHMARK=0",
-		"-DJPEGXL_ENABLE_EXAMPLES=0",
-		"-DBUILD_TESTING=0",
-		"-DCMAKE_CROSSCOMPILING_EMULATOR=node",
-	];
-	execSync(args1.join(" "), { cwd: "vendor/libjxl", stdio: "inherit" })
-
-	execSync("cmake --build .", { cwd: "vendor/libjxl", stdio: "inherit" })
-
-	const args2 = [
-		"emcc",
-		"-O3",
-		"--bind",
-		"-s ALLOW_MEMORY_GROWTH=1",
-		"-s ENVIRONMENT=web",
-		"-s EXPORT_ES6=1",
-
-		"-I vendor/libjxl/lib/include",
-		"-o lib/jxl-enc.js",
-
-		"src/jxl_enc.cpp",
-		"vendor/libjxl/libjxl.a",
-	];
-
-	execSync(args2.join(" "), { stdio: "inherit" })
-}
-
-async function buildWebP2(){
+async function buildWebP2() {
 	await downloadSource("libwebp2", "https://chromium.googlesource.com/codecs/libwebp2/+archive/9dd38de9c8905af1eab0914fd40531e970b309c5.tar.gz", 0)
 	mkdirSync("vendor/wp2_build", { recursive: true });
 
@@ -217,35 +179,118 @@ async function buildWebP2(){
 	execSync(args2.join(" "), { stdio: "inherit" })
 }
 
-// await buildWebpEncoder();
-// await buildAVIF();
+const mozjpeg = {
+	repository: "https://github.com/mozilla/mozjpeg",
+	branch: "v4.1.5",
+	options: {
+		WITH_SIMD: "0",
+		ENABLE_SHARED: "0",
+		WITH_TURBOJPEG: "0",
+		PNG_SUPPORTED: "0",
+	},
+	buildOutput: "vendor/mozjpeg/libjpeg.a",
+	emccArgs: [
+		"-I vendor/mozjpeg",
+		"-o dist/mozjpeg-enc.js",
 
-await downloadSource("mozjpeg", "https://github.com/mozilla/mozjpeg/archive/refs/tags/v4.1.5.tar.gz")
-const args1 = [
-	"emcmake", "cmake", ".",
+		"cpp/mozjpeg_enc.cpp",
+		"vendor/mozjpeg/rdswitch.c",
+		"vendor/mozjpeg/libjpeg.a",
+	]
+}
 
-	"-DENABLE_SHARED=0",
-	"-DPNG_SUPPORTED=0",
-	"-DWITH_TURBOJPEG=0",
-	"-DWITH_SIMD=0",
-];
-// execSync(args1.join(" "), { cwd: "vendor/mozjpeg", stdio: "inherit" })
-// execSync("cmake --build .", { cwd: "vendor/mozjpeg", stdio: "inherit" })
+const libjxl = {
+	repository: "https://github.com/libjxl/libjxl",
+	branch: "v0.8.3",
+	options: {
+		BUILD_SHARED_LIBS: "0",
+		BUILD_TESTING: "0",
+		JPEGXL_ENABLE_BENCHMARK: "0",
+		JPEGXL_ENABLE_EXAMPLES: "0",
+		JPEGXL_ENABLE_DOXYGEN: "0",
+		JPEGXL_ENABLE_JNI: "0",
+	},
+	buildOutput: "vendor/libjxl/lib/libjxl.a",
+	emccArgs: [
+		"-I vendor/libjxl",
+		"-I vendor/libjxl/lib/include",
+		"-I vendor/libjxl/third_party/highway",
+		"-I vendor/libjxl/third_party/skcms",
 
-const args2 = [
-	"emcc",
-	"-O3",
-	"--bind",
-	"-s ALLOW_MEMORY_GROWTH=1",
-	"-s ENVIRONMENT=web",
-	"-s EXPORT_ES6=1",
+		"-o dist/jxl-enc.js",
 
-	"-I vendor/mozjpeg",
-	"-o lib/mozjpeg-enc.js",
+		"cpp/jxl_enc.cpp",
+		"vendor/libjxl/lib/libjxl.a",
+		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
+		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
+		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
+		"vendor/libjxl/third_party/libskcms.a",
+		"vendor/libjxl/third_party/highway/libhwy.a",
+	]
+}
 
-	"src/mozjpeg_enc.cpp",
-	"vendor/mozjpeg/rdswitch.c",
-	"vendor/mozjpeg/libjpeg.a",
-];
+let cmakeBuilder = null;
 
-execSync(args2.join(" "), { stdio: "inherit" })
+function cmake(name, item, rebuild = false) {
+	if (!existsSync(name)) {
+		execSync(`git clone --depth 1 --branch ${item.branch} ${item.repository} ${name}`)
+		execSync(`git submodule update --init --depth 1 --recursive`, { cwd: name });
+	}
+	if (rebuild || item.buildOutput && !existsSync(item.buildOutput)) {
+		const args = [
+			"emcmake", "cmake", `-S ${name}`, `-B ${name}`,
+		];
+		if (cmakeBuilder) {
+			args.push(`-G "${cmakeBuilder}"`);
+		}
+		for (const [k, v] of Object.entries(item.options ?? {})) {
+			args.push(`-D${k}=${v}`);
+		}
+		execSync(args.join(" "), { stdio: "inherit" })
+		execSync("cmake --build .", { cwd: name, stdio: "inherit" })
+	}
+
+	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc")
+	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`)
+
+	const args = [
+		"emcc", "-O3", "--bind",
+
+		"-s ENVIRONMENT=web",
+		"-s ALLOW_MEMORY_GROWTH=1",
+		"-s EXPORT_ES6=1",
+
+		...item.emccArgs,
+	];
+	execSync(args.join(" "), { stdio: "inherit" })
+}
+
+function detectVisualStudio() {
+	const pf32 = process.env["ProgramFiles(x86)"];
+	if (!pf32) {
+		return;
+	}
+	const vswhere = `${pf32}/Microsoft Visual Studio/Installer/vswhere.exe`;
+	const stdout = execFileSync(vswhere, { encoding: "utf8" });
+	const properties = Object.fromEntries(stdout.split("\r\n").map(line => line.split(": ")));
+
+	const path = properties.resolvedInstallationPath;
+	return {
+		version: parseInt(properties.installationVersion),
+		path,
+		clang: path + "/VC/Tools/Llvm/x64/bin",
+		productVersion: properties.catalog_productLineVersion,
+	}
+}
+
+let clangDirectory;
+
+if (process.platform === "win32") {
+	const vs = detectVisualStudio();
+	clangDirectory = vs.clang;
+}
+
+// console.log(detectVisualStudio().clang)
+
+// cmake("vendor/mozjpeg", mozjpeg, true);
+cmake("vendor/libjxl", libjxl);
