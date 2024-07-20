@@ -5,7 +5,10 @@
 	"author": "Kaciras <Kaciras@outlook.com>",
 	"type": "module",
 	"devDependencies": {
+		"@kaciras/eslint-config-core": "^3.1.0",
+		"@kaciras/eslint-config-typescript": "^3.1.0",
 		"@types/emscripten": "^1.39.13",
+		"eslint": "^9.7.0",
 		"tar-fs": "^3.0.6",
 		"typescript": "^5.5.3"
 	}

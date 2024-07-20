@@ -1,13 +1,13 @@
 import { createGunzip } from "zlib";
 import * as tar from "tar-fs";
-import { execFileSync, execSync } from 'child_process';
+import { execFileSync, execSync } from "child_process";
 import { Readable } from "stream";
 import { once } from "events";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
 async function downloadSource(name, url, strip = 1) {
-	const outDir = join("vendor", name)
+	const outDir = join("vendor", name);
 	if (existsSync(outDir)) {
 		return;
 	}
@@ -23,7 +23,7 @@ async function downloadSource(name, url, strip = 1) {
 }
 
 async function buildWebpEncoder() {
-	await downloadSource("libwebp", "https://github.com/webmproject/libwebp/archive/refs/tags/v1.4.0.tar.gz")
+	await downloadSource("libwebp", "https://github.com/webmproject/libwebp/archive/refs/tags/v1.4.0.tar.gz");
 
 	const args1 = [
 		"emcmake", "cmake", ".",
@@ -48,9 +48,9 @@ async function buildWebpEncoder() {
 		// Enable SIMD
 		"-DWEBP_ENABLE_SIMD=1",
 	];
-	execSync(args1.join(" "), { cwd: "vendor/libwebp", stdio: "inherit" })
+	execSync(args1.join(" "), { cwd: "vendor/libwebp", stdio: "inherit" });
 
-	execSync("cmake --build .", { cwd: "vendor/libwebp", stdio: "inherit" })
+	execSync("cmake --build .", { cwd: "vendor/libwebp", stdio: "inherit" });
 
 	const args2 = [
 		"emcc",
@@ -68,13 +68,13 @@ async function buildWebpEncoder() {
 		"vendor/libwebp/libsharpyuv.a",
 	];
 
-	execSync(args2.join(" "), { stdio: "inherit" })
+	execSync(args2.join(" "), { stdio: "inherit" });
 }
 
 // Must build WebP before to generate libsharpyuv.a
 async function buildAVIF() {
-	await downloadSource("libavif/ext/aom", "https://aomedia.googlesource.com/aom/+archive/v3.9.1.tar.gz", 0)
-	await downloadSource("libavif", "https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.1.0.tar.gz")
+	await downloadSource("libavif/ext/aom", "https://aomedia.googlesource.com/aom/+archive/v3.9.1.tar.gz", 0);
+	await downloadSource("libavif", "https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.1.0.tar.gz");
 
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
 
@@ -120,8 +120,8 @@ async function buildAVIF() {
 		"-DLIBYUV_LIBRARY=../libwebp/libsharpyuv.a",
 		"-DLIBYUV_INCLUDE_DIR=../libwebp/sharpyuv",
 	];
-	execSync(argsAvif.join(" "), { cwd: "vendor/libavif", stdio: "inherit" })
-	execSync("cmake --build .", { cwd: "vendor/libavif", stdio: "inherit" })
+	execSync(argsAvif.join(" "), { cwd: "vendor/libavif", stdio: "inherit" });
+	execSync("cmake --build .", { cwd: "vendor/libavif", stdio: "inherit" });
 
 	const args2 = [
 		"emcc",
@@ -139,11 +139,11 @@ async function buildAVIF() {
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
 	];
 
-	execSync(args2.join(" "), { stdio: "inherit" })
+	execSync(args2.join(" "), { stdio: "inherit" });
 }
 
 async function buildWebP2() {
-	await downloadSource("libwebp2", "https://chromium.googlesource.com/codecs/libwebp2/+archive/9dd38de9c8905af1eab0914fd40531e970b309c5.tar.gz", 0)
+	await downloadSource("libwebp2", "https://chromium.googlesource.com/codecs/libwebp2/+archive/9dd38de9c8905af1eab0914fd40531e970b309c5.tar.gz", 0);
 	mkdirSync("vendor/wp2_build", { recursive: true });
 
 	const args1 = [
@@ -158,8 +158,8 @@ async function buildWebP2() {
 		"-DCMAKE_DISABLE_FIND_PACKAGE_Threads=1",
 		"-DWP2_ENABLE_SIMD=1",
 	];
-	execSync(args1.join(" "), { cwd: "vendor/wp2_build", stdio: "inherit" })
-	execSync("cmake --build .", { cwd: "vendor/wp2_build", stdio: "inherit" })
+	execSync(args1.join(" "), { cwd: "vendor/wp2_build", stdio: "inherit" });
+	execSync("cmake --build .", { cwd: "vendor/wp2_build", stdio: "inherit" });
 
 	const args2 = [
 		"emcc",
@@ -176,7 +176,7 @@ async function buildWebP2() {
 		"vendor/wp2_build/libwebp2.a",
 	];
 
-	execSync(args2.join(" "), { stdio: "inherit" })
+	execSync(args2.join(" "), { stdio: "inherit" });
 }
 
 const mozjpeg = {
@@ -196,8 +196,8 @@ const mozjpeg = {
 		"cpp/mozjpeg_enc.cpp",
 		"vendor/mozjpeg/rdswitch.c",
 		"vendor/mozjpeg/libjpeg.a",
-	]
-}
+	],
+};
 
 const libjxl = {
 	repository: "https://github.com/libjxl/libjxl",
@@ -226,15 +226,15 @@ const libjxl = {
 		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
 		"vendor/libjxl/third_party/libskcms.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
-	]
-}
+	],
+};
 
 let cmakeBuilder = null;
 
 function cmake(name, item, rebuild = false) {
 	if (!existsSync(name)) {
-		execSync(`git clone --depth 1 --branch ${item.branch} ${item.repository} ${name}`)
-		execSync(`git submodule update --init --depth 1 --recursive`, { cwd: name });
+		execSync(`git clone --depth 1 --branch ${item.branch} ${item.repository} ${name}`);
+		execSync("git submodule update --init --depth 1 --recursive", { cwd: name });
 	}
 	if (rebuild || item.buildOutput && !existsSync(item.buildOutput)) {
 		const args = [
@@ -246,12 +246,12 @@ function cmake(name, item, rebuild = false) {
 		for (const [k, v] of Object.entries(item.options ?? {})) {
 			args.push(`-D${k}=${v}`);
 		}
-		execSync(args.join(" "), { stdio: "inherit" })
-		execSync("cmake --build .", { cwd: name, stdio: "inherit" })
+		execSync(args.join(" "), { stdio: "inherit" });
+		execSync("cmake --build .", { cwd: name, stdio: "inherit" });
 	}
 
-	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc")
-	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`)
+	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
+	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
 
 	const args = [
 		"emcc", "-O3", "--bind",
@@ -262,7 +262,7 @@ function cmake(name, item, rebuild = false) {
 
 		...item.emccArgs,
 	];
-	execSync(args.join(" "), { stdio: "inherit" })
+	execSync(args.join(" "), { stdio: "inherit" });
 }
 
 function detectVisualStudio() {
@@ -280,7 +280,7 @@ function detectVisualStudio() {
 		path,
 		clang: path + "/VC/Tools/Llvm/x64/bin",
 		productVersion: properties.catalog_productLineVersion,
-	}
+	};
 }
 
 let clangDirectory;
