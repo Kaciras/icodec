@@ -2,9 +2,6 @@ use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use imagequant::RGBA;
 
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
 	pub speed: i32,
@@ -22,11 +19,10 @@ pub fn quantize(data: Vec<u8>, width: usize, height: usize, options: JsValue) ->
     quantizer.set_speed(options.speed).unwrap();
     quantizer.set_quality(options.min_quality, options.quality).unwrap();
 
-	let pixels: &[RGBA] = bytemuck::cast_slice(data.as_slice());
-    let mut image = quantizer.new_image(pixels, width, height, 0.0).unwrap();
+	let rgba: &[RGBA] = bytemuck::cast_slice(data.as_slice());
+    let mut image = quantizer.new_image(rgba, width, height, 0.0).unwrap();
 
-    // The magic happens in quantize()
-    let mut res = match quantizer.quantize(&mut image) {
+    let mut res: imagequant::QuantizationResult = match quantizer.quantize(&mut image) {
         Ok(res) => res,
         Err(err) => panic!("Quantization failed, because: {err:?}"),
     };
@@ -45,7 +41,7 @@ pub fn quantize(data: Vec<u8>, width: usize, height: usize, options: JsValue) ->
 
 #[derive(Serialize, Deserialize)]
 pub struct EncodeOptions {
-	pub level: u8, 
+	pub level: u8,
 	pub interlace: bool,
 }
 
@@ -62,8 +58,8 @@ pub fn encode_png(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> V
     });
 
     let raw = oxipng::RawImage::new(
-		width, height, 
-		oxipng::ColorType::RGBA, 
+		width, height,
+		oxipng::ColorType::RGBA,
 		oxipng::BitDepth::Eight, data).unwrap_throw();
 
     return raw.create_optimized_png(&optimization).unwrap_throw()
