@@ -68,3 +68,10 @@ pub fn encode_png(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> V
 
 	return raw.create_optimized_png(&optimization).unwrap_throw();
 }
+
+#[wasm_bindgen]
+pub fn quantize_to_png(data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
+	
+	let data = quantize(data, width, height, options.clone());
+	return encode_png(data, width as u32, height as u32, options)
+}
