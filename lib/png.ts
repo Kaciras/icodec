@@ -1,4 +1,4 @@
-import loadWASMRust, { encode_png, quantize, quantize_to_png } from "../dist/pngquant.js";
+import loadWASMRust, { png_encode, quantize, quantize_to_png } from "../dist/pngquant.js";
 import { readFileSync } from "fs";
 
 export interface QuantizeOptions {
@@ -68,14 +68,26 @@ export function initialize() {
 	return loadWASMRust(readFileSync("dist/pngquant_bg.wasm"));
 }
 
+/**
+ * Reduces the colors used in the image at a slight loss,
+ * using a combination of vector quantization algorithms.
+ */
 export function reduceColors(data: any, width: number, height: number, options: QuantizeOptions) {
 	return quantize(data, width, height, { ...defaultOptions, ...options });
 }
 
+/**
+ * Encode the RGBA buffer to PNG format, this is a lossless operation.
+ */
 export function encode(data: any, width: number, height: number, options: EncodeOptions) {
-	return encode_png(data, width, height, { ...defaultOptions, ...options });
+	return png_encode(data, width, height, { ...defaultOptions, ...options });
 }
 
+/**
+ * Lossy compress the image to PNG for significant file size reduction.
+ *
+ * This function implements the same functionality as [pngquant](https://pngquant.org).
+ */
 export function optimize(data: any, width: number, height: number, options: Options) {
 	return quantize_to_png(data, width, height, { ...defaultOptions, ...options });
 }

@@ -3,8 +3,10 @@
 node_modules
 snapshot
 /vendor
-/lib
+/dist
 /coverage
+/rust/pkg
+/rust/target
 
 # Log files
 *.log

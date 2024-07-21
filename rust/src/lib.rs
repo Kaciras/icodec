@@ -26,17 +26,18 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 		Err(err) => panic!("Quantization failed, because: {err:?}"),
 	};
 
-	// Enable dithering for subsequent remappings
+	// Enable dithering for subsequent remappings.
 	res.set_dithering_level(options.dithering).unwrap_throw();
 
-	// You can reuse the result to generate several images with the same palette
+	// You can reuse the result to generate several images with the same palette.
 	let (palette, pixels) = res.remapped(&mut image).unwrap_throw();
 
+	// Convert RGBAs back from the palette and the color references.
 	for i in 0..pixels.len() {
 		rgba[i] = palette[pixels[i] as usize]
 	}
 
-	return data;
+	return data; // Modifications are not propagated to JS, so we need to return the data.
 }
 
 #[derive(Serialize, Deserialize)]
@@ -46,7 +47,7 @@ pub struct EncodeOptions {
 }
 
 #[wasm_bindgen]
-pub fn encode_png(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> Vec<u8> {
+pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> Vec<u8> {
 	let options: EncodeOptions = serde_wasm_bindgen::from_value(options).unwrap_throw();
 
 	let mut optimization = oxipng::Options::from_preset(options.level);
@@ -63,15 +64,14 @@ pub fn encode_png(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> V
 		oxipng::ColorType::RGBA,
 		oxipng::BitDepth::Eight,
 		data,
-	)
-	.unwrap_throw();
-
-	return raw.create_optimized_png(&optimization).unwrap_throw();
+	);
+	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
 }
 
+// Data needs to be copied between the managed JS heap and the WASM memory,
+// so here we call two functions internally to avoid the copying overhead.
 #[wasm_bindgen]
 pub fn quantize_to_png(data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
-	
 	let data = quantize(data, width, height, options.clone());
-	return encode_png(data, width as u32, height as u32, options)
+	return png_encode(data, width as u32, height as u32, options)
 }
