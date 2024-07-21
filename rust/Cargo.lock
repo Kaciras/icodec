@@ -256,16 +256,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "proc-macro2"
-version = "1.0.86"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
-dependencies = [
- "unicode-ident",
-]
-
-[[package]]
-name = "quant"
+name = "pngquant"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
@@ -275,6 +266,15 @@ dependencies = [
  "serde-wasm-bindgen",
  "wasm-bindgen",
  "wee_alloc",
+]
+
+[[package]]
+name = "proc-macro2"
+version = "1.0.86"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
+dependencies = [
+ "unicode-ident",
 ]
 
 [[package]]

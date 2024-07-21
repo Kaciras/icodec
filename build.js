@@ -3,7 +3,7 @@ import * as tar from "tar-fs";
 import { execFileSync, execSync } from "child_process";
 import { Readable } from "stream";
 import { once } from "events";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
 
 async function downloadSource(name, url, strip = 1) {
@@ -48,9 +48,8 @@ async function buildWebpEncoder() {
 		// Enable SIMD
 		"-DWEBP_ENABLE_SIMD=1",
 	];
-	execSync(args1.join(" "), { cwd: "vendor/libwebp", stdio: "inherit" });
-
-	execSync("cmake --build .", { cwd: "vendor/libwebp", stdio: "inherit" });
+	// execSync(args1.join(" "), { cwd: "vendor/libwebp", stdio: "inherit" });
+	// execSync("cmake --build .", { cwd: "vendor/libwebp", stdio: "inherit" });
 
 	const args2 = [
 		"emcc",
@@ -61,9 +60,9 @@ async function buildWebpEncoder() {
 		"-s EXPORT_ES6=1",
 
 		"-I vendor/libwebp",
-		"-o lib/webp-enc.js",
+		"-o dist/webp-enc.js",
 
-		"src/webp_enc.cpp",
+		"cpp/webp_enc.cpp",
 		"vendor/libwebp/libwebp.a",
 		"vendor/libwebp/libsharpyuv.a",
 	];
@@ -301,8 +300,30 @@ if (process.platform === "win32") {
 	clangDirectory = vs.clang;
 }
 
-// console.log(detectVisualStudio().clang)
-
 // cmake("vendor/mozjpeg", mozjpeg, true);
 // cmake("vendor/libjxl", libjxl);
-cmake("vendor/qoi", qoi);
+// cmake("vendor/qoi", qoi);
+// buildWebpEncoder();
+
+function buildPNGQuant() {
+	const env = { ...process.env };
+	if (env.EMSDK) {
+		env.CC = join(env.EMSDK, "upstream/bin/clang");
+	}
+
+	// https://github.com/rustwasm/wasm-pack/blob/62ab39cf82ec4d358c1f08f348cd0dc44768f412/src/command/build.rs#L116
+	const args = [
+		"build", "rust",
+		"--no-typescript",
+		"--no-pack",
+		"--reference-types",
+		"--weak-refs",
+		"--target", "web",
+	];
+	execFileSync("wasm-pack", args, { stdio: "inherit", env });
+
+	renameSync("rust/pkg/pngquant.js", "dist/pngquant.js");
+	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
+}
+
+buildPNGQuant();
