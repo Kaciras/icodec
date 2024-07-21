@@ -53,13 +53,13 @@ export interface EncodeOptions {
 	interlace: boolean;
 }
 
-export type Options = EncodeOptions & QuantizeOptions;
+export type PNGQuantOptions = EncodeOptions & QuantizeOptions;
 
-export const defaultOptions: Options = {
+export const defaultOptions: PNGQuantOptions = {
 	speed: 4,
-	quality: 10,
+	quality: 75,
 	min_quality: 0,
-	dithering: 0.5,
+	dithering: 1,
 	level: 3,
 	interlace: false,
 };
@@ -88,6 +88,6 @@ export function encode(data: any, width: number, height: number, options: Encode
  *
  * This function implements the same functionality as [pngquant](https://pngquant.org).
  */
-export function optimize(data: any, width: number, height: number, options: Options) {
+export function optimize(data: any, width: number, height: number, options: PNGQuantOptions) {
 	return quantize_to_png(data, width, height, { ...defaultOptions, ...options });
 }
