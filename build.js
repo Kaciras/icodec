@@ -22,54 +22,6 @@ async function downloadSource(name, url, strip = 1) {
 	return once(extracting, "finish");
 }
 
-async function buildWebpEncoder() {
-	await downloadSource("libwebp", "https://github.com/webmproject/libwebp/archive/refs/tags/v1.4.0.tar.gz");
-
-	const args1 = [
-		"emcmake", "cmake", ".",
-
-		// "-DCMAKE_CXX_STANDARD=17",
-
-		"-G Ninja",
-
-		// Only build libsharpyuv, libwebp, libwebpdecoder, libwebpdemux
-		"-DWEBP_BUILD_ANIM_UTILS=0",
-		"-DWEBP_BUILD_CWEBP=0",
-		"-DWEBP_BUILD_DWEBP=0",
-		"-DWEBP_BUILD_GIF2WEBP=0",
-		"-DWEBP_BUILD_IMG2WEBP=0",
-		"-DWEBP_BUILD_VWEBP=0",
-		"-DWEBP_BUILD_WEBPINFO=0",
-		"-DWEBP_BUILD_LIBWEBPMUX=0",
-		"-DWEBP_BUILD_WEBPMUX=0",
-		"-DWEBP_BUILD_EXTRAS=0",
-		"-DWEBP_USE_THREAD=0",
-
-		// Enable SIMD
-		"-DWEBP_ENABLE_SIMD=1",
-	];
-	// execSync(args1.join(" "), { cwd: "vendor/libwebp", stdio: "inherit" });
-	// execSync("cmake --build .", { cwd: "vendor/libwebp", stdio: "inherit" });
-
-	const args2 = [
-		"emcc",
-		"-O3",
-		"--bind",
-		"-s ALLOW_MEMORY_GROWTH=1",
-		"-s ENVIRONMENT=web",
-		"-s EXPORT_ES6=1",
-
-		"-I vendor/libwebp",
-		"-o dist/webp-enc.js",
-
-		"cpp/webp_enc.cpp",
-		"vendor/libwebp/libwebp.a",
-		"vendor/libwebp/libsharpyuv.a",
-	];
-
-	execSync(args2.join(" "), { stdio: "inherit" });
-}
-
 // Must build WebP before to generate libsharpyuv.a
 async function buildAVIF() {
 	await downloadSource("libavif/ext/aom", "https://aomedia.googlesource.com/aom/+archive/v3.9.1.tar.gz", 0);
@@ -249,40 +201,56 @@ function emcc(userArguments) {
 	execSync(args.join(" "), { stdio: "inherit" });
 }
 
-function buildQOI() {
-	gitClone("vendor/qoi", "master", "https://github.com/phoboslab/qoi");
-	emcc(["-I vendor/qoi", "-o dist/qoi.js", "cpp/qoi.cpp"])
+function cmake(checkFile, src, dist, options) {
+	if (existsSync(checkFile)) {
+		return;
+	}
+	const args = ["emcmake", "cmake", `-S ${src}`, `-B ${dist}`];
+	if (cmakeBuilder) {
+		args.push(`-G "${cmakeBuilder}"`);
+	}
+	for (const [k, v] of Object.entries(options ?? {})) {
+		args.push(`-D${k}=${v}`);
+	}
+	execSync(args.join(" "), { stdio: "inherit" });
+	execSync("cmake --build .", { cwd: src, stdio: "inherit" });
 }
 
-function cmake(name, item, rebuild = false) {
+function buildQOI() {
+	gitClone("vendor/qoi", "master", "https://github.com/phoboslab/qoi");
+	emcc(["-I vendor/qoi", "-o dist/qoi.js", "cpp/qoi.cpp"]);
+}
 
-	if (item.buildOutput && (rebuild || !existsSync(item.buildOutput))) {
-		const args = [
-			"emcmake", "cmake", `-S ${name}`, `-B ${name}`,
-		];
-		if (cmakeBuilder) {
-			args.push(`-G "${cmakeBuilder}"`);
-		}
-		for (const [k, v] of Object.entries(item.options ?? {})) {
-			args.push(`-D${k}=${v}`);
-		}
-		execSync(args.join(" "), { stdio: "inherit" });
-		execSync("cmake --build .", { cwd: name, stdio: "inherit" });
-	}
+async function buildWebpEncoder() {
+	gitClone("vendor/libwebp", "v1.4.0", "https://github.com/webmproject/libwebp");
+	cmake("vendor/libwebp/libwebp.a", "vendor/libwebp", "vendor/libwebp", {
+		WEBP_ENABLE_SIMD: "1",
 
+		WEBP_BUILD_CWEBP: "0",
+		WEBP_BUILD_DWEBP: "0",
+		WEBP_BUILD_GIF2WEBP: "0",
+		WEBP_BUILD_IMG2WEBP: "0",
+		WEBP_BUILD_VWEBP: "0",
+		WEBP_BUILD_WEBPINFO: "0",
+		WEBP_BUILD_LIBWEBPMUX: "0",
+		WEBP_BUILD_WEBPMUX: "0",
+		WEBP_BUILD_EXTRAS: "0",
+		WEBP_USE_THREAD: "0",
+		WEBP_BUILD_ANIM_UTILS: "0",
+	});
+
+	emcc([
+		"-o dist/webp-enc.js",
+		"-I vendor/libwebp",
+		"cpp/webp_enc.cpp",
+		"vendor/libwebp/libwebp.a",
+		"vendor/libwebp/libsharpyuv.a",
+	]);
+}
+
+function cmakex(name, item, rebuild = false) {
 	// execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
 	// execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
-
-	const args = [
-		"emcc", "-O3", "--bind",
-
-		"-s ENVIRONMENT=web",
-		"-s ALLOW_MEMORY_GROWTH=1",
-		"-s EXPORT_ES6=1",
-
-		...item.emccArgs,
-	];
-	execSync(args.join(" "), { stdio: "inherit" });
 }
 
 function detectVisualStudio() {
@@ -338,4 +306,5 @@ function buildPNGQuant() {
 }
 
 // buildPNGQuant();
-buildQOI();
+// buildQOI();
+buildWebpEncoder();
