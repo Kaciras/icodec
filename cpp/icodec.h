@@ -4,7 +4,13 @@ using namespace emscripten;
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
-thread_local const val ImageData = val::global("ImageData");
+thread_local const val ImageData = val::global("_ICODEC_ImageData");
+
+template <typename T, typename Deletion>
+std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
+{
+	return { pointer, deletion };
+}
 
 val toImageData(uint8_t *rgba, size_t width, size_t height)
 {

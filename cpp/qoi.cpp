@@ -1,45 +1,39 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <stdint.h>
 
 #define QOI_IMPLEMENTATION
 #include "qoi.h"
-#include "common.h"
+#include "icodec.h"
 
-struct QoiOptions
+using std::string;
+using std::unique_ptr;
+
+val encode(string buffer, uint32_t width, uint32_t height)
 {
-};
-
-val encode(std::string buffer, int width, int height, QoiOptions options)
-{
-	qoi_desc desc;
-	desc.width = width;
-	desc.height = height;
-	desc.channels = 4;
-	desc.colorspace = QOI_SRGB;
-
+	qoi_desc desc{ width, height, 4, QOI_SRGB };
 	int outSize;
-	uint8_t *encodedData = (uint8_t *)qoi_encode(buffer.c_str(), &desc, &outSize);
-	if (encodedData == NULL)
-		return val::null();
+	auto encoded = (uint8_t *)qoi_encode(buffer.c_str(), &desc, &outSize);
 
-	auto js_result = toUint8((uint8_t *)encodedData, outSize);
-	free(encodedData);
-	return js_result;
+	if (encoded == NULL)
+	{
+		return val::null();
+	}
+	return toUint8(toRAII(encoded, free).get(), outSize);
 }
 
-val decode(std::string input)
+val decode(string input)
 {
 	qoi_desc desc; // Resultant width and height stored in descriptor.
 
 	auto buffer = qoi_decode(input.c_str(), input.length(), &desc, 4);
-	std::unique_ptr<uint8_t, decltype(&free)> result {(uint8_t *)buffer, free};
+	auto result = toRAII((uint8_t *)buffer, free);
 
 	return toImageData(result.get(), desc.width, desc.height);
 }
 
 EMSCRIPTEN_BINDINGS(my_module)
 {
-	value_object<QoiOptions>("QoiOptions");
 	function("encode", &encode);
 	function("decode", &decode);
 }
