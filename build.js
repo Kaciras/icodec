@@ -198,17 +198,6 @@ const mozjpeg = {
 	],
 };
 
-const qoi = {
-	repository: "https://github.com/phoboslab/qoi",
-	branch: "master",
-	emccArgs: [
-		"-I vendor/qoi",
-		"-o dist/qoi-enc.js",
-
-		"cpp/qoi_enc.cpp",
-	],
-};
-
 const libjxl = {
 	repository: "https://github.com/libjxl/libjxl",
 	branch: "v0.8.3",
@@ -241,11 +230,32 @@ const libjxl = {
 
 let cmakeBuilder = null;
 
-function cmake(name, item, rebuild = false) {
-	if (!existsSync(name)) {
-		execSync(`git clone --depth 1 --branch ${item.branch} ${item.repository} ${name}`);
-		execSync("git submodule update --init --depth 1 --recursive", { cwd: name });
+function gitClone(directory, branch, url) {
+	if (!existsSync(directory)) {
+		execSync(`git clone --depth 1 --branch ${branch} ${url} ${directory}`);
+		execSync("git submodule update --init --depth 1 --recursive", { cwd: directory });
 	}
+}
+
+function emcc(userArguments) {
+	const args = [
+		"emcc", "-O3", "--bind",
+		"-s ENVIRONMENT=web",
+		"-s ALLOW_MEMORY_GROWTH=1",
+		"-s EXPORT_ES6=1",
+		"-I cpp",
+		...userArguments,
+	];
+	execSync(args.join(" "), { stdio: "inherit" });
+}
+
+function buildQOI() {
+	gitClone("vendor/qoi", "master", "https://github.com/phoboslab/qoi");
+	emcc(["-I vendor/qoi", "-o dist/qoi.js", "cpp/qoi.cpp"])
+}
+
+function cmake(name, item, rebuild = false) {
+
 	if (item.buildOutput && (rebuild || !existsSync(item.buildOutput))) {
 		const args = [
 			"emcmake", "cmake", `-S ${name}`, `-B ${name}`,
@@ -314,6 +324,7 @@ function buildPNGQuant() {
 	// https://github.com/rustwasm/wasm-pack/blob/62ab39cf82ec4d358c1f08f348cd0dc44768f412/src/command/build.rs#L116
 	const args = [
 		"build", "rust",
+		// "--dev",
 		"--no-typescript",
 		"--no-pack",
 		"--reference-types",
@@ -326,4 +337,5 @@ function buildPNGQuant() {
 	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
 }
 
-buildPNGQuant();
+// buildPNGQuant();
+buildQOI();
