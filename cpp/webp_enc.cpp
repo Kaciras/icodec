@@ -11,8 +11,6 @@ using namespace emscripten;
 val encode(std::string img, int width, int height, WebPConfig config)
 {
 	auto img_in = (uint8_t *)img.c_str();
-
-	// A lot of this is duplicated from Encode in picture_enc.c
 	WebPPicture pic;
 	WebPMemoryWriter writer;
 
