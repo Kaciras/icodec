@@ -36,14 +36,19 @@ function gitClone(directory, branch, url) {
 	}
 }
 
-function emcc(userArguments) {
+function emcc(output, inputArguments) {
+	output = "dist/" + output;
+	if (existsSync(output)) {
+		return;
+	}
 	const args = [
 		"emcc", "-O3", "--bind",
 		"-s ENVIRONMENT=web",
 		"-s ALLOW_MEMORY_GROWTH=1",
 		"-s EXPORT_ES6=1",
-		"-I cpp",
-		...userArguments,
+		"-I cpp/icodec.h",
+		"-o", output,
+		...inputArguments,
 	];
 	execSync(args.join(" "), { stdio: "inherit" });
 }
@@ -71,10 +76,8 @@ export function buildMozJPEG() {
 		WITH_TURBOJPEG: "0",
 		PNG_SUPPORTED: "0",
 	});
-	emcc([
+	emcc("mozjpeg-enc.js", [
 		"-I vendor/mozjpeg",
-		"-o dist/mozjpeg-enc.js",
-
 		"cpp/mozjpeg_enc.cpp",
 		"vendor/mozjpeg/libjpeg.a",
 		"vendor/mozjpeg/rdswitch.c",
@@ -105,7 +108,7 @@ export function buildPNGQuant() {
 
 export function buildQOI() {
 	gitClone("vendor/qoi", "master", "https://github.com/phoboslab/qoi");
-	emcc(["-I vendor/qoi", "-o dist/qoi.js", "cpp/qoi.cpp"]);
+	emcc("qoi.js", ["-I vendor/qoi", "cpp/qoi.cpp"]);
 }
 
 export function buildWebP() {
@@ -126,16 +129,14 @@ export function buildWebP() {
 		WEBP_BUILD_ANIM_UTILS: "0",
 	});
 
-	emcc([
-		"-o dist/webp-enc.js",
+	emcc("webp-enc.js", [
 		"-I vendor/libwebp",
 		"cpp/webp_enc.cpp",
 		"vendor/libwebp/libwebp.a",
 		"vendor/libwebp/libsharpyuv.a",
 	]);
 
-	emcc([
-		"-o dist/webp-dec.js",
+	emcc("webp-dec.js", [
 		"-I vendor/libwebp",
 		"cpp/webp_dec.cpp",
 		"vendor/libwebp/libwebp.a",
@@ -155,13 +156,11 @@ export function buildJXL() {
 	});
 	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
 	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
-	emcc([
+	emcc("jxl-enc.js", [
 		"-I vendor/libjxl",
 		"-I vendor/libjxl/lib/include",
 		"-I vendor/libjxl/third_party/highway",
 		"-I vendor/libjxl/third_party/skcms",
-
-		"-o dist/jxl-enc.js",
 
 		"cpp/jxl_enc.cpp",
 		"vendor/libjxl/lib/libjxl.a",
@@ -204,9 +203,6 @@ export function buildAVIF() {
 	);
 
 	cmake("vendor/libavif/libavif.a", "vendor/libavif", "vendor/libavif", {
-		// "-DCMAKE_BUILD_TYPE=Release",
-		// "-DAOM_LIBRARY=vendor/ext/aom/build.libavif/libaom.a",
-		// "-DAOM_INCLUDE_DIR=../libaom",
 		BUILD_SHARED_LIBS: "0",
 		AVIF_CODEC_AOM: "LOCAL",
 		AVIF_LOCAL_LIBSHARPYUV: "1",
@@ -214,18 +210,16 @@ export function buildAVIF() {
 		LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
 	});
 
-	emcc([
+	emcc("avif-enc.js", [
 		"-I vendor/libavif/include",
-		"-o lib/avif-enc.js",
 
 		"src/avif_enc.cpp",
 		"vendor/libavif/libavif.a",
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
 	]);
 
-	emcc([
+	emcc("avif-dec.js", [
 		"-I vendor/libavif/include",
-		"-o dist/avif-dec.js",
 
 		"cpp/avif_dec.cpp",
 		"vendor/libavif/libavif.a",
@@ -252,10 +246,8 @@ export function buildWebP2() {
 		WP2_ENABLE_SIMD: "1",
 	});
 
-	emcc([
+	emcc("wp2-enc.js", [
 		"-I vendor/libwebp2/src/wp2",
-		"-o lib/wp2-enc.js",
-
 		"src/wp2_enc.cpp",
 		"vendor/wp2_build/libwebp2.a",
 	]);
