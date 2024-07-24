@@ -1,7 +1,6 @@
 .DS_Store
 .esbench-tmp
 node_modules
-snapshot
 /vendor
 /dist
 /coverage
