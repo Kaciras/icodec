@@ -1,4 +1,5 @@
-import loadWASM from "../dist/avif-enc.js";
+import loadEncoderWASM from "../dist/avif-enc.js";
+import loadDecoderWASM from "../dist/avif-dec.js";
 import { readFileSync } from "fs";
 
 export enum AVIFTune {
@@ -36,10 +37,13 @@ const defaultOptions: AVIFOptions = {
 };
 
 let wasmModule: any;
+let wasmModule2: any;
 
 export async function initialize() {
 	const wasmBinary = readFileSync("dist/avif-enc.wasm");
-	wasmModule = await loadWASM({ wasmBinary });
+	const wasmBinary2 = readFileSync("dist/avif-dec.wasm");
+	wasmModule = await loadEncoderWASM({ wasmBinary });
+	wasmModule2 = await loadDecoderWASM({ wasmBinary: wasmBinary2 });
 }
 
 export function encode(data: BufferSource, width: number, height: number, options: AVIFOptions) {
@@ -49,4 +53,12 @@ export function encode(data: BufferSource, width: number, height: number, option
 		return result;
 	}
 	throw new Error("Encode failed");
+}
+
+export function decode(image: BufferSource) {
+	const result =  wasmModule2.decode(image);
+	if (result) {
+		return result;
+	}
+	throw new Error("Decode failed");
 }

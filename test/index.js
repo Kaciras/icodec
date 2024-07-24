@@ -13,6 +13,17 @@ const snapshotDirectory = "test/snapshot";
 
 mkdirSync(snapshotDirectory, { recursive: true });
 
+// TODO: lossy compression will change the data
+function assertBufferEquals(buffer1, buffer2) {
+	assert.strictEqual(buffer1.byteLength, buffer2.byteLength);
+	for (let i = 0; i < buffer1.byteLength; i++) {
+		if (buffer1[i] === buffer2[i]) {
+			continue;
+		}
+		throw new Error(`Index ${i} not equal: ${buffer1[i]} !== ${buffer2[i]}`);
+	}
+}
+
 test("JPEG encode", async () => {
 	await jpeg.initialize();
 
@@ -47,6 +58,16 @@ test("AVIF encode", async () => {
 	assert.ok(encoded.length < 7 * 1024);
 });
 
+test("AVIF decode", async () => {
+	await avif.initialize();
+
+	const image = avif.decode(readFileSync("test/snapshot/image.avif"));
+
+	assertBufferEquals(image.data, rawBuffer);
+	assert.deepStrictEqual(image.width, 417);
+	assert.deepStrictEqual(image.height, 114);
+});
+
 test("QOI encode", async () => {
 	await qoi.initialize();
 
@@ -59,7 +80,7 @@ test("QOI encode", async () => {
 test("QOI decode", async () => {
 	await qoi.initialize();
 	const image = qoi.decode(readFileSync("test/snapshot/image.qoi"));
-	assert.deepStrictEqual(image.data, rawBuffer);
+	assert.deepEqual(image.data, rawBuffer);
 	assert.deepStrictEqual(image.width, 417);
 	assert.deepStrictEqual(image.height, 114);
 });

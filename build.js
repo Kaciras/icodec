@@ -4,73 +4,62 @@ import { join } from "path";
 
 // Must build WebP before to generate libsharpyuv.a
 async function buildAVIF() {
-	await downloadSource("libavif/ext/aom", "https://aomedia.googlesource.com/aom/+archive/v3.9.1.tar.gz", 0);
-	await downloadSource("libavif", "https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.1.0.tar.gz");
+	gitClone("vendor/libavif","v1.1.0", "https://github.com/AOMediaCodec/libavif");
+	gitClone("vendor/libavif/ext/aom","v3.9.1", "https://aomedia.googlesource.com/aom");
 
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
+	cmake(
+		"vendor/libavif/ext/aom/build.libavif/libaom.a",
+		"vendor/libavif/ext/aom",
+		"vendor/libavif/ext/aom/build.libavif",
+		{
+			CMAKE_BUILD_TYPE: "Release",
+			ENABLE_CCACHE: "0",
+			AOM_TARGET_CPU: "generic",
+			AOM_EXTRA_C_FLAGS: "-UNDEBUG",
+			AOM_EXTRA_CXX_FLAGS: "-UNDEBUG",
+			ENABLE_DOCS: "0",
+			ENABLE_TESTS: "0",
+			ENABLE_EXAMPLES: "0",
+			ENABLE_TOOLS: "0",
+			CONFIG_ACCOUNTING: "1",
+			CONFIG_INSPECTION: "0",
+			CONFIG_RUNTIME_CPU_DETECT: "0",
+			CONFIG_WEBM_IO: "0",
 
-	const argsAom = [
-		"emcmake", "cmake",
-		"-S .",
-		"-B build.libavif",
+			CONFIG_MULTITHREAD: "0",
+			CONFIG_AV1_HIGHBITDEPTH: "0",
+		},
+	);
 
-		// "-DCMAKE_CXX_STANDARD=17",
-
-		"-DCMAKE_BUILD_TYPE=Release",
-		"-DENABLE_CCACHE=0",
-		"-DAOM_TARGET_CPU=generic",
-		"-DAOM_EXTRA_C_FLAGS=-UNDEBUG",
-		"-DAOM_EXTRA_CXX_FLAGS=-UNDEBUG",
-		"-DENABLE_DOCS=0",
-		"-DENABLE_TESTS=0",
-		"-DENABLE_EXAMPLES=0",
-		"-DENABLE_TOOLS=0",
-		"-DCONFIG_ACCOUNTING=1",
-		"-DCONFIG_INSPECTION=0",
-		"-DCONFIG_RUNTIME_CPU_DETECT=0",
-		"-DCONFIG_WEBM_IO=0",
-
-		"-DCONFIG_MULTITHREAD=0",
-		"-DCONFIG_AV1_HIGHBITDEPTH=0",
-	];
-	// execSync(argsAom.join(" "), { cwd: "vendor/libavif/ext/aom", stdio: "inherit" })
-	// execSync("cmake --build .", { cwd: "vendor/libavif/ext/aom/build.libavif", stdio: "inherit" })
-
-	const argsAvif = [
-		"emcmake", "cmake", ".",
-
+	cmake("vendor/libavif/libavif.a","vendor/libavif","vendor/libavif", {
 		// "-DCMAKE_BUILD_TYPE=Release",
-		"-DBUILD_SHARED_LIBS=0",
-		"-DAVIF_CODEC_AOM=LOCAL",
-		// "-DAVIF_LOCAL_AOM=1",
-		"-DAVIF_LOCAL_LIBSHARPYUV=1",
-
 		// "-DAOM_LIBRARY=vendor/ext/aom/build.libavif/libaom.a",
 		// "-DAOM_INCLUDE_DIR=../libaom",
+		BUILD_SHARED_LIBS: "0",
+		AVIF_CODEC_AOM: "LOCAL",
+		AVIF_LOCAL_LIBSHARPYUV: "1",
+		LIBYUV_LIBRARY: "../libwebp/libsharpyuv.a",
+		LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
+	});
 
-		"-DLIBYUV_LIBRARY=../libwebp/libsharpyuv.a",
-		"-DLIBYUV_INCLUDE_DIR=../libwebp/sharpyuv",
-	];
-	execSync(argsAvif.join(" "), { cwd: "vendor/libavif", stdio: "inherit" });
-	execSync("cmake --build .", { cwd: "vendor/libavif", stdio: "inherit" });
+	// emcc([
+	// 	"-I vendor/libavif/include",
+	// 	"-o lib/avif-enc.js",
+	//
+	// 	"src/avif_enc.cpp",
+	// 	"vendor/libavif/libavif.a",
+	// 	"vendor/libavif/ext/aom/build.libavif/libaom.a",
+	// ]);
 
-	const args2 = [
-		"emcc",
-		"-O3",
-		"--bind",
-		"-s ALLOW_MEMORY_GROWTH=1",
-		"-s ENVIRONMENT=web",
-		"-s EXPORT_ES6=1",
-
+	emcc([
 		"-I vendor/libavif/include",
-		"-o lib/avif-enc.js",
+		"-o dist/avif-dec.js",
 
-		"src/avif_enc.cpp",
+		"cpp/avif_dec.cpp",
 		"vendor/libavif/libavif.a",
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
-	];
-
-	execSync(args2.join(" "), { stdio: "inherit" });
+	]);
 }
 
 async function buildWebP2() {
@@ -111,7 +100,7 @@ async function buildWebP2() {
 }
 
 function buildMozJPEG() {
-	gitClone("mozjpeg","v4.1.5","https://github.com/mozilla/mozjpeg");
+	gitClone("vendor/mozjpeg","v4.1.5","https://github.com/mozilla/mozjpeg");
 	cmake("vendor/mozjpeg/libjpeg.a", "vendor/mozjpeg", "vendor/mozjpeg", {
 		WITH_SIMD: "0",
 		ENABLE_SHARED: "0",
@@ -161,7 +150,7 @@ function cmake(checkFile, src, dist, options) {
 		args.push(`-D${k}=${v}`);
 	}
 	execSync(args.join(" "), { stdio: "inherit" });
-	execSync("cmake --build .", { cwd: src, stdio: "inherit" });
+	execSync("cmake --build .", { cwd: dist, stdio: "inherit" });
 }
 
 function buildQOI() {
@@ -278,6 +267,5 @@ function buildPNGQuant() {
 	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
 }
 
-// buildPNGQuant();
-// buildQOI();
-buildWebpEncoder();
+// buildMozJPEG();
+buildAVIF();

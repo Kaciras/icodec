@@ -1,11 +1,9 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include "icodec.h"
 #include "avif/avif.h"
 
 using namespace emscripten;
-
-thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
-thread_local const val ImageData = val::global("ImageData");
 
 val decode(std::string input)
 {
@@ -30,9 +28,7 @@ val decode(std::string input)
 
 		// We want to create a *copy* of the decoded data to be owned by the JavaScript side.
 		// For that, we perform `new Uint8Array(wasmMemBuffer, wasmPtr, wasmSize).slice()`:
-		result = ImageData.new_(
-			Uint8ClampedArray.new_(typed_memory_view(rgb.rowBytes * rgb.height, rgb.pixels)), rgb.width,
-			rgb.height);
+		result = toImageData(rgb.pixels, rgb.width, rgb.height);
 
 		// Now we can safely free the RGB pixels:
 		avifRGBImageFreePixels(&rgb);
