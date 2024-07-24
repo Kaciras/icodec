@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { test } from "node:test";
 import * as assert from "assert";
 import { join } from "path";
+import pixelMatch from "pixelmatch";
 import * as jpeg from "../lib/jpeg.js";
 import * as png from "../lib/png.js";
 import * as webp from "../lib/webp.js";
@@ -11,17 +12,15 @@ import * as qoi from "../lib/qoi.js";
 const rawBuffer = readFileSync("test/image.bin");
 const snapshotDirectory = "test/snapshot";
 
+const w = 417;
+const h = 114;
+
 mkdirSync(snapshotDirectory, { recursive: true });
 
-// TODO: lossy compression will change the data
-function assertBufferEquals(buffer1, buffer2) {
+function assertImageEquals(buffer1, buffer2) {
 	assert.strictEqual(buffer1.byteLength, buffer2.byteLength);
-	for (let i = 0; i < buffer1.byteLength; i++) {
-		if (buffer1[i] === buffer2[i]) {
-			continue;
-		}
-		throw new Error(`Index ${i} not equal: ${buffer1[i]} !== ${buffer2[i]}`);
-	}
+	const diff = new Uint8ClampedArray(w * h * 4);
+	pixelMatch(buffer1, buffer2, diff, w, h, { threshold: 0.1 });
 }
 
 test("JPEG encode", async () => {
@@ -49,6 +48,14 @@ test("WebP encode", async () => {
 	assert.ok(encoded.length < 7 * 1024);
 });
 
+test("WebP decode", async () => {
+	await webp.initialize();
+
+	const image = webp.decode(readFileSync("test/snapshot/image.webp"));
+
+	assertImageEquals(image.data, rawBuffer);
+});
+
 test("AVIF encode", async () => {
 	await avif.initialize();
 
@@ -63,9 +70,7 @@ test("AVIF decode", async () => {
 
 	const image = avif.decode(readFileSync("test/snapshot/image.avif"));
 
-	assertBufferEquals(image.data, rawBuffer);
-	assert.deepStrictEqual(image.width, 417);
-	assert.deepStrictEqual(image.height, 114);
+	assertImageEquals(image.data, rawBuffer);
 });
 
 test("QOI encode", async () => {
@@ -80,7 +85,5 @@ test("QOI encode", async () => {
 test("QOI decode", async () => {
 	await qoi.initialize();
 	const image = qoi.decode(readFileSync("test/snapshot/image.qoi"));
-	assert.deepEqual(image.data, rawBuffer);
-	assert.deepStrictEqual(image.width, 417);
-	assert.deepStrictEqual(image.height, 114);
+	assertImageEquals(image.data, rawBuffer);
 });

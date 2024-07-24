@@ -11,6 +11,7 @@
 		"@types/node": "^20.14.11",
 		"esbench": "^0.6.1",
 		"eslint": "^9.7.0",
+		"pixelmatch": "^6.0.0",
 		"sharp": "^0.33.4",
 		"typescript": "^5.5.3"
 	}
