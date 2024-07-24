@@ -1,26 +1,6 @@
-import { createGunzip } from "zlib";
-import * as tar from "tar-fs";
 import { execFileSync, execSync } from "child_process";
-import { Readable } from "stream";
-import { once } from "events";
 import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
-
-async function downloadSource(name, url, strip = 1) {
-	const outDir = join("vendor", name);
-	if (existsSync(outDir)) {
-		return;
-	}
-	const { body, ok, status } = await fetch(url);
-	if (!ok) {
-		throw new Error(`Assets download failed (${status}).`);
-	}
-	const extracting = Readable.fromWeb(body)
-		.pipe(createGunzip())
-		.pipe(tar.extract(outDir, { strip }));
-
-	return once(extracting, "finish");
-}
 
 // Must build WebP before to generate libsharpyuv.a
 async function buildAVIF() {
@@ -130,55 +110,23 @@ async function buildWebP2() {
 	execSync(args2.join(" "), { stdio: "inherit" });
 }
 
-const mozjpeg = {
-	repository: "https://github.com/mozilla/mozjpeg",
-	branch: "v4.1.5",
-	options: {
+function buildMozJPEG() {
+	gitClone("mozjpeg","v4.1.5","https://github.com/mozilla/mozjpeg");
+	cmake("vendor/mozjpeg/libjpeg.a", "vendor/mozjpeg", "vendor/mozjpeg", {
 		WITH_SIMD: "0",
 		ENABLE_SHARED: "0",
 		WITH_TURBOJPEG: "0",
 		PNG_SUPPORTED: "0",
-	},
-	buildOutput: "vendor/mozjpeg/libjpeg.a",
-	emccArgs: [
+	});
+	emcc([
 		"-I vendor/mozjpeg",
 		"-o dist/mozjpeg-enc.js",
 
 		"cpp/mozjpeg_enc.cpp",
-		"vendor/mozjpeg/rdswitch.c",
 		"vendor/mozjpeg/libjpeg.a",
-	],
-};
-
-const libjxl = {
-	repository: "https://github.com/libjxl/libjxl",
-	branch: "v0.8.3",
-	options: {
-		BUILD_SHARED_LIBS: "0",
-		BUILD_TESTING: "0",
-		JPEGXL_ENABLE_BENCHMARK: "0",
-		JPEGXL_ENABLE_EXAMPLES: "0",
-		JPEGXL_ENABLE_DOXYGEN: "0",
-		JPEGXL_ENABLE_JNI: "0",
-	},
-	buildOutput: "vendor/libjxl/lib/libjxl.a",
-	emccArgs: [
-		"-I vendor/libjxl",
-		"-I vendor/libjxl/lib/include",
-		"-I vendor/libjxl/third_party/highway",
-		"-I vendor/libjxl/third_party/skcms",
-
-		"-o dist/jxl-enc.js",
-
-		"cpp/jxl_enc.cpp",
-		"vendor/libjxl/lib/libjxl.a",
-		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
-		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
-		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
-		"vendor/libjxl/third_party/libskcms.a",
-		"vendor/libjxl/third_party/highway/libhwy.a",
-	],
-};
+		"vendor/mozjpeg/rdswitch.c",
+	]);
+}
 
 let cmakeBuilder = null;
 
@@ -248,9 +196,34 @@ async function buildWebpEncoder() {
 	]);
 }
 
-function cmakex(name, item, rebuild = false) {
-	// execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
-	// execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
+function buildJXLEncoder() {
+	gitClone("libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
+	cmake("vendor/libjxl/lib/libjxl.a", "vendor/libjxl", "vendor/libjxl", {
+		BUILD_SHARED_LIBS: "0",
+		BUILD_TESTING: "0",
+		JPEGXL_ENABLE_BENCHMARK: "0",
+		JPEGXL_ENABLE_EXAMPLES: "0",
+		JPEGXL_ENABLE_DOXYGEN: "0",
+		JPEGXL_ENABLE_JNI: "0",
+	});
+	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
+	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
+	emcc([
+		"-I vendor/libjxl",
+		"-I vendor/libjxl/lib/include",
+		"-I vendor/libjxl/third_party/highway",
+		"-I vendor/libjxl/third_party/skcms",
+
+		"-o dist/jxl-enc.js",
+
+		"cpp/jxl_enc.cpp",
+		"vendor/libjxl/lib/libjxl.a",
+		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
+		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
+		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
+		"vendor/libjxl/third_party/libskcms.a",
+		"vendor/libjxl/third_party/highway/libhwy.a",
+	]);
 }
 
 function detectVisualStudio() {
