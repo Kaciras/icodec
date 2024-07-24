@@ -7,36 +7,38 @@ using namespace emscripten;
 
 val decode(std::string input)
 {
-	avifImage *image = avifImageCreateEmpty();
-	avifDecoder *decoder = avifDecoderCreate();
-	avifResult decodeResult = avifDecoderReadMemory(decoder, image, (uint8_t *)input.c_str(), input.length());
-
-	// image is an independent copy of decoded data, decoder may be destroyed here
-	avifDecoderDestroy(decoder);
-
-	val result = val::null();
-
-	if (decodeResult == AVIF_RESULT_OK)
+	auto decoder = toRAII(avifDecoderCreate(), avifDecoderDestroy);
+	auto image = toRAII(avifImageCreateEmpty(), avifImageDestroy);
+	if (!decoder)
 	{
-		// Convert to interleaved RGB(A)/BGR(A) using a libavif-allocated buffer.
-		avifRGBImage rgb;
-		avifRGBImageSetDefaults(&rgb, image); // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
-		rgb.depth = 8;					// Does not need to match image->depth. We always want 8-bit pixels.
-
-		avifRGBImageAllocatePixels(&rgb);
-		avifImageYUVToRGB(image, &rgb);
-
-		// We want to create a *copy* of the decoded data to be owned by the JavaScript side.
-		// For that, we perform `new Uint8Array(wasmMemBuffer, wasmPtr, wasmSize).slice()`:
-		result = toImageData(rgb.pixels, rgb.width, rgb.height);
-
-		// Now we can safely free the RGB pixels:
-		avifRGBImageFreePixels(&rgb);
+		return val("Memory allocation failure");
 	}
 
-	// Image has been converted to RGB, we don't need the original anymore.
-	avifImageDestroy(image);
+	auto status = avifDecoderReadMemory(decoder.get(), image.get(), (uint8_t *)input.c_str(), input.length());
+	if (status != AVIF_RESULT_OK)
+	{
+		return val(avifResultToString(status));
+	}
 
+	// Convert to interleaved RGB(A)/BGR(A) using a libavif-allocated buffer.
+	avifRGBImage rgb;
+	avifRGBImageSetDefaults(&rgb, image.get()); // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+	rgb.depth = 8;
+
+	status = avifRGBImageAllocatePixels(&rgb);
+	if (status != AVIF_RESULT_OK)
+	{
+		return val(avifResultToString(status));
+	}
+
+	status = avifImageYUVToRGB(image.get(), &rgb);
+	if (status != AVIF_RESULT_OK)
+	{
+		return val(avifResultToString(status));
+	}
+
+	auto result = toImageData(rgb.pixels, rgb.width, rgb.height);
+	avifRGBImageFreePixels(&rgb);
 	return result;
 }
 
