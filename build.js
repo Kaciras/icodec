@@ -50,6 +50,7 @@ function emcc(output, inputArguments) {
 		...inputArguments,
 	];
 	execFileSync("emcc", args, { stdio: "inherit", shell: true });
+	console.info(`Successfully build WASM module: ${output}`);
 }
 
 function cmake(checkFile, src, dist, options) {
@@ -101,6 +102,7 @@ export function buildPNGQuant() {
 	];
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
+	// --out-dir cannot be out of the rust workspace.
 	renameSync("rust/pkg/pngquant.js", "dist/pngquant.js");
 	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
 }
@@ -168,34 +170,20 @@ export function buildJXL() {
 		"vendor/libjxl/third_party/skcms/skcms.cc.o",
 	]);
 
-	emcc("jxl-enc.js", [
-		"-I vendor/libjxl",
-		"-I vendor/libjxl/lib/include",
+	const libs = [
 		"-I vendor/libjxl/third_party/highway",
 		"-I vendor/libjxl/third_party/skcms",
-
-		"cpp/jxl_enc.cpp",
+		"-I vendor/libjxl",
+		"-I vendor/libjxl/lib/include",
 		"vendor/libjxl/lib/libjxl.a",
 		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
 		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
 		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
-		"vendor/libjxl/third_party/libskcms.a",
+		// "vendor/libjxl/third_party/libskcms.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
-	]);
-	// emcc("jxl-dec.js", [
-	// 	"-I vendor/libjxl",
-	// 	"-I vendor/libjxl/lib/include",
-	// 	"-I vendor/libjxl/third_party/highway",
-	// 	"-I vendor/libjxl/third_party/skcms",
-	//
-	// 	"cpp/jxl_dec.cpp",
-	// 	"vendor/libjxl/lib/libjxl.a",
-	// 	"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
-	// 	"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
-	// 	"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
-	// 	// "vendor/libjxl/third_party/libskcms.a",
-	// 	"vendor/libjxl/third_party/highway/libhwy.a",
-	// ]);
+	];
+	// emcc("jxl-enc.js", [...libs, "cpp/jxl_enc.cpp"]);
+	emcc("jxl-dec.js", [...libs, "cpp/jxl_dec.cpp"]);
 }
 
 // Must build WebP before to generate libsharpyuv.a
@@ -239,7 +227,7 @@ export function buildAVIF() {
 	emcc("avif-enc.js", [
 		"-I vendor/libavif/include",
 
-		"src/avif_enc.cpp",
+		"cpp/avif_enc.cpp",
 		"vendor/libavif/libavif.a",
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
 	]);
@@ -274,7 +262,7 @@ export function buildWebP2() {
 
 	emcc("wp2-enc.js", [
 		"-I vendor/libwebp2/src/wp2",
-		"src/wp2_enc.cpp",
+		"cpp/wp2_enc.cpp",
 		"vendor/wp2_build/libwebp2.a",
 	]);
 }

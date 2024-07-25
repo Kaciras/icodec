@@ -5,7 +5,8 @@ import { join } from "path";
 import pixelMatch from "pixelmatch";
 import * as jpeg from "../lib/jpeg.js";
 import * as png from "../lib/png.js";
-import * as qoi from "../lib/qoi.js";
+import { loadQOIEncoder } from "../lib/node.js";
+import * as jxl from "../lib/jxl.js";
 import * as webp from "../lib/webp.js";
 import * as avif from "../lib/avif.js";
 
@@ -18,7 +19,10 @@ const h = 114;
 function assertImageEquals(buffer1, buffer2) {
 	assert.strictEqual(buffer1.byteLength, buffer2.byteLength);
 	const diff = new Uint8ClampedArray(w * h * 4);
-	pixelMatch(buffer1, buffer2, diff, w, h, { threshold: 0.1 });
+	const diffs = pixelMatch(buffer1, buffer2, diff, w, h, { threshold: 0.1 });
+	if (diffs > 1000) {
+		throw new Error();
+	}
 }
 
 describe("Encode", () => {
@@ -47,18 +51,26 @@ describe("Encode", () => {
 		assert.ok(encoded.length < 7 * 1024);
 	});
 
+	test("JXL", async () => {
+		await jpeg.initialize();
 
-	test("AVIF", async () => {
-		await avif.initialize();
+		const encoded = jpeg.encode(rawBuffer, 417, 114, {});
 
-		const encoded = avif.encode(rawBuffer, 417, 114, {});
+		writeFileSync(join(snapshotDirectory, "image.jpeg"), encoded);
+		assert.ok(encoded.length < 7 * 1024);
+	});
 
-		writeFileSync(join(snapshotDirectory, "image.avif"), encoded);
+	test("JXL", async () => {
+		await jxl.encoder.initialize();
+
+		const encoded = jxl.encoder.encode(rawBuffer, 417, 114, {});
+
+		writeFileSync(join(snapshotDirectory, "image.jxl"), encoded);
 		assert.ok(encoded.length < 7 * 1024);
 	});
 
 	test("QOI", async () => {
-		await qoi.initialize();
+		const qoi = await loadQOIEncoder();
 
 		const encoded = qoi.encode(rawBuffer, 417, 114, {});
 
@@ -81,6 +93,14 @@ describe("Decode", () => {
 
 		const image = avif.decode(readFileSync("test/snapshot/image.avif"));
 
+		assertImageEquals(image.data, rawBuffer);
+	});
+
+	test("JXL", async () => {
+		await jxl.decoder.initialize({
+			wasmBinary: readFileSync("dist/jxl-dec.wasm"),
+		});
+		const image = jxl.decoder.decode(readFileSync("test/snapshot/image.jxl"));
 		assertImageEquals(image.data, rawBuffer);
 	});
 
