@@ -1,4 +1,4 @@
-import { execFileSync, execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
 
@@ -31,41 +31,38 @@ let cmakeBuilder = null;
 
 function gitClone(directory, branch, url) {
 	if (!existsSync(directory)) {
-		execSync(`git clone --depth 1 --branch ${branch} ${url} ${directory}`);
-		execSync("git submodule update --init --depth 1 --recursive", { cwd: directory });
+		execFileSync("git", ["clone", "--depth", "1", "--branch", branch, url, directory]);
+		execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
 	}
 }
 
 function emcc(output, inputArguments) {
 	output = "dist/" + output;
-	if (existsSync(output)) {
-		return;
-	}
 	const args = [
-		"emcc", "-O3", "--bind",
-		"-s ENVIRONMENT=web",
-		"-s ALLOW_MEMORY_GROWTH=1",
-		"-s EXPORT_ES6=1",
-		"-I cpp/icodec.h",
+		"-O3", "--bind",
+		"-s", "ENVIRONMENT=web",
+		"-s", "ALLOW_MEMORY_GROWTH=1",
+		"-s", "EXPORT_ES6=1",
+		"-I", "cpp/icodec.h",
 		"-o", output,
 		...inputArguments,
 	];
-	execSync(args.join(" "), { stdio: "inherit" });
+	execFileSync("emcc", args, { stdio: "inherit", shell: true });
 }
 
 function cmake(checkFile, src, dist, options) {
 	if (existsSync(checkFile)) {
 		return;
 	}
-	const args = ["emcmake", "cmake", `-S ${src}`, `-B ${dist}`];
+	const args = ["cmake", "-S", src, "-B", dist];
 	if (cmakeBuilder) {
-		args.push(`-G "${cmakeBuilder}"`);
+		args.push("-G", cmakeBuilder);
 	}
-	for (const [k, v] of Object.entries(options ?? {})) {
+	for (const [k, v] of Object.entries(options)) {
 		args.push(`-D${k}=${v}`);
 	}
-	execSync(args.join(" "), { stdio: "inherit" });
-	execSync("cmake --build .", { cwd: dist, stdio: "inherit" });
+	execFileSync("emcmake", args, { stdio: "inherit", shell: true });
+	execFileSync("cmake", ["--build", "."], { cwd: dist, stdio: "inherit" });
 }
 
 export function buildMozJPEG() {
@@ -145,17 +142,30 @@ export function buildWebP() {
 }
 
 export function buildJXL() {
-	gitClone("libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
+	gitClone("vendor/libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
 	cmake("vendor/libjxl/lib/libjxl.a", "vendor/libjxl", "vendor/libjxl", {
 		BUILD_SHARED_LIBS: "0",
 		BUILD_TESTING: "0",
-		JPEGXL_ENABLE_BENCHMARK: "0",
-		JPEGXL_ENABLE_EXAMPLES: "0",
-		JPEGXL_ENABLE_DOXYGEN: "0",
 		JPEGXL_ENABLE_JNI: "0",
+		JPEGXL_ENABLE_BENCHMARK: "0",
+		JPEGXL_ENABLE_DOXYGEN: "0",
+		JPEGXL_ENABLE_EXAMPLES: "0",
 	});
-	execSync("emcc -Wall -O3 -o vendor/libjxl/third_party/skcms/skcms.cc.o -I vendor/libjxl/third_party/skcms -c vendor/libjxl/third_party/skcms/skcms.cc");
-	execSync(`"${clangDirectory}/llvm-ar" rc vendor/libjxl/third_party/libskcms.a vendor/libjxl/third_party/skcms/skcms.cc.o`);
+
+	execFileSync("emcc", [
+		"-Wall", "-O3",
+		"-o", "vendor/libjxl/third_party/skcms/skcms.cc.o",
+		"-I", "vendor/libjxl/third_party/skcms",
+		"-c", "vendor/libjxl/third_party/skcms/skcms.cc",
+	], {
+		shell: true,
+	});
+	execFileSync(`${clangDirectory}/llvm-ar`, [
+		"rc",
+		"vendor/libjxl/third_party/libskcms.a",
+		"vendor/libjxl/third_party/skcms/skcms.cc.o",
+	]);
+
 	emcc("jxl-enc.js", [
 		"-I vendor/libjxl",
 		"-I vendor/libjxl/lib/include",
@@ -170,6 +180,20 @@ export function buildJXL() {
 		"vendor/libjxl/third_party/libskcms.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
 	]);
+	// emcc("jxl-dec.js", [
+	// 	"-I vendor/libjxl",
+	// 	"-I vendor/libjxl/lib/include",
+	// 	"-I vendor/libjxl/third_party/highway",
+	// 	"-I vendor/libjxl/third_party/skcms",
+	//
+	// 	"cpp/jxl_dec.cpp",
+	// 	"vendor/libjxl/lib/libjxl.a",
+	// 	"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
+	// 	"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
+	// 	"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
+	// 	// "vendor/libjxl/third_party/libskcms.a",
+	// 	"vendor/libjxl/third_party/highway/libhwy.a",
+	// ]);
 }
 
 // Must build WebP before to generate libsharpyuv.a
@@ -234,7 +258,7 @@ export function buildWebP2() {
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	);
 
-	mkdirSync("vendor/wp2_build", { recursive: true });
+	// mkdirSync("vendor/wp2_build", { recursive: true });
 
 	cmake("vendor/wp2_build/libwebp2.a", "vendor/libwebp2", "vendor/wp2_build", {
 		WP2_BUILD_TESTS: "0",
@@ -255,11 +279,11 @@ export function buildWebP2() {
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
-	buildWebP();
-	buildAVIF();
-	buildWebP2();
+	// buildWebP();
+	// buildAVIF();
+	// buildWebP2();
 	buildJXL();
-	buildQOI();
-	buildPNGQuant();
-	buildMozJPEG();
+	// buildQOI();
+	// buildPNGQuant();
+	// buildMozJPEG();
 }
