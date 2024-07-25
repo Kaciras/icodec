@@ -29,6 +29,8 @@ if (process.platform === "win32") {
 
 let cmakeBuilder = null;
 
+mkdirSync("dist", { recursive: true });
+
 function gitClone(directory, branch, url) {
 	if (!existsSync(directory)) {
 		execFileSync("git", ["clone", "--depth", "1", "--branch", branch, url, directory]);
