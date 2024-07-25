@@ -159,14 +159,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 		return val(avifResultToString(addImageResult));
 	}
 
-	auto js_result = toUint8(output.data, output.size);
+	auto js_result = toUint8Array(output.data, output.size);
 
 	avifRWDataFree(&output);
 	return js_result;
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_AVIF)
 {
+	function("encode", &encode);
+
 	value_object<AvifOptions>("AvifOptions")
 		.field("quality", &AvifOptions::quality)
 		.field("qualityAlpha", &AvifOptions::qualityAlpha)
@@ -179,6 +181,4 @@ EMSCRIPTEN_BINDINGS(my_module)
 		.field("denoiseLevel", &AvifOptions::denoiseLevel)
 		.field("subsample", &AvifOptions::subsample)
 		.field("enableSharpYUV", &AvifOptions::enableSharpYUV);
-
-	function("encode", &encode);
 }

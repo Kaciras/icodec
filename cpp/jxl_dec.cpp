@@ -2,6 +2,7 @@
 #include <emscripten/val.h>
 
 #include <jxl/decode.h>
+#include <jxl/decode_cxx.h>
 #include "lib/jxl/color_encoding_internal.h"
 #include "skcms.h"
 #include "icodec.h"
@@ -41,30 +42,31 @@ using namespace emscripten;
 #define EXPECT_EQ(a, b) EXPECT_TRUE((a) == (b));
 #endif
 
-val decode(std::string data)
+val decode(std::string input)
 {
-	std::unique_ptr<JxlDecoder, 
-			std::integral_constant<decltype(&JxlDecoderDestroy), JxlDecoderDestroy>>
-		dec(JxlDecoderCreate(nullptr));
+	auto dec = JxlDecoderMake(nullptr);
 
-	EXPECT_EQ(JXL_DEC_SUCCESS,
-			  JxlDecoderSubscribeEvents(
-				  dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE));
+	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE));
 
-	auto next_in = (const uint8_t *)data.c_str();
-	auto avail_in = data.size();
+	auto next_in = (const uint8_t *)input.c_str();
+	auto avail_in = input.size();
+
 	JxlDecoderSetInput(dec.get(), next_in, avail_in);
 	EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec.get()));
+
 	JxlBasicInfo info;
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
+
 	size_t pixel_count = info.xsize * info.ysize;
 	size_t component_count = pixel_count * COMPONENTS_PER_PIXEL;
 
 	EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get()));
 	static const JxlPixelFormat format = {COMPONENTS_PER_PIXEL, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
+
 	size_t icc_size;
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetICCProfileSize(dec.get(), &format,
 														   JXL_COLOR_PROFILE_TARGET_DATA, &icc_size));
+
 	std::vector<uint8_t> icc_profile(icc_size);
 	EXPECT_EQ(JXL_DEC_SUCCESS,
 			  JxlDecoderGetColorAsICCProfile(dec.get(), &format, JXL_COLOR_PROFILE_TARGET_DATA,
@@ -94,7 +96,7 @@ val decode(std::string data)
 	return toImageData(byte_pixels.get(), info.xsize, info.ysize);
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
 {
 	function("decode", &decode);
 }

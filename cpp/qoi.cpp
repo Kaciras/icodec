@@ -19,7 +19,7 @@ val encode(string buffer, uint32_t width, uint32_t height)
 	{
 		return val::null();
 	}
-	return toUint8(toRAII(encoded, free).get(), outSize);
+	return toUint8Array(toRAII(encoded, free).get(), outSize);
 }
 
 val decode(string input)
@@ -32,7 +32,7 @@ val decode(string input)
 	return toImageData(result.get(), desc.width, desc.height);
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_QOI)
 {
 	function("encode", &encode);
 	function("decode", &decode);

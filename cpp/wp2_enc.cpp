@@ -2,11 +2,11 @@
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
 #include <cstdio>
+#include "icodec.h"
 #include "src/wp2/encode.h"
 
 using namespace emscripten;
-
-thread_local const val Uint8Array = val::global("Uint8Array");
+using std::string;
 
 struct WP2Options
 {
@@ -21,7 +21,7 @@ struct WP2Options
 	bool use_random_matrix;
 };
 
-val encode(std::string image_in, int image_width, int image_height, WP2Options options)
+val encode(string input, int width, int height, WP2Options options)
 {
 	WP2::EncoderConfig config = {};
 
@@ -35,11 +35,11 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
 	config.error_diffusion = options.error_diffusion;
 	config.use_random_matrix = options.use_random_matrix;
 
-	uint8_t *image_buffer = (uint8_t *)image_in.c_str();
+	auto buffer = (uint8_t *)input.c_str();
 	WP2::ArgbBuffer src = WP2::ArgbBuffer();
-	WP2Status status =
-		src.Import(WP2_rgbA_32, // Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
-				   image_width, image_height, image_buffer, 4 * image_width);
+
+	// Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
+	WP2Status status = src.Import(WP2_rgbA_32, width, height, buffer, 4 * width);
 	if (status != WP2_STATUS_OK)
 	{
 		return val::null();
@@ -47,18 +47,19 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
 
 	WP2::MemoryWriter memory_writer;
 	// In WebP2, thread_level is number of *extra* threads to use (0 for no multithreading).
-	config.thread_level = emscripten_num_logical_cores() - 1;
+	// config.thread_level = emscripten_num_logical_cores() - 1;
 	status = WP2::Encode(src, &memory_writer, config);
 	if (status != WP2_STATUS_OK)
 	{
 		return val::null();
 	}
-
-	return Uint8Array.new_(typed_memory_view(memory_writer.size_, memory_writer.mem_));
+	return toUint8Array(memory_writer.mem_, memory_writer.size_);
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_WebP2)
 {
+	function("encode", &encode);
+
 	value_object<WP2Options>("WP2Options")
 		.field("quality", &WP2Options::quality)
 		.field("alpha_quality", &WP2Options::alpha_quality)
@@ -69,6 +70,4 @@ EMSCRIPTEN_BINDINGS(my_module)
 		.field("error_diffusion", &WP2Options::error_diffusion)
 		.field("use_random_matrix", &WP2Options::use_random_matrix)
 		.field("sns", &WP2Options::sns);
-
-	function("encode", &encode);
 }

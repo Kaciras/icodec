@@ -42,7 +42,7 @@ val decode(std::string input)
 	return result;
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_AVIF)
 {
 	function("decode", &decode);
 }

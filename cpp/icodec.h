@@ -20,7 +20,7 @@ val toImageData(uint8_t *rgba, size_t width, size_t height)
 	return ImageData.new_(data, width, height);
 }
 
-val toUint8(uint8_t *bytes, size_t length)
+val toUint8Array(uint8_t *bytes, size_t length)
 {
 	return Uint8Array.new_(typed_memory_view(length, (const uint8_t *)bytes));
 }

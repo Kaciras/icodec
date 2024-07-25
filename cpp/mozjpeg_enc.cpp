@@ -35,8 +35,6 @@ struct MozJpegOptions
 	int chroma_quality;
 };
 
-thread_local const val Uint8Array = val::global("Uint8Array");
-
 val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts)
 {
 	auto image_buffer = (uint8_t *)image_in.c_str();
@@ -60,18 +58,11 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	jpeg_create_compress(&cinfo);
 
 	/* Step 2: specify data destination (eg, a file) */
-
-	/* Here we use the library-supplied code to send compressed data to a
-	 * stdio stream.  You can also write your own code to do something else.
-	 * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
-	 * requires it in order to write binary files.
-	 */
 	uint8_t *output = nullptr;
 	unsigned long size = 0;
 	jpeg_mem_dest(&cinfo, &output, &size);
 
 	/* Step 3: set parameters for compression */
-
 	cinfo.image_width = image_width;
 	cinfo.image_height = image_height;
 	cinfo.input_components = 4;
@@ -107,14 +98,11 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	// A little hacky to build a string for this, but it means we can use
 	// set_quality_ratings which does some useful heuristic stuff.
 	std::string quality_str = std::to_string(opts.quality);
-
 	if (opts.separate_chroma_quality && opts.color_space == JCS_YCbCr)
 	{
 		quality_str += "," + std::to_string(opts.chroma_quality);
 	}
-
 	char const *pqual = quality_str.c_str();
-
 	set_quality_ratings(&cinfo, (char *)pqual, opts.baseline);
 
 	if (!opts.auto_subsample && opts.color_space == JCS_YCbCr)
@@ -153,33 +141,28 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
 	while (cinfo.next_scanline < cinfo.image_height)
 	{
-		/* jpeg_write_scanlines expects an array of pointers to scanlines.
+		/* 
+		 * jpeg_write_scanlines expects an array of pointers to scanlines.
 		 * Here the array is only one element long, but you could pass
 		 * more than one scanline at a time if that's more convenient.
 		 */
-
-		JSAMPROW row_pointer =
-			&image_buffer[cinfo.next_scanline * row_stride]; /* pointer to JSAMPLE row[s] */
+		JSAMPROW row_pointer = &image_buffer[cinfo.next_scanline * row_stride];
 		(void)jpeg_write_scanlines(&cinfo, &row_pointer, 1);
 	}
 
 	/* Step 6: Finish compression */
 	jpeg_finish_compress(&cinfo);
-
-	/* Step 7: release JPEG compression object */
-
-	auto js_result = Uint8Array.new_(typed_memory_view(size, output));
-
-	/* This is an important step since it will release a good deal of memory. */
 	jpeg_destroy_compress(&cinfo);
-	free(output);
 
-	/* And we're done! */
+	auto js_result = toUint8Array(output, size);
+	free(output);
 	return js_result;
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)
 {
+	function("encode", &encode);
+
 	value_object<MozJpegOptions>("MozJpegOptions")
 		.field("quality", &MozJpegOptions::quality)
 		.field("baseline", &MozJpegOptions::baseline)
@@ -197,6 +180,4 @@ EMSCRIPTEN_BINDINGS(my_module)
 		.field("auto_subsample", &MozJpegOptions::auto_subsample)
 		.field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
 		.field("chroma_quality", &MozJpegOptions::chroma_quality);
-
-	function("encode", &encode);
 }

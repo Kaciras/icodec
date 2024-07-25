@@ -36,11 +36,13 @@ val encode(std::string img, int width, int height, WebPConfig config)
 	WebPPictureFree(&pic);
 
 	auto result = toRAII(&writer, WebPMemoryWriterClear);
-	return ok ? toUint8(writer.mem, writer.size) : val::null();
+	return ok ? toUint8Array(writer.mem, writer.size) : val::null();
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_WebP)
 {
+	function("encode", &encode);
+
 	enum_<WebPImageHint>("WebPImageHint")
 		.value("WEBP_HINT_DEFAULT", WebPImageHint::WEBP_HINT_DEFAULT)
 		.value("WEBP_HINT_PICTURE", WebPImageHint::WEBP_HINT_PICTURE)
@@ -74,6 +76,4 @@ EMSCRIPTEN_BINDINGS(my_module)
 		.field("exact", &WebPConfig::exact)
 		.field("use_delta_palette", &WebPConfig::use_delta_palette)
 		.field("use_sharp_yuv", &WebPConfig::use_sharp_yuv);
-
-	function("encode", &encode);
 }

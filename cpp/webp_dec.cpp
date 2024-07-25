@@ -22,7 +22,7 @@ val decode(std::string buffer)
 	return toImageData(rgba.get(), width, height);
 }
 
-EMSCRIPTEN_BINDINGS(my_module)
+EMSCRIPTEN_BINDINGS(icodec_module_WebP)
 {
 	function("decode", &decode);
 }
