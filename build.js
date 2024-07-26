@@ -4,7 +4,7 @@ import { join } from "path";
 
 export const config = {
 	/**
-	 * Force rebuild static link libraries, it takes more time.
+	 * Force rebuild 3rd-party libraries, it will take more time.
 	 */
 	rebuild: false,
 
@@ -52,7 +52,7 @@ function cmake(checkFile, src, dist, options) {
 	if (!config.rebuild && existsSync(checkFile)) {
 		return;
 	}
-	const args = ["cmake", "-S", src, "-B", dist];
+	const args = ["cmake", "-S", src, "-B", dist, "--fresh"];
 	if (config.cmakeBuilder) {
 		args.push("-G", config.cmakeBuilder);
 	}
