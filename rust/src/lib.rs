@@ -1,6 +1,12 @@
+use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
 use imagequant::RGBA;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+
+#[global_allocator]
+static ALLOC: AssumeSingleThreaded<FreeListAllocator> = unsafe {
+	AssumeSingleThreaded::new(FreeListAllocator::new())
+};
 
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
