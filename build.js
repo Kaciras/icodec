@@ -9,9 +9,16 @@ export const config = {
 	rebuild: false,
 
 	/**
+	 * Set to true to build in debug more, default is release.
+	 */
+	debug: false,
+
+	/**
 	 * Build in 64-bit WASM, allows to access more than 4GB RAM.
 	 * This is an experimental feature.
 	 * https://github.com/WebAssembly/memory64/blob/main/proposals/memory64/Overview.md
+	 *
+	 * You'll also need to rebuild if you previously built 32-bit version.
 	 */
 	wasm64: false,
 
@@ -30,16 +37,42 @@ function gitClone(directory, branch, url) {
 	}
 }
 
-function emcc(output, inputArguments) {
+function cmake(checkFile, src, dist, options) {
+	if (!config.rebuild && existsSync(checkFile)) {
+		return;
+	}
+	const args = [
+		"cmake", "-S", src, "-B", dist, "--fresh",
+		"-Wno-dev", "-DCMAKE_WARN_DEPRECATED=OFF",
+	];
+	if (config.cmakeBuilder) {
+		args.push("-G", config.cmakeBuilder);
+	}
+	if (config.wasm64) {
+		args.push("-DCMAKE_C_FLAGS=-sMEMORY64");
+		args.push("-DCMAKE_CXX_FLAGS=-sMEMORY64");
+	}
+	if (config.debug) {
+		args.push("-DCMAKE_BUILD_TYPE=Debug");
+	}
+	for (const [k, v] of Object.entries(options)) {
+		args.push(`-D${k}=${v}`);
+	}
+	execFileSync("emcmake", args, { stdio: "inherit", shell: true });
+	execFileSync("cmake", ["--build", "."], { cwd: dist, stdio: "inherit" });
+}
+
+function emcc(output, sourceArguments) {
 	output = "dist/" + output;
 	const args = [
-		"-O3", "--bind",
+		config.debug ? "-g" : "-O3",
+		"--bind",
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
 		"-I", "cpp",
 		"-o", output,
-		...inputArguments,
+		...sourceArguments,
 	];
 	if (config.wasm64) {
 		args.push("-s", "MEMORY64=1");
@@ -48,24 +81,7 @@ function emcc(output, inputArguments) {
 	console.info(`Successfully build WASM module: ${output}`);
 }
 
-function cmake(checkFile, src, dist, options) {
-	if (!config.rebuild && existsSync(checkFile)) {
-		return;
-	}
-	const args = ["cmake", "-S", src, "-B", dist, "--fresh"];
-	if (config.cmakeBuilder) {
-		args.push("-G", config.cmakeBuilder);
-	}
-	if (config.wasm64) {
-		args.push("-DCMAKE_C_FLAGS=-sMEMORY64");
-		args.push("-DCMAKE_CXX_FLAGS=-sMEMORY64");
-	}
-	for (const [k, v] of Object.entries(options)) {
-		args.push(`-D${k}=${v}`);
-	}
-	execFileSync("emcmake", args, { stdio: "inherit", shell: true });
-	execFileSync("cmake", ["--build", "."], { cwd: dist, stdio: "inherit" });
-}
+// ============================== Build Coders ==============================
 
 export function buildMozJPEG() {
 	gitClone("vendor/mozjpeg", "v4.1.5", "https://github.com/mozilla/mozjpeg");
@@ -92,13 +108,15 @@ export function buildPNGQuant() {
 	// https://github.com/rustwasm/wasm-pack/blob/62ab39cf82ec4d358c1f08f348cd0dc44768f412/src/command/build.rs#L116
 	const args = [
 		"build", "rust",
-		// "--dev",
 		"--no-typescript",
 		"--no-pack",
 		"--reference-types",
 		"--weak-refs",
 		"--target", "web",
 	];
+	if (config.debug) {
+		args.push("--dev");
+	}
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
 	// `--out-dir` cannot be out of the rust workspace.
@@ -154,7 +172,6 @@ export function buildJXL() {
 		JPEGXL_ENABLE_DOXYGEN: "0",
 		JPEGXL_ENABLE_EXAMPLES: "0",
 	});
-
 	const libs = [
 		"-I vendor/libjxl/third_party/highway",
 		"-I vendor/libjxl/third_party/skcms",
@@ -210,15 +227,12 @@ export function buildAVIF() {
 
 	emcc("avif-enc.js", [
 		"-I vendor/libavif/include",
-
 		"cpp/avif_enc.cpp",
 		"vendor/libavif/libavif.a",
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
 	]);
-
 	emcc("avif-dec.js", [
 		"-I vendor/libavif/include",
-
 		"cpp/avif_dec.cpp",
 		"vendor/libavif/libavif.a",
 		"vendor/libavif/ext/aom/build.libavif/libaom.a",
@@ -231,7 +245,6 @@ export function buildWebP2() {
 		"main",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	);
-
 	// mkdirSync("vendor/wp2_build", { recursive: true });
 
 	cmake("vendor/wp2_build/libwebp2.a", "vendor/libwebp2", "vendor/wp2_build", {
@@ -243,7 +256,6 @@ export function buildWebP2() {
 		CMAKE_DISABLE_FIND_PACKAGE_Threads: "1",
 		WP2_ENABLE_SIMD: "1",
 	});
-
 	emcc("wp2-enc.js", [
 		"-I vendor/libwebp2/src/wp2",
 		"cpp/wp2_enc.cpp",
@@ -253,11 +265,11 @@ export function buildWebP2() {
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
-	buildWebP();
-	buildAVIF();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildPNGQuant();
+	// buildMozJPEG();
 	buildWebP2();
-	buildJXL();
-	buildQOI();
-	buildPNGQuant();
-	buildMozJPEG();
 }
