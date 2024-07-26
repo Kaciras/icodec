@@ -8,16 +8,16 @@
 
 using namespace emscripten;
 
-val encode(std::string img, int width, int height, WebPConfig config)
+val encode(std::string input, int width, int height, WebPConfig config)
 {
-	auto img_in = (uint8_t *)img.c_str();
+	auto rgba = reinterpret_cast<uint8_t *>(input.data());
 	WebPPicture pic;
 	WebPMemoryWriter writer;
 
 	if (!WebPPictureInit(&pic))
 	{
 		// shouldn't happen, except if system installation is broken
-		return val::null();
+		return val("WebPPictureInit");
 	}
 
 	// Allow quality to go higher than 0.
@@ -32,11 +32,12 @@ val encode(std::string img, int width, int height, WebPConfig config)
 
 	WebPMemoryWriterInit(&writer);
 
-	int ok = WebPPictureImportRGBA(&pic, img_in, width * 4) && WebPEncode(&config, &pic);
+	auto stride = width * CHANNELS_RGB;
+	int ok = WebPPictureImportRGBA(&pic, rgba, stride) && WebPEncode(&config, &pic);
 	WebPPictureFree(&pic);
 
-	auto result = toRAII(&writer, WebPMemoryWriterClear);
-	return ok ? toUint8Array(writer.mem, writer.size) : val::null();
+	auto _ = toRAII(&writer, WebPMemoryWriterClear);
+	return ok ? toUint8Array(writer.mem, writer.size) : val("WebPEncode");
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_WebP)

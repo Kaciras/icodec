@@ -2,9 +2,15 @@
 
 using namespace emscripten;
 
+// The target platform is the browser, which does not yet support 10 bit color.
+#define COLOR_DEPTH 8
+
+// We want RGBA bytes in raw image data.
+#define CHANNELS_RGB 4
+
 thread_local const val Uint8Array = val::global("Uint8Array");
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
-thread_local const val ImageData = val::global("_ICODEC_ImageData");
+thread_local const val ImageData = val::global("_ICodec_ImageData");
 
 template <typename T, typename Deletion>
 std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
@@ -12,10 +18,9 @@ std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
 	return { pointer, deletion };
 }
 
-val toImageData(uint8_t *rgba, size_t width, size_t height)
+val toImageData(uint8_t *bytes, uint32_t width, uint32_t height)
 {
-	auto length = width * height * 4;
-	auto view = typed_memory_view(4 * width * height, rgba);
+	auto view = typed_memory_view(CHANNELS_RGB * width * height, bytes);
 	auto data = Uint8ClampedArray.new_(view);
 	return ImageData.new_(data, width, height);
 }

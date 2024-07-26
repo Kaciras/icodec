@@ -9,6 +9,7 @@
 
 using namespace emscripten;
 using namespace jxl;
+
 using std::string;
 
 struct JXLOptions
@@ -25,6 +26,8 @@ struct JXLOptions
 
 val encode(string image, int width, int height, JXLOptions options)
 {
+	static const JxlPixelFormat format = {CHANNELS_RGB, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+
 	CompressParams cparams;
 	PassesEncoderState passes_enc_state;
 	CodecInOut io;
@@ -86,27 +89,26 @@ val encode(string image, int width, int height, JXLOptions options)
 	io.metadata.m.SetAlphaBits(8);
 	if (!io.metadata.size.Set(width, height))
 	{
-		return val("jxl::SizeHeader::Set failed");
+		return val("jxl::SizeHeader::Set");
 	}
 
 	auto inBuffer = reinterpret_cast<const uint8_t *>(image.data());
 	auto span = Span(inBuffer, image.size());
-	JxlPixelFormat pixel_format = {4, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
 	auto status = ConvertFromExternal(
 		span, width, height,
-		ColorEncoding::SRGB(/*is_gray=*/false),
-		8, pixel_format, pool_ptr, main);
-
+		ColorEncoding::SRGB(false),
+		8, format, pool_ptr, main
+	);
 	if (!status)
 	{
-		return val("jxl::ConvertFromExternal failed");
+		return val("jxl::ConvertFromExternal");
 	}
 
 	status = EncodeFile(cparams, &io, &passes_enc_state, &bytes, GetJxlCms(), nullptr, pool_ptr);
 	if (!status)
 	{
-		return val("jxl::EncodeFile failed");
+		return val("jxl::EncodeFile");
 	}
 	return toUint8Array(bytes.data(), bytes.size());
 }

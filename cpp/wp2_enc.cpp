@@ -39,7 +39,7 @@ val encode(string input, int width, int height, WP2Options options)
 	WP2::ArgbBuffer src = WP2::ArgbBuffer();
 
 	// Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
-	WP2Status status = src.Import(WP2_rgbA_32, width, height, buffer, 4 * width);
+	WP2Status status = src.Import(WP2_rgbA_32, width, height, buffer, CHANNELS_RGB * width);
 	if (status != WP2_STATUS_OK)
 	{
 		return val::null();

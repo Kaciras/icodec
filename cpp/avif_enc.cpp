@@ -1,14 +1,13 @@
+#include <memory>
+#include <string>
 #include <emscripten/bind.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+#include "icodec.h"
 #include "avif/avif.h"
-
-#include <memory>
-#include <string>
 
 using namespace emscripten;
 
-using AvifImagePtr = std::unique_ptr<avifImage, decltype(&avifImageDestroy)>;
 using AvifEncoderPtr = std::unique_ptr<avifEncoder, decltype(&avifEncoderDestroy)>;
 
 struct AvifOptions
@@ -26,11 +25,10 @@ struct AvifOptions
 	bool enableSharpYUV;
 };
 
-val encode(std::string buffer, int width, int height, AvifOptions options)
+val encode(std::string input, int width, int height, AvifOptions options)
 {
 	avifResult status; // To check the return status for avif API's
 
-	int depth = 8;
 	avifPixelFormat format;
 	switch (options.subsample)
 	{
@@ -53,7 +51,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 					format == AVIF_PIXEL_FORMAT_YUV444;
 
 	// Smart pointer for the input image in YUV format
-	AvifImagePtr image(avifImageCreate(width, height, depth, format), avifImageDestroy);
+	auto image = toRAII(avifImageCreate(width, height, COLOR_DEPTH, format), avifImageDestroy);
 	if (image == nullptr)
 	{
 		return val("Out of memory");
@@ -68,12 +66,10 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 		image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT601;
 	}
 
-	uint8_t *rgba = reinterpret_cast<uint8_t *>(const_cast<char *>(buffer.data()));
-
 	avifRGBImage srcRGB;
 	avifRGBImageSetDefaults(&srcRGB, image.get());
-	srcRGB.pixels = rgba;
-	srcRGB.rowBytes = width * 4;
+	srcRGB.pixels = reinterpret_cast<uint8_t *>(input.data());
+	srcRGB.rowBytes = width * CHANNELS_RGB;
 	if (options.enableSharpYUV)
 	{
 		srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
@@ -82,11 +78,11 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 	status = avifImageRGBToYUV(image.get(), &srcRGB);
 	if (status != AVIF_RESULT_OK)
 	{
-		return val(avifResultToString(addImageResult));
+		return val(avifResultToString(status));
 	}
 
 	// Create a smart pointer for the encoder
-	AvifEncoderPtr encoder(avifEncoderCreate(), avifEncoderDestroy);
+	auto encoder = toRAII(avifEncoderCreate(), avifEncoderDestroy);
 	if (image == nullptr)
 	{
 		return val("Out of memory");
@@ -102,7 +98,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 		status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness", std::to_string(options.sharpness).c_str());
 		if (status != AVIF_RESULT_OK)
 		{
-			return val(avifResultToString(addImageResult));
+			return val(avifResultToString(status));
 		}
 
 		encoder->quality = options.quality;
@@ -120,7 +116,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 			status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
 			if (status != AVIF_RESULT_OK)
 			{
-				return val(avifResultToString(addImageResult));
+				return val(avifResultToString(status));
 			}
 		}
 
@@ -129,15 +125,14 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 			status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
 			if (status != AVIF_RESULT_OK)
 			{
-				return val(avifResultToString(addImageResult));
+				return val(avifResultToString(status));
 			}
 		}
 
-		status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level",
-												   std::to_string(options.denoiseLevel).c_str());
+		status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
 		if (status != AVIF_RESULT_OK)
 		{
-			return val(avifResultToString(addImageResult));
+			return val(avifResultToString(status));
 		}
 	}
 
@@ -146,17 +141,11 @@ val encode(std::string buffer, int width, int height, AvifOptions options)
 	encoder->tileColsLog2 = options.tileColsLog2;
 	encoder->speed = options.speed;
 
-	avifResult addImageResult = avifEncoderAddImage(encoder.get(), image.get(), 1, AVIF_ADD_IMAGE_FLAG_SINGLE);
-	if (addImageResult != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(addImageResult));
-	}
-
 	avifRWData output = AVIF_DATA_EMPTY;
-	avifResult finishResult = avifEncoderFinish(encoder.get(), &output);
-	if (finishResult != AVIF_RESULT_OK)
+	status = avifEncoderWrite(encoder.get(), image.get(), &output);
+	if (status != AVIF_RESULT_OK)
 	{
-		return val(avifResultToString(addImageResult));
+		return val(avifResultToString(status));
 	}
 
 	auto js_result = toUint8Array(output.data, output.size);

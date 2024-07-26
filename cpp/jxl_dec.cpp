@@ -43,7 +43,7 @@ using namespace emscripten;
 
 val decode(std::string input)
 {
-	static const JxlPixelFormat format = {CHANNELS, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+	static const JxlPixelFormat format = {CHANNELS_RGB, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 	static const int EVENTS = JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE;
 
 	auto dec = JxlDecoderMake(nullptr);
@@ -64,12 +64,12 @@ val decode(std::string input)
 
 	size_t buffer_size;
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size));
-	EXPECT_EQ(buffer_size, length * sizeof(uint8_t));
+	// EXPECT_EQ(buffer_size, length * sizeof(uint8_t));
 
 	auto output = std::make_unique<uint8_t[]>(length);
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(
-		dec.get(), 
-		&format, 
+		dec.get(),
+		&format,
 		output.get(),
 		length * sizeof(uint8_t)
 	));

@@ -14,7 +14,7 @@ val decode(std::string input)
 		return val("Memory allocation failure");
 	}
 
-	auto status = avifDecoderReadMemory(decoder.get(), image.get(), (uint8_t *)input.c_str(), input.length());
+	auto status = avifDecoderReadMemory(decoder.get(), image.get(), (uint8_t *)input.data(), input.length());
 	if (status != AVIF_RESULT_OK)
 	{
 		return val(avifResultToString(status));
@@ -23,7 +23,7 @@ val decode(std::string input)
 	// Convert to interleaved RGB(A)/BGR(A) using a libavif-allocated buffer.
 	avifRGBImage rgb;
 	avifRGBImageSetDefaults(&rgb, image.get()); // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
-	rgb.depth = 8;
+	rgb.depth = COLOR_DEPTH;
 
 	status = avifRGBImageAllocatePixels(&rgb);
 	if (status != AVIF_RESULT_OK)

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "icodec.h"
 #include "jconfig.h"
 #include "jpeglib.h"
 
@@ -47,7 +48,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	jpeg_compress_struct cinfo;
 	jpeg_error_mgr jerr;
 
-	/* 
+	/*
 	 * We have to set up the error handler first, in case the initialization
 	 * step fails.  (Unlikely, but it could happen if you are out of memory.)
 	 * This routine fills in the contents of struct jerr, and returns jerr's
@@ -65,10 +66,10 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	/* Step 3: set parameters for compression */
 	cinfo.image_width = image_width;
 	cinfo.image_height = image_height;
-	cinfo.input_components = 4;
+	cinfo.input_components = CHANNELS_RGB;
 	cinfo.in_color_space = JCS_EXT_RGBA;
 
-	/* 
+	/*
 	 * Now use the library's routine to set default compression parameters.
 	 * (You must set at least cinfo.in_color_space before calling this,
 	 * since the defaults depend on the source color space.)
@@ -141,7 +142,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
 	while (cinfo.next_scanline < cinfo.image_height)
 	{
-		/* 
+		/*
 		 * jpeg_write_scanlines expects an array of pointers to scanlines.
 		 * Here the array is only one element long, but you could pass
 		 * more than one scanline at a time if that's more convenient.
@@ -154,9 +155,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	jpeg_finish_compress(&cinfo);
 	jpeg_destroy_compress(&cinfo);
 
-	auto js_result = toUint8Array(output, size);
-	free(output);
-	return js_result;
+	return toUint8Array(toRAII(output, free).get(), size);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)

@@ -9,17 +9,15 @@
 
 using namespace emscripten;
 
-val decode(std::string buffer)
+val decode(std::string input)
 {
-	auto bytes = (const uint8_t *)buffer.c_str();
+	auto bytes = reinterpret_cast<uint8_t *>(input.data());
 	int width, height;
 
-	std::unique_ptr<uint8_t[]> rgba(WebPDecodeRGBA(bytes, buffer.size(), &width, &height));
-	if (!rgba)
-	{
-		return val::null();
-	}
-	return toImageData(rgba.get(), width, height);
+	auto rgba = WebPDecodeRGBA(bytes, input.size(), &width, &height);
+	std::unique_ptr<uint8_t[]> _(rgba);
+
+	return rgba ? toImageData(rgba, width, height) : val::null();
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_WebP)
