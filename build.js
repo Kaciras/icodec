@@ -1,6 +1,7 @@
 import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
+import { cpus } from "os";
 
 export const config = {
 	/**
@@ -26,6 +27,11 @@ export const config = {
 	 * Specify -G parameter of cmake, e.g. "Visual Studio 17 2022"
 	 */
 	cmakeBuilder: null,
+
+	/**
+	 * The maximum number of concurrent processes to use when building.
+	 */
+	parallel: cpus().length,
 };
 
 mkdirSync("dist", { recursive: true });
@@ -59,7 +65,9 @@ function cmake(checkFile, src, dist, options) {
 		args.push(`-D${k}=${v}`);
 	}
 	execFileSync("emcmake", args, { stdio: "inherit", shell: true });
-	execFileSync("cmake", ["--build", "."], { cwd: dist, stdio: "inherit" });
+
+	const buildArgs = ["--build", ".", "-j", config.parallel];
+	execFileSync("cmake", buildArgs, { cwd: dist, stdio: "inherit" });
 }
 
 function emcc(output, sourceArguments) {
