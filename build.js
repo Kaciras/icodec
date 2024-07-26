@@ -37,10 +37,11 @@ export const config = {
 mkdirSync("dist", { recursive: true });
 
 function gitClone(directory, branch, url) {
-	if (!existsSync(directory)) {
-		execFileSync("git", ["clone", "--depth", "1", "--branch", branch, url, directory]);
-		execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
+	if (existsSync(directory)) {
+		return;
 	}
+	execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, directory]);
+	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
 }
 
 function cmake(checkFile, src, dist, options) {
