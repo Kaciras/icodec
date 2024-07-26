@@ -2,32 +2,24 @@ import { execFileSync } from "child_process";
 import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
 
-function detectVisualStudio() {
-	const pf32 = process.env["ProgramFiles(x86)"];
-	if (!pf32) {
-		return;
-	}
-	const vswhere = `${pf32}/Microsoft Visual Studio/Installer/vswhere.exe`;
-	const stdout = execFileSync(vswhere, { encoding: "utf8" });
-	const properties = Object.fromEntries(stdout.split("\r\n").map(line => line.split(": ")));
+export const config = {
+	/**
+	 * Force rebuild static link libraries, it takes more time.
+	 */
+	rebuild: false,
 
-	const path = properties.resolvedInstallationPath;
-	return {
-		version: parseInt(properties.installationVersion),
-		path,
-		clang: path + "/VC/Tools/Llvm/x64/bin",
-		productVersion: properties.catalog_productLineVersion,
-	};
-}
+	/**
+	 * Build in 64-bit WASM, allows to access more than 4GB RAM.
+	 * This is an experimental feature.
+	 * https://github.com/WebAssembly/memory64/blob/main/proposals/memory64/Overview.md
+	 */
+	wasm64: false,
 
-let clangDirectory;
-
-if (process.platform === "win32") {
-	const vs = detectVisualStudio();
-	clangDirectory = vs.clang;
-}
-
-let cmakeBuilder = null;
+	/**
+	 * Specify -G parameter of cmake, e.g. "Visual Studio 17 2022"
+	 */
+	cmakeBuilder: null,
+};
 
 mkdirSync("dist", { recursive: true });
 
@@ -45,21 +37,28 @@ function emcc(output, inputArguments) {
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
-		"-I", "cpp/icodec.h",
+		"-I", "cpp",
 		"-o", output,
 		...inputArguments,
 	];
+	if (config.wasm64) {
+		args.push("-s", "MEMORY64=1");
+	}
 	execFileSync("emcc", args, { stdio: "inherit", shell: true });
 	console.info(`Successfully build WASM module: ${output}`);
 }
 
 function cmake(checkFile, src, dist, options) {
-	if (existsSync(checkFile)) {
+	if (!config.rebuild && existsSync(checkFile)) {
 		return;
 	}
 	const args = ["cmake", "-S", src, "-B", dist];
-	if (cmakeBuilder) {
-		args.push("-G", cmakeBuilder);
+	if (config.cmakeBuilder) {
+		args.push("-G", config.cmakeBuilder);
+	}
+	if (config.wasm64) {
+		args.push("-DCMAKE_C_FLAGS=-sMEMORY64");
+		args.push("-DCMAKE_CXX_FLAGS=-sMEMORY64");
 	}
 	for (const [k, v] of Object.entries(options)) {
 		args.push(`-D${k}=${v}`);
@@ -102,7 +101,7 @@ export function buildPNGQuant() {
 	];
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
-	// --out-dir cannot be out of the rust workspace.
+	// `--out-dir` cannot be out of the rust workspace.
 	renameSync("rust/pkg/pngquant.js", "dist/pngquant.js");
 	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
 }
@@ -156,20 +155,6 @@ export function buildJXL() {
 		JPEGXL_ENABLE_EXAMPLES: "0",
 	});
 
-	execFileSync("emcc", [
-		"-Wall", "-O3",
-		"-o", "vendor/libjxl/third_party/skcms/skcms.cc.o",
-		"-I", "vendor/libjxl/third_party/skcms",
-		"-c", "vendor/libjxl/third_party/skcms/skcms.cc",
-	], {
-		shell: true,
-	});
-	execFileSync(`${clangDirectory}/llvm-ar`, [
-		"rc",
-		"vendor/libjxl/third_party/libskcms.a",
-		"vendor/libjxl/third_party/skcms/skcms.cc.o",
-	]);
-
 	const libs = [
 		"-I vendor/libjxl/third_party/highway",
 		"-I vendor/libjxl/third_party/skcms",
@@ -179,10 +164,9 @@ export function buildJXL() {
 		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
 		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
 		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
-		// "vendor/libjxl/third_party/libskcms.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
 	];
-	// emcc("jxl-enc.js", [...libs, "cpp/jxl_enc.cpp"]);
+	emcc("jxl-enc.js", [...libs, "cpp/jxl_enc.cpp"]);
 	emcc("jxl-dec.js", [...libs, "cpp/jxl_dec.cpp"]);
 }
 
@@ -269,11 +253,11 @@ export function buildWebP2() {
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
-	// buildWebP();
-	// buildAVIF();
-	// buildWebP2();
+	buildWebP();
+	buildAVIF();
+	buildWebP2();
 	buildJXL();
-	// buildQOI();
-	// buildPNGQuant();
-	// buildMozJPEG();
+	buildQOI();
+	buildPNGQuant();
+	buildMozJPEG();
 }
