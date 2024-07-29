@@ -1,7 +1,7 @@
 import { execFileSync } from "child_process";
-import { existsSync, mkdirSync, renameSync } from "fs";
 import { join } from "path";
 import { cpus } from "os";
+import { existsSync, mkdirSync, renameSync } from "fs";
 
 export const config = {
 	/**
@@ -100,7 +100,7 @@ export function buildMozJPEG() {
 		WITH_TURBOJPEG: "0",
 		PNG_SUPPORTED: "0",
 	});
-	emcc("mozjpeg-enc.js", [
+	emcc("jpeg-enc.js", [
 		"-I vendor/mozjpeg",
 		"cpp/mozjpeg_enc.cpp",
 		"vendor/mozjpeg/libjpeg.a",
@@ -129,8 +129,8 @@ export function buildPNGQuant() {
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
 	// `--out-dir` cannot be out of the rust workspace.
-	renameSync("rust/pkg/pngquant.js", "dist/pngquant.js");
-	renameSync("rust/pkg/pngquant_bg.wasm", "dist/pngquant_bg.wasm");
+	renameSync("rust/pkg/png.js", "dist/png.js");
+	renameSync("rust/pkg/png_bg.wasm", "dist/png_bg.wasm");
 }
 
 export function buildQOI() {
@@ -261,24 +261,31 @@ export function buildWebP2() {
 		WP2_ENABLE_TESTS: "0",
 		WP2_BUILD_EXAMPLES: "0",
 		WP2_BUILD_EXTRAS: "0",
-		WP2_REDUCED: "1",
+		// WP2_REDUCED: "1", // TODO: fails in vdebug.cc
 		CMAKE_DISABLE_FIND_PACKAGE_Threads: "1",
 		WP2_ENABLE_SIMD: "1",
 	});
 	emcc("wp2-enc.js", [
-		"-I vendor/libwebp2/src/wp2",
+		"-I vendor/libwebp2",
 		"cpp/wp2_enc.cpp",
+		"vendor/wp2_build/libwebp2.a",
+	]);
+	emcc("wp2-dec.js", [
+		"-I vendor/libwebp2",
+		"cpp/wp2_dec.cpp",
 		"vendor/wp2_build/libwebp2.a",
 	]);
 }
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildPNGQuant();
-	// buildMozJPEG();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildPNGQuant();
+	buildMozJPEG();
 	buildWebP2();
+
+	// checkForUpdate();
 }

@@ -1,4 +1,4 @@
-import wasmFactoryEnc from "../dist/mozjpeg-enc.js";
+import wasmFactoryEnc from "../dist/jpeg-enc.js";
 import { check, loadES, WasmSource } from "./common.js";
 
 export const enum ColorSpace {
@@ -26,7 +26,7 @@ export interface Options {
 	chroma_quality: number;
 }
 
-const defaultOptions: Options = {
+export const defaultOptions: Options = {
 	quality: 75,
 	baseline: false,
 	arithmetic: false,

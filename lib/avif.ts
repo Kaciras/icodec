@@ -8,7 +8,7 @@ export enum AVIFTune {
 	SSIM,
 }
 
-interface Options {
+export interface Options {
 	// [0 - 100]
 	// 0 = worst quality
 	// 100 = lossless

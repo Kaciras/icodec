@@ -1,4 +1,4 @@
-import wasmFactory, { png_encode, quantize, quantize_to_png } from "../dist/pngquant.js";
+import wasmFactory, { png_encode, quantize, quantize_to_png } from "../dist/png.js";
 import { WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
@@ -53,9 +53,9 @@ export interface EncodeOptions {
 	interlace: boolean;
 }
 
-export type PNGQuantOptions = EncodeOptions & QuantizeOptions;
+export type Options = EncodeOptions & QuantizeOptions;
 
-export const defaultOptions: PNGQuantOptions = {
+export const defaultOptions: Options = {
 	speed: 4,
 	quality: 75,
 	min_quality: 0,
@@ -89,6 +89,6 @@ export function encode(data: any, width: number, height: number, options?: Encod
  *
  * This function implements the same functionality as [pngquant](https://pngquant.org).
  */
-export function optimize(data: any, width: number, height: number, options?: PNGQuantOptions) {
+export function optimize(data: any, width: number, height: number, options?: Options) {
 	return quantize_to_png(data, width, height, { ...defaultOptions, ...options });
 }

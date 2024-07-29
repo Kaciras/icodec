@@ -263,7 +263,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pngquant"
+name = "png"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
