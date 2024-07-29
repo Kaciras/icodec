@@ -53,6 +53,9 @@ export const defaultOptions: Options = {
 	enableSharpYUV: false,
 };
 
+export const mimeType = "image/avif";
+export const extension = "avif";
+
 let encoderWASM: any;
 let decoderWASM: any;
 

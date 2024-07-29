@@ -62,6 +62,9 @@ export const defaultOptions: Options = {
 	use_sharp_yuv: 0,
 };
 
+export const mimeType = "image/webp";
+export const extension = "webp";
+
 let encoderWASM: any;
 let decoderWASM: any;
 

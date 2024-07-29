@@ -24,6 +24,9 @@ export const defaultOptions :Options= {
 	lossyModular: false,
 };
 
+export const mimeType = "image/jxl";
+export const extension = "jxl";
+
 let encoderWASM: any;
 let decoderWASM: any;
 

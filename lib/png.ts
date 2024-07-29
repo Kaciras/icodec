@@ -64,6 +64,9 @@ export const defaultOptions: PNGQuantOptions = {
 	interlace: false,
 };
 
+export const mimeType = "image/png";
+export const extension = "png";
+
 export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<void>;
 
 /**

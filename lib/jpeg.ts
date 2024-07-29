@@ -45,6 +45,9 @@ const defaultOptions: Options = {
 	chroma_quality: 75,
 };
 
+export const mimeType = "image/jpeg";
+export const extension = "jpg";
+
 let encoderWASM: any;
 
 export async function loadEncoder(input?: WasmSource) {

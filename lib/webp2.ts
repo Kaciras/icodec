@@ -40,6 +40,9 @@ export const defaultOptions: Options = {
 	use_random_matrix: false,
 };
 
+export const mimeType = "image/webp2";
+export const extension = "wp2";
+
 let encoderWASM: any;
 let decoderWASM: any;
 

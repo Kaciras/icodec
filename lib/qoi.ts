@@ -1,6 +1,9 @@
 import wasmFactory from "../dist/qoi.js";
 import { check, loadES, WasmSource } from "./common.js";
 
+export const mimeType = "image/qoi";
+export const extension = "qoi";
+
 let codecWASM: any;
 
 export async function loadEncoder(input?: WasmSource) {
