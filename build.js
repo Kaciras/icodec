@@ -53,7 +53,7 @@ function cmake(checkFile, src, dist, options) {
 		"-Wno-dev", "-DCMAKE_WARN_DEPRECATED=OFF",
 	];
 	if (config.cmakeBuilder) {
-		args.push("-G", config.cmakeBuilder);
+		args.push("-G", `"${config.cmakeBuilder}"`);
 	}
 	if (config.wasm64) {
 		args.push("-DCMAKE_C_FLAGS=-sMEMORY64");
