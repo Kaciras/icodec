@@ -1,9 +1,31 @@
 {
 	"name": "@kaciras/icodec",
 	"version": "1.0.0",
+	"description": "WebAssembly image encoders & decoders",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
 	"type": "module",
+	"keywords": [
+		"WebAssembly",
+		"image",
+		"optimize",
+		"converter",
+		"webp",
+		"avif",
+		"qoi",
+		"mozjpeg",
+		"pngquant"
+	],
+	"files": [
+		"dist/*.{js,wasm}",
+		"lib/**/*.{js,d.ts}"
+	],
+	"exports": {
+		".": "./lib/index.js",
+		"./node": "./lib/node.js",
+		"./pngquant.wasm": "./dist/pngquant_bg.wasm",
+		"./*.wasm": "./dist/*.wasm"
+	},
 	"devDependencies": {
 		"@kaciras/eslint-config-core": "^3.1.0",
 		"@kaciras/eslint-config-typescript": "^3.1.0",
