@@ -1,8 +1,8 @@
-import type { EmscriptenModule } from "emscripten";
-import loadEncoderWASM from "../dist/jxl-enc.js";
-import loadDecoderWASM from "../dist/jxl-dec.js";
+import wasmFactoryEnc from "../dist/jxl-enc.js";
+import wasmFactoryDec from "../dist/jxl-dec.js";
+import { check, loadES, WasmSource } from "./common.js";
 
-export interface JXLOptions{
+export interface Options {
 	effort: number;
 	quality: number;
 	progressive: boolean;
@@ -13,7 +13,7 @@ export interface JXLOptions{
 	lossyModular: boolean;
 }
 
-const defaults :JXLOptions= {
+export const defaultOptions :Options= {
 	effort: 7,
 	quality: 75,
 	progressive: false,
@@ -24,37 +24,23 @@ const defaults :JXLOptions= {
 	lossyModular: false,
 };
 
-export const encoder = {
+let encoderWASM: any;
+let decoderWASM: any;
 
-	wasm: null as any,
+export async function loadEncoder(input?: WasmSource) {
+	encoderWASM = await loadES(wasmFactoryEnc, input);
+}
 
-	async initialize(input: EmscriptenModule) {
-		this.wasm = await loadEncoderWASM(input);
-	},
+export async function loadDecoder(input?: WasmSource) {
+	decoderWASM = await loadES(wasmFactoryDec, input);
+}
 
-	encode(data: BufferSource, width: number, height: number, options: JXLOptions) {
-		options = { ...defaults, ...options };
-		const result = this.wasm.encode(data, width, height, options);
-		if (typeof result !== "string") {
-			return result;
-		}
-		throw new Error(`Encode failed in ${result}`);
-	},
-};
+export function encode(data: BufferSource, width: number, height: number, options?: Options) {
+	options = { ...defaultOptions, ...options };
+	const result = encoderWASM.encode(data, width, height, options);
+	return check<Uint8Array>(result, "JXL Encode");
+}
 
-export const decoder = {
-
-	wasm: null as any,
-
-	async initialize(input: EmscriptenModule) {
-		this.wasm = await loadDecoderWASM(input);
-	},
-
-	decode(data: BufferSource) {
-		const result = this.wasm.decode(data);
-		if (typeof result !== "string") {
-			return result;
-		}
-		throw new Error(`Encode failed in ${result}`);
-	},
-};
+export function decode(input: BufferSource) {
+	return check<ImageData>(decoderWASM.decode(input), "JXL Decode");
+}

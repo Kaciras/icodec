@@ -1,20 +1,20 @@
-import loadWASM from "../dist/mozjpeg-enc.js";
-import { readFileSync } from "fs";
+import wasmFactoryEnc from "../dist/mozjpeg-enc.js";
+import { check, loadES, WasmSource } from "./common.js";
 
-export const enum MozJpegColorSpace {
+export const enum ColorSpace {
 	GRAYSCALE = 1,
 	RGB,
 	YCbCr,
 }
 
-export interface MozJPEGOptions {
+export interface Options {
 	quality: number;
 	baseline: boolean;
 	arithmetic: boolean;
 	progressive: boolean;
 	optimize_coding: boolean;
 	smoothing: number;
-	color_space: MozJpegColorSpace;
+	color_space: ColorSpace;
 	quant_table: number;
 	trellis_multipass: boolean;
 	trellis_opt_zero: boolean;
@@ -26,14 +26,14 @@ export interface MozJPEGOptions {
 	chroma_quality: number;
 }
 
-const defaultOptions: MozJPEGOptions = {
+const defaultOptions: Options = {
 	quality: 75,
 	baseline: false,
 	arithmetic: false,
 	progressive: true,
 	optimize_coding: true,
 	smoothing: 0,
-	color_space: MozJpegColorSpace.YCbCr,
+	color_space: ColorSpace.YCbCr,
 	quant_table: 3,
 	trellis_multipass: false,
 	trellis_opt_zero: false,
@@ -45,18 +45,14 @@ const defaultOptions: MozJPEGOptions = {
 	chroma_quality: 75,
 };
 
-let wasmModule: any;
+let encoderWASM: any;
 
-export async function initialize() {
-	const wasmBinary = readFileSync("dist/mozjpeg-enc.wasm");
-	wasmModule = await loadWASM({ wasmBinary });
+export async function loadEncoder(input?: WasmSource) {
+	encoderWASM = await loadES(wasmFactoryEnc, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options: MozJPEGOptions) {
+export function encode(data: BufferSource, width: number, height: number, options?: Options) {
 	options = { ...defaultOptions, ...options };
-	const result = wasmModule.encode(data, width, height, options);
-	if (result) {
-		return result;
-	}
-	throw new Error("Encode failed");
+	const result = encoderWASM.encode(data, width, height, options);
+	return check<Uint8Array>(result, "JPEG Encode");
 }

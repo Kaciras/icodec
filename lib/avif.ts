@@ -1,6 +1,6 @@
-import loadEncoderWASM from "../dist/avif-enc.js";
-import loadDecoderWASM from "../dist/avif-dec.js";
-import { readFileSync } from "fs";
+import wasmFactoryEnc from "../dist/avif-enc.js";
+import wasmFactoryDec from "../dist/avif-dec.js";
+import { check, loadES, WasmSource } from "./common.js";
 
 export enum AVIFTune {
 	Auto,
@@ -8,21 +8,38 @@ export enum AVIFTune {
 	SSIM,
 }
 
-interface AVIFOptions {
+interface Options {
+	// [0 - 100]
+	// 0 = worst quality
+	// 100 = lossless
 	quality: number;
+	// As above, but -1 means 'use quality'
 	qualityAlpha: number;
-	denoiseLevel: number;
+	// [0 - 6]
+	// Creates 2^n tiles in that dimension
 	tileRowsLog2: number;
+	// [0 - 10]
+	// 0 = slowest
+	// 10 = fastest
 	tileColsLog2: number;
 	speed: number;
+	// 0 = 4:0:0
+	// 1 = 4:2:0
+	// 2 = 4:2:2
+	// 3 = 4:4:4
 	subsample: number;
+	// Extra chroma compression
 	chromaDeltaQ: boolean;
+	// 0-7
 	sharpness: number;
-	enableSharpYUV: boolean;
+	// 0-50
+	denoiseLevel: number;
 	tune: AVIFTune;
+	// toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
+	enableSharpYUV: boolean;
 }
 
-const defaultOptions: AVIFOptions = {
+export const defaultOptions: Options = {
 	quality: 50,
 	qualityAlpha: -1,
 	denoiseLevel: 0,
@@ -36,29 +53,23 @@ const defaultOptions: AVIFOptions = {
 	enableSharpYUV: false,
 };
 
-let wasmModule: any;
-let wasmModule2: any;
+let encoderWASM: any;
+let decoderWASM: any;
 
-export async function initialize() {
-	const wasmBinary = readFileSync("dist/avif-enc.wasm");
-	const wasmBinary2 = readFileSync("dist/avif-dec.wasm");
-	wasmModule = await loadEncoderWASM({ wasmBinary });
-	wasmModule2 = await loadDecoderWASM({ wasmBinary: wasmBinary2 });
+export async function loadEncoder(input?: WasmSource) {
+	encoderWASM = await loadES(wasmFactoryEnc, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options: AVIFOptions) {
+export async function loadDecoder(input?: WasmSource) {
+	decoderWASM = await loadES(wasmFactoryDec, input);
+}
+
+export function encode(data: BufferSource, width: number, height: number, options?: Options) {
 	options = { ...defaultOptions, ...options };
-	const result = wasmModule.encode(data, width, height, options);
-	if (result) {
-		return result;
-	}
-	throw new Error("Encode failed");
+	const result = encoderWASM.encode(data, width, height, options);
+	return check<Uint8Array>(result, "AVIF Encode");
 }
 
-export function decode(image: BufferSource) {
-	const result =  wasmModule2.decode(image);
-	if (result) {
-		return result;
-	}
-	throw new Error("Decode failed");
+export function decode(input: BufferSource) {
+	return check<ImageData>(decoderWASM.decode(input), "AVIF Decode");
 }

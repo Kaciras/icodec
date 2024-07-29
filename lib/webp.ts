@@ -1,5 +1,6 @@
-import loadWASM from "../dist/webp-enc.js";
-import { readFileSync } from "fs";
+import wasmFactoryEnc from "../dist/webp-enc.js";
+import wasmFactoryDec from "../dist/webp-dec.js";
+import { check, loadES, WasmSource } from "./common.js";
 
 export interface Options {
 	quality: number;
@@ -31,7 +32,7 @@ export interface Options {
 	use_sharp_yuv: number;
 }
 
-const defaultOptions: Options = {
+export const defaultOptions: Options = {
 	quality: 75,
 	target_size: 0,
 	target_PSNR: 0,
@@ -61,18 +62,23 @@ const defaultOptions: Options = {
 	use_sharp_yuv: 0,
 };
 
-let wasmModule: any;
+let encoderWASM: any;
+let decoderWASM: any;
 
-export async function initialize() {
-	const wasmBinary = readFileSync("dist/webp-enc.wasm");
-	wasmModule = await loadWASM({ wasmBinary });
+export async function loadEncoder(input?: WasmSource) {
+	encoderWASM = await loadES(wasmFactoryEnc, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options: Options) {
+export async function loadDecoder(input?: WasmSource) {
+	decoderWASM = await loadES(wasmFactoryDec, input);
+}
+
+export function encode(data: BufferSource, width: number, height: number, options?: Options) {
 	options = { ...defaultOptions, ...options };
-	const result = wasmModule.encode(data, width, height, options);
-	if (result) {
-		return result;
-	}
-	throw new Error("Encode failed");
+	const result = encoderWASM.encode(data, width, height, options);
+	return check<Uint8Array>(result, "Webp Encode");
+}
+
+export function decode(input: BufferSource) {
+	return check<ImageData>(decoderWASM.decode(input), "Webp Decode");
 }

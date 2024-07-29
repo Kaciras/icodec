@@ -1,5 +1,5 @@
-import loadWASMRust, { png_encode, quantize, quantize_to_png } from "../dist/pngquant.js";
-import { readFileSync } from "fs";
+import wasmFactory, { png_encode, quantize, quantize_to_png } from "../dist/pngquant.js";
+import { WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
 	/**
@@ -64,22 +64,20 @@ export const defaultOptions: PNGQuantOptions = {
 	interlace: false,
 };
 
-export function initialize() {
-	return loadWASMRust(readFileSync("dist/pngquant_bg.wasm"));
-}
+export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<void>;
 
 /**
  * Reduces the colors used in the image at a slight loss,
  * using a combination of vector quantization algorithms.
  */
-export function reduceColors(data: any, width: number, height: number, options: QuantizeOptions) {
+export function reduceColors(data: any, width: number, height: number, options?: QuantizeOptions) {
 	return quantize(data, width, height, { ...defaultOptions, ...options });
 }
 
 /**
  * Encode the RGBA buffer to PNG format, this is a lossless operation.
  */
-export function encode(data: any, width: number, height: number, options: EncodeOptions) {
+export function encode(data: any, width: number, height: number, options?: EncodeOptions) {
 	return png_encode(data, width, height, { ...defaultOptions, ...options });
 }
 
@@ -88,6 +86,6 @@ export function encode(data: any, width: number, height: number, options: Encode
  *
  * This function implements the same functionality as [pngquant](https://pngquant.org).
  */
-export function optimize(data: any, width: number, height: number, options: PNGQuantOptions) {
+export function optimize(data: any, width: number, height: number, options?: PNGQuantOptions) {
 	return quantize_to_png(data, width, height, { ...defaultOptions, ...options });
 }
