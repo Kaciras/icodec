@@ -1,0 +1,26 @@
+body {
+	display: grid;
+	gap: 16px;
+	grid-template-areas: "input options" "image options";
+	grid-template-rows: auto 1fr;
+	grid-template-columns: 1fr 200px;
+
+	margin: 0;
+	height: 100vh;
+}
+
+button {
+	display: inline-flex;
+}
+
+#input {
+	grid-area: input;
+}
+
+#options {
+	grid-area: options;
+}
+
+canvas {
+	grid-area: image;aspect-ratio: unset;
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>ICodec Decoder Demo</title>
+	<script type='module' src='test/demo.js'></script>
+	<link rel='stylesheet' href='test/demo.css'>
+</head>
+<body>
+<section id='input'>
+
+	<label>
+		Select a file: <input id='file' type='file'>
+	</label>
+	<label>
+		Encoder:
+		<select>
+			<option>MozJPEG</option>
+			<option>PNGQuant</option>
+			<option>QOI</option>
+			<option>WebP</option>
+			<option>AVIF</option>
+			<option>JPEG XL</option>
+			<option>WebP2</option>
+		</select>
+	</label>
+</section>
+<canvas width='100' height='100'></canvas>
+<textarea id='options'></textarea>
+</body>
+</html>
