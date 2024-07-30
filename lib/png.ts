@@ -1,4 +1,4 @@
-import wasmFactory, { png_encode, quantize, quantize_to_png } from "../dist/png.js";
+import wasmFactory, { optimize, quantize } from "../dist/png.js";
 import { WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
@@ -36,7 +36,7 @@ export interface QuantizeOptions {
 	dithering: number;
 }
 
-export interface EncodeOptions {
+export interface Options extends QuantizeOptions {
 	/**
 	 * Range [0, 6], bigger means smallest file and slower compression.
 	 *
@@ -51,9 +51,17 @@ export interface EncodeOptions {
 	 * @default false
 	 */
 	interlace: boolean;
-}
 
-export type Options = EncodeOptions & QuantizeOptions;
+	/**
+	 * Lossy compress the image to PNG for significant file size reduction.
+	 * Implements the same functionality as [pngquant](https://pngquant.org)
+	 *
+	 * if set to false, properties from `QuantizeOptions` are ignored.
+	 *
+	 * @default true
+	 */
+	quantize: boolean;
+}
 
 export const defaultOptions: Options = {
 	speed: 4,
@@ -62,6 +70,7 @@ export const defaultOptions: Options = {
 	dithering: 1,
 	level: 3,
 	interlace: false,
+	quantize: true,
 };
 
 export const mimeType = "image/png";
@@ -73,22 +82,13 @@ export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<void>;
  * Reduces the colors used in the image at a slight loss,
  * using a combination of vector quantization algorithms.
  */
-export function reduceColors(data: any, width: number, height: number, options?: QuantizeOptions) {
+export function reduceColors(data: Uint8Array, width: number, height: number, options?: QuantizeOptions) {
 	return quantize(data, width, height, { ...defaultOptions, ...options });
 }
 
 /**
- * Encode the RGBA buffer to PNG format, this is a lossless operation.
+ * Encode the RGBA buffer to PNG format, with optional lossy compression.
  */
-export function encode(data: any, width: number, height: number, options?: EncodeOptions) {
-	return png_encode(data, width, height, { ...defaultOptions, ...options });
-}
-
-/**
- * Lossy compress the image to PNG for significant file size reduction.
- *
- * This function implements the same functionality as [pngquant](https://pngquant.org).
- */
-export function optimize(data: any, width: number, height: number, options?: Options) {
-	return quantize_to_png(data, width, height, { ...defaultOptions, ...options });
+export function encode(data: Uint8Array, width: number, height: number, options?: Options) {
+	return optimize(data, width, height, { ...defaultOptions, ...options });
 }

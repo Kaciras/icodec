@@ -2,6 +2,7 @@ use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
 use imagequant::RGBA;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+use serde_wasm_bindgen::from_value;
 
 #[global_allocator]
 static ALLOC: AssumeSingleThreaded<FreeListAllocator> = unsafe {
@@ -18,7 +19,7 @@ pub struct QuantizeOptions {
 
 #[wasm_bindgen]
 pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
-	let options: QuantizeOptions = serde_wasm_bindgen::from_value(options).unwrap_throw();
+	let options: QuantizeOptions = from_value(options).unwrap_throw();
 
 	let mut quantizer = imagequant::new();
 	quantizer.set_speed(options.speed).unwrap_throw();
@@ -48,14 +49,12 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 
 #[derive(Serialize, Deserialize)]
 pub struct EncodeOptions {
+	pub quantize: bool,
 	pub level: u8,
 	pub interlace: bool,
 }
 
-#[wasm_bindgen]
-pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> Vec<u8> {
-	let options: EncodeOptions = serde_wasm_bindgen::from_value(options).unwrap_throw();
-
+pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions) -> Vec<u8> {
 	let mut optimization = oxipng::Options::from_preset(options.level);
 	optimization.optimize_alpha = true;
 	optimization.interlace = Some(if options.interlace {
@@ -77,7 +76,10 @@ pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: JsValue) -> V
 // Data needs to be copied between the managed JS heap and the WASM memory,
 // so here we call two functions internally to avoid the copying overhead.
 #[wasm_bindgen]
-pub fn quantize_to_png(data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
-	let data = quantize(data, width, height, options.clone());
-	return png_encode(data, width as u32, height as u32, options)
+pub fn optimize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
+	let config: EncodeOptions = from_value(options.clone()).unwrap_throw();
+	if config.quantize {
+		data = quantize(data, width, height, options);
+	}
+	return png_encode(data, width as u32, height as u32, config)
 }
