@@ -28,7 +28,7 @@ export interface Options {
 	use_random_matrix?: boolean;
 }
 
-export const defaultOptions: Options = {
+export const defaultOptions: Required<Options> = {
 	quality: 75,
 	alpha_quality: 75,
 	effort: 5,

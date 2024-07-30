@@ -12,34 +12,34 @@ export interface Options {
 	// [0 - 100]
 	// 0 = worst quality
 	// 100 = lossless
-	quality: number;
+	quality?: number;
 	// As above, but -1 means 'use quality'
-	qualityAlpha: number;
+	qualityAlpha?: number;
 	// [0 - 6]
 	// Creates 2^n tiles in that dimension
-	tileRowsLog2: number;
+	tileRowsLog2?: number;
 	// [0 - 10]
 	// 0 = slowest
 	// 10 = fastest
-	tileColsLog2: number;
-	speed: number;
+	tileColsLog2?: number;
+	speed?: number;
 	// 0 = 4:0:0
 	// 1 = 4:2:0
 	// 2 = 4:2:2
 	// 3 = 4:4:4
-	subsample: number;
+	subsample?: number;
 	// Extra chroma compression
-	chromaDeltaQ: boolean;
+	chromaDeltaQ?: boolean;
 	// 0-7
-	sharpness: number;
+	sharpness?: number;
 	// 0-50
-	denoiseLevel: number;
-	tune: AVIFTune;
+	denoiseLevel?: number;
+	tune?: AVIFTune;
 	// toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
-	enableSharpYUV: boolean;
+	enableSharpYUV?: boolean;
 }
 
-export const defaultOptions: Options = {
+export const defaultOptions: Required<Options> = {
 	quality: 50,
 	qualityAlpha: -1,
 	denoiseLevel: 0,

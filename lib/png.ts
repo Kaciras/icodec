@@ -8,7 +8,7 @@ export interface QuantizeOptions {
 	 *
 	 * @default 4
 	 */
-	speed: number;
+	speed?: number;
 
 	/**
 	 * Range [0, 100], roughly like JPEG. the max 100 means best effort
@@ -18,7 +18,7 @@ export interface QuantizeOptions {
 	 *
 	 * @default 75
 	 */
-	quality: number;
+	quality?: number;
 
 	/**
 	 * If the minimum quality can't be met, the quantization will be aborted with an error.
@@ -26,14 +26,14 @@ export interface QuantizeOptions {
 	 *
 	 * @default 0
 	 */
-	min_quality: number;
+	min_quality?: number;
 
 	/**
 	 * Range [0, 1] float, set to 1 to get nice smooth image.
 	 *
 	 * @default 1
 	 */
-	dithering: number;
+	dithering?: number;
 }
 
 export interface Options extends QuantizeOptions {
@@ -42,7 +42,7 @@ export interface Options extends QuantizeOptions {
 	 *
 	 * @default 3
 	 */
-	level: number;
+	level?: number;
 
 	/**
 	 * Is the image made to support progressive loading?
@@ -50,7 +50,7 @@ export interface Options extends QuantizeOptions {
 	 *
 	 * @default false
 	 */
-	interlace: boolean;
+	interlace?: boolean;
 
 	/**
 	 * Lossy compress the image to PNG for significant file size reduction.
@@ -60,10 +60,10 @@ export interface Options extends QuantizeOptions {
 	 *
 	 * @default true
 	 */
-	quantize: boolean;
+	quantize?: boolean;
 }
 
-export const defaultOptions: Options = {
+export const defaultOptions: Required<Options> = {
 	speed: 4,
 	quality: 75,
 	min_quality: 0,

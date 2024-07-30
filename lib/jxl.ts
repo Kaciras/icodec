@@ -3,17 +3,17 @@ import wasmFactoryDec from "../dist/jxl-dec.js";
 import { check, loadES, WasmSource } from "./common.js";
 
 export interface Options {
-	effort: number;
-	quality: number;
-	progressive: boolean;
-	epf: number;
-	lossyPalette: boolean;
-	decodingSpeedTier: number;
-	photonNoiseIso: number;
-	lossyModular: boolean;
+	effort?: number;
+	quality?: number;
+	progressive?: boolean;
+	epf?: number;
+	lossyPalette?: boolean;
+	decodingSpeedTier?: number;
+	photonNoiseIso?: number;
+	lossyModular?: boolean;
 }
 
-export const defaultOptions :Options= {
+export const defaultOptions: Required<Options> = {
 	effort: 7,
 	quality: 75,
 	progressive: false,
