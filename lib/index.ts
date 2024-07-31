@@ -1,3 +1,5 @@
+import { WasmSource } from "./common.js";
+
 export * as avif from "./avif.js";
 export * as png from "./png.js";
 export * as jpeg from "./jpeg.js";
@@ -12,3 +14,21 @@ declare global {
 }
 
 globalThis._ICodec_ImageData = ImageData;
+
+export interface ICodecEncoder<T> {
+
+	defaultOptions: Required<T>;
+	mimeType: string;
+	extension: string;
+
+	loadEncoder(source?: WasmSource): Promise<void>;
+
+	encode(data: BufferSource, width: number, height: number, options?: T): Uint8Array;
+}
+
+export interface ICodecDecoder {
+
+	loadEncoder(source?: WasmSource): Promise<void>;
+
+	decode(input: BufferSource): ImageData;
+}

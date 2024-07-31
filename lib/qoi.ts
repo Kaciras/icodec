@@ -1,6 +1,8 @@
 import wasmFactory from "../dist/qoi.js";
 import { check, loadES, WasmSource } from "./common.js";
 
+export const defaultOptions = undefined;
+
 export const mimeType = "image/qoi";
 export const extension = "qoi";
 
