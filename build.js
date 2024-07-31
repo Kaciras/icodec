@@ -76,6 +76,11 @@ function emcc(output, sourceArguments) {
 	const args = [
 		config.debug ? "-g" : "-O3",
 		"--bind",
+		// "--std=c++23",
+		"-s", "NODEJS_CATCH_EXIT=0",
+		"-s", "NODEJS_CATCH_REJECTION=0",
+		"-s", "FILESYSTEM=0",
+		"-s", "TEXTDECODER=2",
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
