@@ -29,25 +29,15 @@ val encode(std::string input, int width, int height, AvifOptions options)
 {
 	avifResult status; // To check the return status for avif API's
 
-	avifPixelFormat format;
-	switch (options.subsample)
+	if (options.qualityAlpha == -1)
 	{
-	case 0:
-		format = AVIF_PIXEL_FORMAT_YUV400;
-		break;
-	case 1:
-		format = AVIF_PIXEL_FORMAT_YUV420;
-		break;
-	case 2:
-		format = AVIF_PIXEL_FORMAT_YUV422;
-		break;
-	case 3:
-		format = AVIF_PIXEL_FORMAT_YUV444;
-		break;
+		options.qualityAlpha = options.quality;
 	}
 
-	bool lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
-					(options.qualityAlpha == -1 || options.qualityAlpha == AVIF_QUALITY_LOSSLESS) &&
+	auto format = (avifPixelFormat)options.subsample;
+
+	auto lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
+					options.qualityAlpha == AVIF_QUALITY_LOSSLESS &&
 					format == AVIF_PIXEL_FORMAT_YUV444;
 
 	// Smart pointer for the input image in YUV format
@@ -102,14 +92,7 @@ val encode(std::string input, int width, int height, AvifOptions options)
 		}
 
 		encoder->quality = options.quality;
-		if (options.qualityAlpha == -1)
-		{
-			encoder->qualityAlpha = options.quality;
-		}
-		else
-		{
-			encoder->qualityAlpha = options.qualityAlpha;
-		}
+		encoder->qualityAlpha = options.qualityAlpha;
 
 		if (options.tune == 2 || (options.tune == 0 && options.quality >= 50))
 		{
@@ -148,10 +131,8 @@ val encode(std::string input, int width, int height, AvifOptions options)
 		return val(avifResultToString(status));
 	}
 
-	auto js_result = toUint8Array(output.data, output.size);
-
-	avifRWDataFree(&output);
-	return js_result;
+	auto _ = toRAII(&output, avifRWDataFree);
+	return toUint8Array(output.data, output.size);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_AVIF)

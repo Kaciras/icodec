@@ -22,7 +22,8 @@ val decode(std::string input)
 
 	// Convert to interleaved RGB(A)/BGR(A) using a libavif-allocated buffer.
 	avifRGBImage rgb;
-	avifRGBImageSetDefaults(&rgb, image.get()); // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+	 // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+	avifRGBImageSetDefaults(&rgb, image.get());
 	rgb.depth = COLOR_DEPTH;
 
 	status = avifRGBImageAllocatePixels(&rgb);
@@ -37,9 +38,8 @@ val decode(std::string input)
 		return val(avifResultToString(status));
 	}
 
-	auto result = toImageData(rgb.pixels, rgb.width, rgb.height);
-	avifRGBImageFreePixels(&rgb);
-	return result;
+	auto _ = toRAII(&rgb, avifRGBImageFreePixels);
+	return toImageData(rgb.pixels, rgb.width, rgb.height);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_AVIF)

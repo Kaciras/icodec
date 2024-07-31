@@ -20,7 +20,7 @@ Supported codecs:
         </tr>
         <tr>
             <td>png</td>
-            <td>OxiPNG, imagequant</td>
+            <td>OxiPNG + imagequant</td>
             <td>❌</td>
         </tr>
         <tr>
@@ -78,7 +78,7 @@ Each codec module exports:
   - If pass a `ArrayBuffer` or `ArrayBufferView`, it will be treated as the WASM bytes.
 - `encode(buffer, width, height, options?)`: Encode the RGBA buffer.
 - `mimeType`: The MIME type string of the codec.
-- `extension`: File extension of the encoded image.
+- `extension`: File extension of the format.
 - `defaultOptions`: The default options for `encode` function.
 - `type Options`: Type definition of the encode options.
 
@@ -125,3 +125,4 @@ Run the build script:
 ```shell
 node build.js
 ```
+

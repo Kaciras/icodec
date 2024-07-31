@@ -36,13 +36,11 @@ struct MozJpegOptions
 	int chroma_quality;
 };
 
-val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts)
+val encode(std::string input, int image_width, int image_height, MozJpegOptions opts)
 {
-	auto image_buffer = (uint8_t *)image_in.c_str();
-
 	// The code below is basically the `write_JPEG_file` function from
 	// https://github.com/mozilla/mozjpeg/blob/master/example.c
-	// I just write to memory instead of a file.
+	auto image_buffer = (uint8_t *)input.c_str();
 
 	/* Step 1: allocate and initialize JPEG compression object */
 	jpeg_compress_struct cinfo;
@@ -138,7 +136,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 	 * To keep things simple, we pass one scanline per call; you can pass
 	 * more if you wish, though.
 	 */
-	int row_stride = image_width * 4; /* JSAMPLEs per row in image_buffer */
+	int row_stride = image_width * CHANNELS_RGB;
 
 	while (cinfo.next_scanline < cinfo.image_height)
 	{

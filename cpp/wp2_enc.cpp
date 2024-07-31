@@ -6,7 +6,6 @@
 #include "src/wp2/encode.h"
 
 using namespace emscripten;
-using std::string;
 
 struct WP2Options
 {
@@ -21,7 +20,7 @@ struct WP2Options
 	bool use_random_matrix;
 };
 
-val encode(string input, int width, int height, WP2Options options)
+val encode(std::string input, int width, int height, WP2Options options)
 {
 	WP2::EncoderConfig config = {};
 

@@ -1,9 +1,15 @@
+/**
+ * Parameter type of `loadEncoder()` and `loadDecoder()`. 11,861,557
+ *
+ * - If is a string, it's the URL of WASM file to fetch.
+ * - If is BufferSource, it will be treated as the WASM bytes.
+ */
 export type WasmSource = string | BufferSource;
 
-export function loadES(factory: any, input?: WasmSource) {
-	return typeof input === "string"
-		? factory({ locateFile: () => input })
-		: factory({ wasmBinary: input });
+export function loadES(factory: any, source?: WasmSource) {
+	return typeof source === "string"
+		? factory({ locateFile: () => source })
+		: factory({ wasmBinary: source });
 }
 
 export function check<T>(value: string | null | T, hint: string) {

@@ -10,8 +10,6 @@
 using namespace emscripten;
 using namespace jxl;
 
-using std::string;
-
 struct JXLOptions
 {
 	float quality;
@@ -24,7 +22,7 @@ struct JXLOptions
 	bool lossyModular;
 };
 
-val encode(string image, int width, int height, JXLOptions options)
+val encode(std::string image, int width, int height, JXLOptions options)
 {
 	static const JxlPixelFormat format = {CHANNELS_RGB, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 

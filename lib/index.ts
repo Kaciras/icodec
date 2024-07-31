@@ -15,7 +15,15 @@ declare global {
 
 globalThis._ICodec_ImageData = ImageData;
 
-export interface ICodecEncoder<T> {
+/**
+ * Provides a uniform type for codec modules that support encoding.
+ *
+ * @example
+ * import { wp2, ICodecEncoder } from "icodec";
+ *
+ * const encoder: ICodecEncoder<wp2.Options> = wp2;
+ */
+export interface ICodecEncoder<T = any> {
 
 	defaultOptions: Required<T>;
 	mimeType: string;
@@ -26,6 +34,14 @@ export interface ICodecEncoder<T> {
 	encode(data: BufferSource, width: number, height: number, options?: T): Uint8Array;
 }
 
+/**
+ * Provides a uniform type for codec modules that support decoding.
+ *
+ * @example
+ * import { wp2, ICodecEncoder, ICodecDecoder } from "icodec";
+ *
+ * const convertor: ICodecEncoder<wp2.Options> & ICodecDecoder = wp2;
+ */
 export interface ICodecDecoder {
 
 	loadEncoder(source?: WasmSource): Promise<void>;

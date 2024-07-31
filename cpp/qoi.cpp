@@ -8,11 +8,11 @@
 
 using std::string;
 
-val encode(string buffer, uint32_t width, uint32_t height)
+val encode(string input, uint32_t width, uint32_t height)
 {
 	qoi_desc desc{ width, height, CHANNELS_RGB, QOI_SRGB };
 	int outSize;
-	auto encoded = (uint8_t *)qoi_encode(buffer.c_str(), &desc, &outSize);
+	auto encoded = (uint8_t *)qoi_encode(input.c_str(), &desc, &outSize);
 
 	if (encoded == NULL)
 	{
