@@ -51,7 +51,7 @@ export const extension = "jpg";
 let encoderWASM: any;
 
 export async function loadEncoder(input?: WasmSource) {
-	encoderWASM = await loadES(wasmFactoryEnc, input);
+	return encoderWASM = await loadES(wasmFactoryEnc, input);
 }
 
 export function encode(data: BufferSource, width: number, height: number, options?: Options) {

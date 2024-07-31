@@ -29,7 +29,7 @@ export interface ICodecEncoder<T = any> {
 	mimeType: string;
 	extension: string;
 
-	loadEncoder(source?: WasmSource): Promise<void>;
+	loadEncoder(source?: WasmSource): Promise<any>;
 
 	encode(data: BufferSource, width: number, height: number, options?: T): Uint8Array;
 }
@@ -44,7 +44,7 @@ export interface ICodecEncoder<T = any> {
  */
 export interface ICodecDecoder {
 
-	loadEncoder(source?: WasmSource): Promise<void>;
+	loadDecoder(source?: WasmSource): Promise<any>;
 
 	decode(input: BufferSource): ImageData;
 }

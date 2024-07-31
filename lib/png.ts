@@ -76,7 +76,7 @@ export const defaultOptions: Required<Options> = {
 export const mimeType = "image/png";
 export const extension = "png";
 
-export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<void>;
+export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<any>;
 
 /**
  * Reduces the colors used in the image at a slight loss,

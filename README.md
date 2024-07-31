@@ -76,6 +76,9 @@ Each codec module exports:
 - `loadEncoder(input?)`: Load the encoder WASM file, must be called once before `encode`, it accepts an optional argument:
   - If pass a string, it's the URL of WASM file to fetch.
   - If pass a `ArrayBuffer` or `ArrayBufferView`, it will be treated as the WASM bytes.
+
+  This function returns the underlying WASM module, which is not part of the public API and can be changed at any time.
+
 - `encode(buffer, width, height, options?)`: Encode the RGBA buffer.
 - `mimeType`: The MIME type string of the codec.
 - `extension`: File extension of the format.

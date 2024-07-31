@@ -1,5 +1,5 @@
 /**
- * Parameter type of `loadEncoder()` and `loadDecoder()`. 11,861,557
+ * Parameter type of `loadEncoder()` and `loadDecoder()`.
  *
  * - If is a string, it's the URL of WASM file to fetch.
  * - If is BufferSource, it will be treated as the WASM bytes.
