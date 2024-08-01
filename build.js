@@ -236,7 +236,7 @@ export function buildAVIF() {
 	cmake("vendor/libavif/libavif.a", "vendor/libavif", "vendor/libavif", {
 		BUILD_SHARED_LIBS: "0",
 		AVIF_CODEC_AOM: "LOCAL",
-		AVIF_LOCAL_LIBSHARPYUV: "1",
+		AVIF_LIBSHARPYUV: "LOCAL",
 		LIBYUV_LIBRARY: "../libwebp/libsharpyuv.a",
 		LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
 	});
