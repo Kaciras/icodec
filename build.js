@@ -178,6 +178,8 @@ export function buildWebP() {
 
 export function buildJXL() {
 	gitClone("vendor/libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
+	// highway uses CJS scripts in build, our project is ESM.
+	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
 	cmake("vendor/libjxl/lib/libjxl.a", "vendor/libjxl", "vendor/libjxl", {
 		BUILD_SHARED_LIBS: "0",
 		BUILD_TESTING: "0",
