@@ -20,12 +20,13 @@ std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
 
 val toImageData(uint8_t *bytes, uint32_t width, uint32_t height)
 {
-	auto view = typed_memory_view(CHANNELS_RGB * width * height, bytes);
+	auto length = ((size_t)CHANNELS_RGB) * width * height;
+	auto view = typed_memory_view(length, bytes);
 	auto data = Uint8ClampedArray.new_(view);
 	return ImageData.new_(data, width, height);
 }
 
 val toUint8Array(uint8_t *bytes, size_t length)
 {
-	return Uint8Array.new_(typed_memory_view(length, (const uint8_t *)bytes));
+	return Uint8Array.new_(typed_memory_view(length, bytes));
 }

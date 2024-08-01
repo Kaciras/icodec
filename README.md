@@ -121,6 +121,8 @@ To build WASM modules, you will need to install:
 * [Cmake](https://cmake.org) >= 3.24
 * [Rust](https://www.rust-lang.org/tools/install) & [wasm-pack](https://rustwasm.github.io/wasm-pack/installer)
 * [Emscripten](https://emscripten.org/docs/getting_started/downloads.html)
+* [Perl](https://www.perl.org)
+* [Git](https://git-scm.com)
 * A proper C/C++ compiler toolchain, depending on your operating system
 
 Run the build script:
