@@ -8,7 +8,7 @@
 
 using std::string;
 
-val encode(string input, uint32_t width, uint32_t height)
+val encode(string input, uint32_t width, uint32_t height, val _)
 {
 	qoi_desc desc{ width, height, CHANNELS_RGB, QOI_SRGB };
 	int outSize;

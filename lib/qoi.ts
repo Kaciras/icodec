@@ -16,10 +16,10 @@ export async function loadEncoder(input?: WasmSource) {
 
 export const loadDecoder = loadEncoder;
 
-export function decode(input: BufferSource) {
-	return check<ImageData>(codecWASM.decode(input), "QOI Decode");
+export function encode(data: BufferSource, width: number, height: number) {
+	return check<Uint8Array>(codecWASM.encode(data, width, height, undefined), "QOI Encode");
 }
 
-export function encode(data: BufferSource, width: number, height: number) {
-	return check<Uint8Array>(codecWASM.encode(data, width, height), "QOI Encode");
+export function decode(input: BufferSource) {
+	return check<ImageData>(codecWASM.decode(input), "QOI Decode");
 }
