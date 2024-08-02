@@ -1,6 +1,6 @@
 {
-	"name": "@kaciras/icodec",
-	"version": "1.0.0",
+	"name": "icodec",
+	"version": "0.1.0",
 	"description": "WebAssembly image encoders & decoders",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
@@ -28,7 +28,7 @@
 			"types": "./lib/index.d.ts",
 			"default": "./lib/node.js"
 		},
-		"./png.wasm": "./dist/png_bg.wasm",
+		"./png-enc.wasm": "./dist/png_bg.wasm",
 		"./qoi-enc.wasm": "./dist/qoi.wasm",
 		"./qoi-dec.wasm": "./dist/qoi.wasm",
 		"./*.wasm": "./dist/*.wasm"
