@@ -1,22 +1,27 @@
-import { jxl, qoi, wp2 } from "../lib/index.js";
+import * as codecs from "../lib/index.js";
 
+const textarea = document.querySelector("textarea");
+const download = document.getElementById("download");
 const canvas = document.querySelector("canvas");
+const ctx2D = canvas.getContext("2d");
 
-document.getElementById("file").oninput = e => {
-	const [file] = e.currentTarget.files;
+document.getElementById("file").oninput = event => {
+	const [file] = event.currentTarget.files;
 	if (file.name.endsWith(".wp2")) {
-		return wasmDecode(file, wp2);
+		return wasmDecode(file, codecs.wp2);
 	}
 	if (file.name.endsWith(".qoi")) {
-		return wasmDecode(file, qoi);
+		return wasmDecode(file, codecs.qoi);
 	}
 	switch (file.type) {
 		case "image/JXL":
-			return wasmDecode(file, jxl);
+			return wasmDecode(file, codecs.jxl);
+		case "image/webp":
+			return wasmDecode(file, codecs.webp);
+		case "image/avif":
+			return wasmDecode(file, codecs.avif);
 		case "image/jpeg":
 		case "image/png":
-		case "image/webp":
-		case "image/avif":
 			return builtinDecode(file);
 	}
 	window.alert("Invalid image type: " + file.type);
@@ -26,23 +31,36 @@ globalThis._ICodec_ImageData = ImageData;
 
 async function wasmDecode(file, decoder) {
 	const input = await file.arrayBuffer();
-
 	await decoder.loadDecoder();
 	const image = decoder.decode(input);
 
 	canvas.width = image.width;
 	canvas.height = image.height;
-	canvas.getContext("2d").putImageData(image, 0, 0);
+	ctx2D.putImageData(image, 0, 0);
 }
 
 async function builtinDecode(file) {
 	const image = await createImageBitmap(file);
 
-	const { width, height } = image;
-	canvas.width = width;
-	canvas.height = height;
-
-	const ctx = canvas.getContext("2d");
-	ctx.drawImage(image, 0, 0);
-	return ctx.getImageData(0, 0, width, height);
+	canvas.width = image.width;
+	canvas.height = image.height;
+	ctx2D.drawImage(image, 0, 0);
 }
+
+async function encode(codec) {
+	const { width, height } = canvas;
+	const image = ctx2D.getImageData(0, 0, width, height);
+	const options = JSON.parse(textarea.value);
+
+	await codec.loadEncoder();
+	const output = codec.encode(image.data, width, height, options);
+
+	const file = new File([output], "output." + codec.extension);
+	URL.revokeObjectURL(download.href);
+	download.href = URL.createObjectURL(file);
+}
+
+document.querySelector("select").oninput = event => {
+	const codec = codecs[event.currentTarget.value];
+	textarea.value = JSON.stringify(codec.defaultOptions, null, "\t");
+};

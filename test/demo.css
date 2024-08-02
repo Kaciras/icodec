@@ -3,22 +3,49 @@ body {
 	gap: 16px;
 	grid-template-areas: "input options" "image options";
 	grid-template-rows: auto 1fr;
-	grid-template-columns: 1fr 200px;
+	grid-template-columns: 1fr 300px;
 
 	margin: 0;
 	height: 100vh;
 }
 
-button {
+#download {
 	display: inline-flex;
+	padding: 6px 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	color: #777;
+	user-select: none;
+
+	& [href] {
+		color: blue;
+		cursor: pointer;
+	}
 }
 
 #input {
 	grid-area: input;
+	padding: 10px;
 }
 
 #options {
 	grid-area: options;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+textarea {
+	padding: 0.5em;
+	overflow: auto;
+	resize: none;
+	flex: 1;
+	white-space: preserve;
+	tab-size: 4;
+
+	background: #e9eef6;
+	border: none;
+	border-radius: 8px;
 }
 
 canvas {
