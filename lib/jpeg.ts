@@ -1,10 +1,23 @@
 import wasmFactoryEnc from "../dist/jpeg-enc.js";
 import { check, loadES, WasmSource } from "./common.js";
 
-export const enum ColorSpace {
+export enum ColorSpace {
 	GRAYSCALE = 1,
 	RGB,
 	YCbCr,
+}
+
+// https://github.com/mozilla/mozjpeg/blob/6c9f0897afa1c2738d7222a0a9ab49e8b536a267/jcparam.c#L74
+export enum Quantization {
+	JPEG_Annex_K,
+	Flat,
+	MSSIM_Tuned_Kodak,
+	ImageMagick,
+	PSNR_HVS_M_Tuned_Kodak,
+	Klein_Silverstein_Carney,
+	Watson_Taylor_Borthwick,
+	Ahumada_Watson_Peterson,
+	Peterson_Ahumada_Watson,
 }
 
 export interface Options {
@@ -15,7 +28,7 @@ export interface Options {
 	optimize_coding?: boolean;
 	smoothing?: number;
 	color_space?: ColorSpace;
-	quant_table?: number;
+	quant_table?: Quantization;
 	trellis_multipass?: boolean;
 	trellis_opt_zero?: boolean;
 	trellis_opt_table?: boolean;
@@ -34,7 +47,7 @@ export const defaultOptions: Required<Options> = {
 	optimize_coding: true,
 	smoothing: 0,
 	color_space: ColorSpace.YCbCr,
-	quant_table: 3,
+	quant_table: Quantization.ImageMagick,
 	trellis_multipass: false,
 	trellis_opt_zero: false,
 	trellis_opt_table: false,

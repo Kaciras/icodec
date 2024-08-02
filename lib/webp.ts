@@ -2,6 +2,12 @@ import wasmFactoryEnc from "../dist/webp-enc.js";
 import wasmFactoryDec from "../dist/webp-dec.js";
 import { check, loadES, WasmSource } from "./common.js";
 
+export enum Preprocess {
+	None,
+	SegmentSmooth,
+	Dithering,
+}
+
 export interface Options {
 	quality?: number;
 	target_size?: number;
@@ -15,7 +21,7 @@ export interface Options {
 	segments?: number;
 	pass?: number;
 	show_compressed?: number;
-	preprocessing?: number;
+	preprocessing?: Preprocess;
 	autofilter?: number;
 	partition_limit?: number;
 	alpha_compression?: number;
@@ -45,7 +51,7 @@ export const defaultOptions: Required<Options> = {
 	segments: 4,
 	pass: 1,
 	show_compressed: 0,
-	preprocessing: 0,
+	preprocessing: Preprocess.None,
 	autofilter: 0,
 	partition_limit: 0,
 	alpha_compression: 1,
