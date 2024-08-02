@@ -1,11 +1,15 @@
 import * as codecs from "../lib/index.js";
 
+const select = document.querySelector("select");
 const textarea = document.querySelector("textarea");
+const encodeButton = document.getElementById("encode");
 const download = document.getElementById("download");
 const canvas = document.querySelector("canvas");
 const ctx2D = canvas.getContext("2d");
 
 document.getElementById("file").oninput = event => {
+	encodeButton.removeAttribute("disabled");
+
 	const [file] = event.currentTarget.files;
 	if (file.name.endsWith(".wp2")) {
 		return wasmDecode(file, codecs.wp2);
@@ -26,8 +30,6 @@ document.getElementById("file").oninput = event => {
 	}
 	window.alert("Invalid image type: " + file.type);
 };
-
-globalThis._ICodec_ImageData = ImageData;
 
 async function wasmDecode(file, decoder) {
 	const input = await file.arrayBuffer();
@@ -50,7 +52,7 @@ async function builtinDecode(file) {
 async function encode(codec) {
 	const { width, height } = canvas;
 	const image = ctx2D.getImageData(0, 0, width, height);
-	const options = JSON.parse(textarea.value);
+	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
 
 	await codec.loadEncoder();
 	const output = codec.encode(image.data, width, height, options);
@@ -58,9 +60,18 @@ async function encode(codec) {
 	const file = new File([output], "output." + codec.extension);
 	URL.revokeObjectURL(download.href);
 	download.href = URL.createObjectURL(file);
+	download.download = "output." + codec.extension;
+	download.click();
 }
 
-document.querySelector("select").oninput = event => {
-	const codec = codecs[event.currentTarget.value];
-	textarea.value = JSON.stringify(codec.defaultOptions, null, "\t");
+function refreshOptions() {
+	const { defaultOptions } = codecs[select.value];
+	textarea.value = defaultOptions ? JSON.stringify(defaultOptions, null, "\t") : "";
+}
+
+select.oninput = refreshOptions;
+refreshOptions();
+
+encodeButton.onclick = () => {
+	encode(codecs[select.value]);
 };

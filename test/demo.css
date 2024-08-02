@@ -3,51 +3,80 @@ body {
 	gap: 16px;
 	grid-template-areas: "input options" "image options";
 	grid-template-rows: auto 1fr;
-	grid-template-columns: 1fr 300px;
+	grid-template-columns: 1fr 360px;
 
 	margin: 0;
 	height: 100vh;
+
+	color: #222;
+	font-family: Arial, Helvetica, sans-serif;
 }
 
-#download {
+#encode {
 	display: inline-flex;
 	padding: 6px 8px;
-	border: 1px solid #ccc;
+	border: 1px solid #777;
 	border-radius: 4px;
+
+	background: none;
 	color: #777;
 	user-select: none;
 
-	& [href] {
-		color: blue;
+	&:enabled {
 		cursor: pointer;
+		color: blue;
+		border-color: blue;
 	}
+}
+
+#download {
+	display: none;
+}
+
+#file-label {
+	border: 1px solid #aaa;
+	padding: 6px;
+	border-radius: 4px;
+}
+
+#encoder-label {
+	margin: 0 10px;
 }
 
 #input {
 	grid-area: input;
-	padding: 10px;
+	padding: 0 1rem;
 }
 
 #options {
 	grid-area: options;
 	display: flex;
+	gap: 1em;
 	flex-direction: column;
 	align-items: stretch;
+
+	padding: 1em;
+	background: #e9eef6;
 }
 
 textarea {
-	padding: 0.5em;
+	padding: 1em 0;
 	overflow: auto;
 	resize: none;
 	flex: 1;
 	white-space: preserve;
 	tab-size: 4;
 
-	background: #e9eef6;
 	border: none;
-	border-radius: 8px;
+	border-top: solid 1px #777777;
+	background: none;
+
+	&:focus-visible {
+		outline: none;
+	}
 }
 
 canvas {
-	grid-area: image;aspect-ratio: unset;
+	grid-area: image;
+	aspect-ratio: unset;
 }
