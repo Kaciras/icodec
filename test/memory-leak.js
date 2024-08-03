@@ -3,7 +3,11 @@ import { avif, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import assert from "assert";
 import { readFileSync } from "fs";
 
-const rawBuffer = readFileSync("test/snapshot/image.bin");
+const rgbaFixture = {
+	width: 417,
+	height: 114,
+	data: readFileSync("test/snapshot/image.bin"),
+};
 
 const leakTestRuns = 20;
 
@@ -14,13 +18,13 @@ function getMemoryBuffer(wasm) {
 async function testEncodeLeak() {
 	const { loadEncoder, encode } = this;
 	const wasm = await loadEncoder();
-	encode(rawBuffer, 417, 114);
+	encode(rgbaFixture);
 
 	const memory = getMemoryBuffer(wasm);
 	const before = memory.byteLength;
 
 	for (let i = 0; i < leakTestRuns; i++) {
-		encode(rawBuffer, 417, 114);
+		encode(rgbaFixture);
 	}
 	const after = memory.byteLength;
 	assert.strictEqual(after, before);

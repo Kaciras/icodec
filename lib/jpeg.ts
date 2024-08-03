@@ -1,5 +1,5 @@
 import wasmFactoryEnc from "../dist/jpeg-enc.js";
-import { check, loadES, WasmSource } from "./common.js";
+import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export enum ColorSpace {
 	GRAYSCALE = 1,
@@ -67,8 +67,9 @@ export async function loadEncoder(input?: WasmSource) {
 	return encoderWASM = await loadES(wasmFactoryEnc, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options?: Options) {
+export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
+	const { data, width, height } = image;
 	const result = encoderWASM.encode(data, width, height, options);
 	return check<Uint8Array>(result, "JPEG Encode");
 }

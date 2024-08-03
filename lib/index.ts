@@ -1,4 +1,4 @@
-import { WasmSource } from "./common.js";
+import { ImageDataLike, WasmSource } from "./common.js";
 
 export * as avif from "./avif.js";
 export * as png from "./png.js";
@@ -31,7 +31,7 @@ export interface ICodecEncoder<T = any> {
 
 	loadEncoder(source?: WasmSource): Promise<any>;
 
-	encode(data: BufferSource, width: number, height: number, options?: T): Uint8Array;
+	encode(image: ImageDataLike, options?: T): Uint8Array;
 }
 
 /**

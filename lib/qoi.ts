@@ -1,5 +1,5 @@
 import wasmFactory from "../dist/qoi.js";
-import { check, loadES, WasmSource } from "./common.js";
+import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export type Options = never;
 
@@ -16,7 +16,8 @@ export async function loadEncoder(input?: WasmSource) {
 
 export const loadDecoder = loadEncoder;
 
-export function encode(data: BufferSource, width: number, height: number) {
+export function encode(image: ImageDataLike) {
+	const { data, width, height } = image;
 	return check<Uint8Array>(codecWASM.encode(data, width, height, undefined), "QOI Encode");
 }
 

@@ -55,7 +55,7 @@ async function encode(codec) {
 	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
 
 	await codec.loadEncoder();
-	const output = codec.encode(image.data, width, height, options);
+	const output = codec.encode(image, options);
 
 	const file = new File([output], "output." + codec.extension);
 	URL.revokeObjectURL(download.href);

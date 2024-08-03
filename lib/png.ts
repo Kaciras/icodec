@@ -1,5 +1,5 @@
 import wasmFactory, { optimize, quantize } from "../dist/png.js";
-import { WasmSource } from "./common.js";
+import { ImageDataLike, WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
 	/**
@@ -82,13 +82,17 @@ export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<any>;
  * Reduces the colors used in the image at a slight loss,
  * using a combination of vector quantization algorithms.
  */
-export function reduceColors(data: Uint8Array, width: number, height: number, options?: QuantizeOptions) {
-	return quantize(data, width, height, { ...defaultOptions, ...options });
+export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
+	options = { ...defaultOptions, ...options };
+	const { data, width, height } = image;
+	return quantize(data as any, width, height, { ...defaultOptions, ...options });
 }
 
 /**
  * Encode the RGBA buffer to PNG format, with optional lossy compression.
  */
-export function encode(data: Uint8Array, width: number, height: number, options?: Options) {
-	return optimize(data, width, height, { ...defaultOptions, ...options });
+export function encode(image: ImageDataLike, options?: Options) {
+	options = { ...defaultOptions, ...options };
+	const { data, width, height } = image;
+	return optimize(data as any, width, height, { ...defaultOptions, ...options });
 }

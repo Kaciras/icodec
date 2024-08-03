@@ -1,6 +1,6 @@
 import wasmFactoryEnc from "../dist/jxl-enc.js";
 import wasmFactoryDec from "../dist/jxl-dec.js";
-import { check, loadES, WasmSource } from "./common.js";
+import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export interface Options {
 	effort?: number;
@@ -38,8 +38,9 @@ export async function loadDecoder(input?: WasmSource) {
 	return decoderWASM = await loadES(wasmFactoryDec, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options?: Options) {
+export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
+	const { data, width, height } = image;
 	const result = encoderWASM.encode(data, width, height, options);
 	return check<Uint8Array>(result, "JXL Encode");
 }

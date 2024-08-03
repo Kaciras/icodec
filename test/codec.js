@@ -5,23 +5,26 @@ import { join } from "path";
 import pixelMatch from "pixelmatch";
 import { avif, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 
-const rawBuffer = readFileSync("test/snapshot/image.bin");
 const snapshotDirectory = "test/snapshot";
 
-const w = 417;
-const h = 114;
+const rgbaFixture = {
+	width: 417,
+	height: 114,
+	data: readFileSync("test/snapshot/image.bin"),
+};
 
-function assertImageEqual(buffer1, buffer2) {
-	assert.strictEqual(buffer1.byteLength, buffer2.byteLength);
-	const diff = new Uint8ClampedArray(w * h * 4);
-	const diffs = pixelMatch(buffer1, buffer2, diff, w, h, { threshold: 0.2 });
-	assert.ok(diffs < w * h / 100, "Wrong decode output");
+function assertImageEqual(buffer1, { width, height, data }) {
+	assert.strictEqual(buffer1.byteLength, data.byteLength);
+
+	const diff = new Uint8ClampedArray(width * height * 4);
+	const diffs = pixelMatch(buffer1, data, diff, width, height, { threshold: 0.2 });
+	assert.ok(diffs < width * height / 100, "Wrong decode output");
 }
 
 async function testEncode() {
 	const { loadEncoder, extension, encode } = this;
 	await loadEncoder();
-	const encoded = encode(rawBuffer, 417, 114);
+	const encoded = encode(rgbaFixture);
 	writeFileSync(join(snapshotDirectory, "image." + extension), encoded);
 	assert.ok(encoded.length < 18 * 1024);
 }
@@ -29,8 +32,8 @@ async function testEncode() {
 async function testDecode() {
 	const { loadDecoder, extension, decode } = this;
 	await loadDecoder();
-	const image = decode(readFileSync("test/snapshot/image." + extension));
-	assertImageEqual(image.data, rawBuffer);
+	const output = decode(readFileSync("test/snapshot/image." + extension));
+	assertImageEqual(output.data, rgbaFixture);
 }
 
 describe("encode", () => {

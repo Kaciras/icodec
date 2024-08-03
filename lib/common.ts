@@ -12,6 +12,25 @@ export function loadES(factory: any, source?: WasmSource) {
 		: factory({ wasmBinary: source });
 }
 
+export interface ImageDataLike {
+	/**
+	 * representing the actual width, in pixels.
+	 */
+	width: number;
+
+	/**
+	 * representing the actual height, in pixels.
+	 */
+	height: number;
+
+	/**
+	 * Representing a one-dimensional array containing the data in the RGBA order,
+	 * with integer values between 0 and 255 (inclusive).
+	 * The order goes by rows from the top-left pixel to the bottom-right.
+	 */
+	data: Uint8Array | Uint8ClampedArray;
+}
+
 export function check<T>(value: string | null | T, hint: string) {
 	if (typeof value === "string") {
 		throw new Error(`${hint}: ${value}`);

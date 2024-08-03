@@ -1,6 +1,6 @@
 import wasmFactoryEnc from "../dist/avif-enc.js";
 import wasmFactoryDec from "../dist/avif-dec.js";
-import { check, loadES, WasmSource } from "./common.js";
+import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export enum Subsampling {
 	YUV444 = 1,
@@ -18,10 +18,14 @@ export enum AVIFTune {
 export interface Options {
 	/**
 	 * [0 - 100], 0 = worst quality, 100 = lossless
+	 *
+	 * @default 50
 	 */
 	quality?: number;
 	/**
 	 * As above, but -1 means 'use quality'
+	 *
+	 * @default -1
 	 */
 	qualityAlpha?: number;
 	/**
@@ -55,13 +59,13 @@ export interface Options {
 export const defaultOptions: Required<Options> = {
 	quality: 50,
 	qualityAlpha: -1,
-	denoiseLevel: 0,
 	tileColsLog2: 0,
 	tileRowsLog2: 0,
 	speed: 6,
 	subsample: Subsampling.YUV420,
 	chromaDeltaQ: false,
 	sharpness: 0,
+	denoiseLevel: 0,
 	tune: AVIFTune.Auto,
 	enableSharpYUV: false,
 };
@@ -80,8 +84,9 @@ export async function loadDecoder(input?: WasmSource) {
 	return decoderWASM = await loadES(wasmFactoryDec, input);
 }
 
-export function encode(data: BufferSource, width: number, height: number, options?: Options) {
+export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
+	const { data, width, height } = image;
 	const result = encoderWASM.encode(data, width, height, options);
 	return check<Uint8Array>(result, "AVIF Encode");
 }
