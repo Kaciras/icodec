@@ -1,7 +1,7 @@
-import { execFileSync } from "child_process";
+import { execFile, execFileSync } from "child_process";
 import { join } from "path";
-import { cpus } from "os";
-import { existsSync, mkdirSync, renameSync } from "fs";
+import { existsSync, mkdirSync, renameSync, writeFileSync } from "fs";
+import { promisify } from "util";
 
 export const config = {
 	/**
@@ -24,14 +24,14 @@ export const config = {
 	wasm64: false,
 
 	/**
-	 * Specify -G parameter of cmake, e.g. "Visual Studio 17 2022"
+	 * Specify -G parameter of cmake, e.g. "Ninja"
 	 */
 	cmakeBuilder: null,
 
 	/**
 	 * The maximum number of concurrent processes to use when building.
 	 */
-	parallel: cpus().length,
+	parallel: navigator.hardwareConcurrency,
 };
 
 mkdirSync("dist", { recursive: true });
@@ -48,19 +48,27 @@ function cmake(checkFile, src, dist, options) {
 	if (!config.rebuild && existsSync(checkFile)) {
 		return;
 	}
+
+	let cxxFlags = "-pthread";
+	if (config.wasm64) {
+		cxxFlags += " -sMEMORY64";
+	}
+
 	const args = [
-		"cmake", "-S", src, "-B", dist, "--fresh",
-		"-Wno-dev", "-DCMAKE_WARN_DEPRECATED=OFF",
+		"cmake", "-S", src, "-B", dist,
+		"--fresh",
+		"-Wno-dev",
+		`-DCMAKE_C_FLAGS="${cxxFlags}"`,
+		`-DCMAKE_CXX_FLAGS="${cxxFlags}"`,
+		"-DCMAKE_WARN_DEPRECATED=OFF",
 	];
 	if (config.cmakeBuilder) {
 		args.push("-G", `"${config.cmakeBuilder}"`);
 	}
-	if (config.wasm64) {
-		args.push("-DCMAKE_C_FLAGS=-sMEMORY64");
-		args.push("-DCMAKE_CXX_FLAGS=-sMEMORY64");
-	}
 	if (config.debug) {
 		args.push("-DCMAKE_BUILD_TYPE=Debug");
+	} else {
+		args.push("-DCMAKE_BUILD_TYPE=Release");
 	}
 	for (const [k, v] of Object.entries(options)) {
 		args.push(`-D${k}=${v}`);
@@ -284,15 +292,54 @@ export function buildWebP2() {
 	]);
 }
 
+function buildHEIC() {
+	gitClone("vendor/libheif", "1.18.1", "https://github.com/strukturag/libheif");
+	gitClone("vendor/x265", "3.6", "https://bitbucket.org/multicoreware/x265_git");
+
+	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
+	cmake("vendor/x265/source/libx265.a", "vendor/x265/source", "vendor/x265/source", {
+		ENABLE_LIBNUMA: "0",
+		ENABLE_SHARED: "0",
+		ENABLE_CLI: "0",
+		ENABLE_ASSEMBLY: "0",
+	});
+
+	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
+		WITH_LIBSHARPYUV: "0",
+		WITH_EXAMPLES: "0",
+		WITH_GDK_PIXBUF: "0",
+		ENABLE_MULTITHREADING_SUPPORT: "0",
+		BUILD_TESTING: "0",
+		BUILD_SHARED_LIBS: "0",
+
+		WITH_X265: "1",
+		X265_INCLUDE_DIR: "vendor/x265/source",
+		X265_LIBRARY: "vendor/x265/source/libx265.a",
+	});
+
+	emcc("heic-enc.js", [
+		"-s", "ENVIRONMENT=web,worker",
+		"-I vendor/libheif",
+		"-I vendor/libheif/libheif/api",
+		"-pthread",
+		"cpp/heic_enc.cpp",
+		"vendor/x265/source/libx265.a",
+		"vendor/libheif/libheif/libheif.a",
+	]);
+}
+
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	buildWebP();
 	buildAVIF();
 	buildJXL();
 	buildQOI();
-	buildPNGQuant();
 	buildMozJPEG();
 	buildWebP2();
+	buildPNGQuant();
+
+	// TODO: performance issues
+	// buildHEIC();
 
 	// checkForUpdate();
 }
