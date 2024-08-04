@@ -87,7 +87,6 @@ function emcc(output, sourceArguments) {
 		// "--std=c++23",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
-		"-s", "FILESYSTEM=0",
 		"-s", "TEXTDECODER=2",
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
@@ -96,6 +95,9 @@ function emcc(output, sourceArguments) {
 		"-o", output,
 		...sourceArguments,
 	];
+	if (!config.debug) {
+		args.push("-s", "FILESYSTEM=0");
+	}
 	if (config.wasm64) {
 		args.push("-s", "MEMORY64=1");
 	}
