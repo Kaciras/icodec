@@ -1,9 +1,7 @@
 import { readFileSync } from "fs";
-import sharp, { Sharp, SharpOptions } from "sharp";
+import { Sharp } from "sharp";
 import { defineSuite } from "esbench";
 import * as codecs from "../lib/node.js";
-
-const sharpOptions: SharpOptions = { raw: { width: 417, height: 114, channels: 4 } };
 
 const rgbaFixture = {
 	width: 417,
@@ -38,7 +36,7 @@ export default defineSuite({
 
 		scene.bench("WASM", () => encode(rgbaFixture));
 		if (sharpEncode) {
-			scene.benchAsync("Sharp", () => sharpEncode(sharp(rgbaFixture.data, sharpOptions)).toBuffer());
+			scene.benchAsync("Sharp", () => sharpEncode().toBuffer());
 		}
 	},
 });

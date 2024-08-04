@@ -198,6 +198,7 @@ export function buildJXL() {
 	cmake("vendor/libjxl/lib/libjxl.a", "vendor/libjxl", "vendor/libjxl", {
 		BUILD_SHARED_LIBS: "0",
 		BUILD_TESTING: "0",
+		JPEGXL_ENABLE_SJPEG: "0",
 		JPEGXL_ENABLE_JNI: "0",
 		JPEGXL_ENABLE_BENCHMARK: "0",
 		JPEGXL_ENABLE_DOXYGEN: "0",
@@ -220,7 +221,7 @@ export function buildJXL() {
 
 // Must build WebP before to generate libsharpyuv.a
 export function buildAVIF() {
-	gitClone("vendor/libavif", "v1.1.0", "https://github.com/AOMediaCodec/libavif");
+	gitClone("vendor/libavif", "v1.1.1", "https://github.com/AOMediaCodec/libavif");
 	gitClone("vendor/libavif/ext/aom", "v3.9.1", "https://aomedia.googlesource.com/aom");
 
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
@@ -335,6 +336,30 @@ function buildHEIC() {
 	]);
 }
 
+function buildVVIC() {
+	gitClone("vendor/libheif", "v1.18.1", "https://github.com/strukturag/libheif");
+	gitClone("vendor/vvenc", "v1.12.0", "https://github.com/fraunhoferhhi/vvenc");
+
+	cmake("vendor/vvenc/vvenc.a", "vendor/vvenc", "vendor/vvenc/build", {
+		BUILD_SHARED_LIBS: "0",
+		VVENC_ENABLE_INSTALL: "0",
+		VVENC_ENABLE_THIRDPARTY_JSON: "0",
+	});
+
+	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
+		WITH_LIBSHARPYUV: "0",
+		WITH_EXAMPLES: "0",
+		WITH_GDK_PIXBUF: "0",
+		ENABLE_MULTITHREADING_SUPPORT: "0",
+		BUILD_TESTING: "0",
+		BUILD_SHARED_LIBS: "0",
+
+		WITH_VVENC: "1",
+		VVENC_INCLUDE_DIR: "vendor/x265/source",
+		VVENC_LIBRARY: "vendor/x265/source/libx265.a",
+	});
+}
+
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	buildWebP();
@@ -345,8 +370,11 @@ if (process.argv[1] === import.meta.filename) {
 	buildWebP2();
 	buildPNGQuant();
 
-	// TODO: performance issues
+	// TODO: workers limit
 	// buildHEIC();
+
+	// TODO: build failed.
+	// buildVVIC();
 
 	// checkForUpdate();
 }
