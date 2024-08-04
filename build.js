@@ -5,6 +5,11 @@ import { promisify } from "util";
 
 export const config = {
 	/**
+	 * Directory name that WASM and JS interop files placed to.
+	 */
+	outDir: "dist",
+
+	/**
 	 * Force rebuild 3rd-party libraries, it will take more time.
 	 */
 	rebuild: false,
@@ -34,7 +39,7 @@ export const config = {
 	parallel: navigator.hardwareConcurrency,
 };
 
-mkdirSync("dist", { recursive: true });
+mkdirSync(config.outDir, { recursive: true });
 
 function gitClone(directory, branch, url) {
 	if (existsSync(directory)) {
@@ -80,7 +85,7 @@ function cmake(checkFile, src, dist, options) {
 }
 
 function emcc(output, sourceArguments) {
-	output = "dist/" + output;
+	output = join(config.outDir, output);
 	const args = [
 		config.debug ? "-g" : "-O3",
 		"--bind",
@@ -144,8 +149,8 @@ export function buildPNGQuant() {
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
 	// `--out-dir` cannot be out of the rust workspace.
-	renameSync("rust/pkg/png.js", "dist/png.js");
-	renameSync("rust/pkg/png_bg.wasm", "dist/png_bg.wasm");
+	renameSync("rust/pkg/png.js", `${config.outDir}/png.js`);
+	renameSync("rust/pkg/png_bg.wasm", `${config.outDir}/png_bg.wasm`);
 }
 
 export function buildQOI() {
