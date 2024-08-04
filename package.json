@@ -1,9 +1,13 @@
 {
 	"name": "icodec",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "WebAssembly image encoders & decoders",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Kaciras/icodec"
+	},
 	"type": "module",
 	"keywords": [
 		"WebAssembly",
