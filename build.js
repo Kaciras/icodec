@@ -54,7 +54,7 @@ function cmake(checkFile, src, dist, options) {
 		return;
 	}
 
-	let cxxFlags = "-pthread";
+	let cxxFlags = "-msimd128";
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}
@@ -89,7 +89,7 @@ function emcc(output, sourceArguments) {
 	const args = [
 		config.debug ? "-g" : "-O3",
 		"--bind",
-		// "--std=c++23",
+		"-msimd128",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
