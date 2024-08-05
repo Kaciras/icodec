@@ -27,8 +27,24 @@ heif_error WriteToJS(heif_context *ctx, const void *data, size_t size, void *use
 
 val encode(std::string input, int width, int height, HeicOptions options)
 {
-	auto row_pointers = reinterpret_cast<uint8_t *>(input.data());
+	auto rgba = reinterpret_cast<uint8_t *>(input.data());
 	heif_context *ctx = heif_context_alloc();
+
+	heif_image *image;
+	heif_image_create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, &image);
+	auto error = heif_image_add_plane(image, heif_channel_interleaved, width, height, COLOR_DEPTH);
+	if (error.code)
+	{
+		return val(error.message);
+	}
+
+	int row_bytes = width * CHANNELS_RGB;
+	int stride;
+	uint8_t *p = heif_image_get_plane(image, heif_channel_interleaved, &stride);
+	for (size_t i = 0; i < height; i++)
+	{
+		memcpy(p + stride * i, rgba + row_bytes * i, stride);
+	}
 
 	// get the default encoder
 	heif_encoder *encoder;
@@ -43,23 +59,6 @@ val encode(std::string input, int width, int height, HeicOptions options)
 	heif_encoder_set_parameter_integer(encoder, "tu-intra-depth", options.tuIntraDepth);
 	heif_encoder_set_parameter_integer(encoder, "complexity", options.complexity);
 	heif_encoder_set_parameter_string(encoder, "chroma", options.chroma.c_str());
-
-	heif_image *image;
-	heif_image_create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, &image);
-	auto error = heif_image_add_plane(image, heif_channel_interleaved, width, height, 32);
-	if (error.code)
-	{
-		return val(error.message);
-	}
-
-	int stride;
-	uint8_t *p = heif_image_get_plane(image, heif_channel_interleaved, &stride);
-	memcpy(p, row_pointers, input.length());
-
-	if (stride != width * CHANNELS_RGB)
-	{
-		return val(stride);
-	}
 
 	// encode the image
 	error = heif_context_encode_image(ctx, image, encoder, nullptr, nullptr);
