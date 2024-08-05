@@ -56,6 +56,11 @@ val encode(std::string input, int width, int height, HeicOptions options)
 	uint8_t *p = heif_image_get_plane(image, heif_channel_interleaved, &stride);
 	memcpy(p, row_pointers, input.length());
 
+	if (stride != width * CHANNELS_RGB)
+	{
+		return val(stride);
+	}
+
 	// encode the image
 	error = heif_context_encode_image(ctx, image, encoder, nullptr, nullptr);
 	if (error.code)
@@ -77,9 +82,42 @@ val encode(std::string input, int width, int height, HeicOptions options)
 	return result;
 }
 
+val decode(std::string input)
+{
+	heif_context *ctx = heif_context_alloc();
+
+	auto error = heif_context_read_from_memory_without_copy(ctx, input.c_str(), input.length(), nullptr);
+	if (error.code)
+	{
+		return val(error.message);
+	}
+
+	// get a handle to the primary image
+	heif_image_handle *handle;
+	heif_context_get_primary_image_handle(ctx, &handle);
+
+	heif_image *img;
+	error = heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, nullptr);
+	if (error.code)
+	{
+		return val(error.message);
+	}
+
+	int height = heif_image_handle_get_height(handle);
+	int stride;
+	const uint8_t *data = heif_image_get_plane_readonly(img, heif_channel_interleaved, &stride);
+
+	heif_image_release(img);
+	heif_image_handle_release(handle);
+	heif_context_free(ctx);
+
+	return toImageData(data, (uint32_t)stride / CHANNELS_RGB, (uint32_t)height);
+}
+
 EMSCRIPTEN_BINDINGS(icodec_module_HEIC)
 {
 	function("encode", &encode);
+	function("decode", &decode);
 
 	value_object<HeicOptions>("HeicOptions")
 		.field("lossless", &HeicOptions::lossless)

@@ -43,7 +43,7 @@ mkdirSync(config.outDir, { recursive: true });
 
 function gitClone(directory, branch, url) {
 	if (existsSync(directory)) {
-		return;
+		return true;
 	}
 	execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, directory]);
 	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
@@ -54,7 +54,7 @@ function cmake(checkFile, src, dist, options) {
 		return;
 	}
 
-	let cxxFlags = "-msimd128";
+	let cxxFlags = "-pthread -msimd128";
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}
@@ -301,15 +301,29 @@ export function buildWebP2() {
 }
 
 function buildHEIC() {
-	gitClone("vendor/libheif", "1.18.1", "https://github.com/strukturag/libheif");
-	gitClone("vendor/x265", "3.6", "https://bitbucket.org/multicoreware/x265_git");
+	const x265Cached = gitClone("vendor/x265", "3.6", "https://bitbucket.org/multicoreware/x265_git");
+	gitClone("vendor/libde265", "v1.0.15", "https://github.com/strukturag/libde265");
+	gitClone("vendor/libheif", "v1.18.1", "https://github.com/strukturag/libheif");
 
 	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
+	if (!x265Cached && !config.wasm64) {
+		const text = readFileSync("vendor/x265/source/CmakeLists.txt", "utf8");
+		const lines = text.split("\n");
+		lines.splice(lines.indexOf("    elseif(X86 AND NOT X64)"), 9);
+		writeFileSync("vendor/x265/source/CmakeLists.txt", lines.join("\n"));
+	}
+
 	cmake("vendor/x265/source/libx265.a", "vendor/x265/source", "vendor/x265/source", {
 		ENABLE_LIBNUMA: "0",
 		ENABLE_SHARED: "0",
 		ENABLE_CLI: "0",
 		ENABLE_ASSEMBLY: "0",
+	});
+
+	cmake("vendor/libde265/libde265/libde265.a", "vendor/libde265", "vendor/libde265", {
+		BUILD_SHARED_LIBS: "0",
+		ENABLE_SDL: "0",
+		ENABLE_DECODER: "0",
 	});
 
 	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
@@ -319,10 +333,15 @@ function buildHEIC() {
 		ENABLE_MULTITHREADING_SUPPORT: "0",
 		BUILD_TESTING: "0",
 		BUILD_SHARED_LIBS: "0",
+		CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
 
 		WITH_X265: "1",
 		X265_INCLUDE_DIR: "vendor/x265/source",
 		X265_LIBRARY: "vendor/x265/source/libx265.a",
+
+		WITH_LIBDE265: "1",
+		LIBDE265_INCLUDE_DIR: "vendor/libde265",
+		LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
 	});
 
 	emcc("heic-enc.js", [
@@ -332,6 +351,7 @@ function buildHEIC() {
 		"-pthread",
 		"cpp/heic_enc.cpp",
 		"vendor/x265/source/libx265.a",
+		"vendor/libde265/libde265/libde265.a",
 		"vendor/libheif/libheif/libheif.a",
 	]);
 }

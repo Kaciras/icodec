@@ -19,7 +19,10 @@ document.getElementById("file").oninput = event => {
 	if (file.name.endsWith(".qoi")) {
 		return wasmDecode(file, codecs.qoi);
 	}
-	switch (file.type) {
+	if (file.name.endsWith(".heic")) {
+		return wasmDecode(file, codecs.heic);
+	}
+	switch (file.type) {//17,483,124
 		case "image/JXL":
 			return wasmDecode(file, codecs.jxl);
 		case "image/avif":
