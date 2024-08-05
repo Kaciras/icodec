@@ -1,9 +1,11 @@
 import * as codecs from "../lib/index.js";
 
+const worker = new Worker("./test/worker.js", { type: "module" });
+
 const select = document.querySelector("select");
 const textarea = document.querySelector("textarea");
 const encodeButton = document.getElementById("encode");
-const download = document.getElementById("download");
+const dlButton = document.getElementById("download");
 const canvas = document.querySelector("canvas");
 const ctx2D = canvas.getContext("2d");
 
@@ -20,16 +22,23 @@ document.getElementById("file").oninput = event => {
 	switch (file.type) {
 		case "image/JXL":
 			return wasmDecode(file, codecs.jxl);
-		case "image/webp":
-			return wasmDecode(file, codecs.webp);
 		case "image/avif":
 			return wasmDecode(file, codecs.avif);
 		case "image/jpeg":
 		case "image/png":
+		case "image/webp":
 			return builtinDecode(file);
 	}
 	window.alert("Invalid image type: " + file.type);
 };
+
+function callWorker(args, transfer) {
+	worker.postMessage(args, transfer);
+	return new Promise((resolve, reject) => {
+		worker.onerror = reject;
+		worker.onmessage = e => resolve(e.data);
+	});
+}
 
 async function wasmDecode(file, decoder) {
 	const input = await file.arrayBuffer();
@@ -52,16 +61,22 @@ async function builtinDecode(file) {
 async function encode(codec) {
 	const { width, height } = canvas;
 	const image = ctx2D.getImageData(0, 0, width, height);
-	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
 
-	await codec.loadEncoder();
-	const output = codec.encode(image, options);
+	const options = textarea.value
+		? JSON.parse(textarea.value)
+		: undefined;
 
-	const file = new File([output], "output." + codec.extension);
-	URL.revokeObjectURL(download.href);
-	download.href = URL.createObjectURL(file);
-	download.download = "output." + codec.extension;
-	download.click();
+	const output = await callWorker([codec, image, options], [image.data.buffer]);
+
+	const { extension } = codecs[codec];
+	download(new File([output], "output." + extension));
+}
+
+function download(file) {
+	dlButton.href = URL.createObjectURL(file);
+	dlButton.download = file.name;
+	dlButton.click();
+	URL.revokeObjectURL(dlButton.href);
 }
 
 function refreshOptions() {
@@ -72,6 +87,4 @@ function refreshOptions() {
 select.oninput = refreshOptions;
 refreshOptions();
 
-encodeButton.onclick = () => {
-	encode(codecs[select.value]);
-};
+encodeButton.onclick = () => encode(select.value);
