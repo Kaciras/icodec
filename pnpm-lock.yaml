@@ -18,11 +18,11 @@ importers:
         specifier: ^1.39.13
         version: 1.39.13
       '@types/node':
-        specifier: ^20.14.11
-        version: 20.14.13
+        specifier: ^22.1.0
+        version: 22.1.0
       esbench:
-        specifier: ^0.6.1
-        version: 0.6.1(typescript@5.5.4)
+        specifier: ^0.6.2
+        version: 0.6.2(typescript@5.5.4)
       eslint:
         specifier: ^9.7.0
         version: 9.8.0
@@ -35,6 +35,9 @@ importers:
       typescript:
         specifier: ^5.5.3
         version: 5.5.4
+      web-worker:
+        specifier: ^1.3.0
+        version: 1.3.0
 
 packages:
 
@@ -236,8 +239,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@20.14.13':
-    resolution: {integrity: sha512-+bHoGiZb8UiQ0+WEtmph2IWQCjIqg8MDZMAV+ppRRhUZnquF5mQkP/9vpSwJClEiSM/C7fZZExPzfU0vJTyp8w==}
+  '@types/node@22.1.0':
+    resolution: {integrity: sha512-AOmuRF0R2/5j1knA3c6G3HOk523Ga+l+ZXltX8SF1+5oqcXijjfTd8fY3XRZqSihEu9XhtQnKYLmkFaoxgsJHw==}
 
   '@typescript-eslint/eslint-plugin@7.17.0':
     resolution: {integrity: sha512-pyiDhEuLM3PuANxH7uNYan1AaFs5XE0zw1hq69JBvGvE7gSuEoQl1ydtEe/XQeoC3GQxLXyOVa5kNOATgM638A==}
@@ -408,8 +411,8 @@ packages:
   es-module-lexer@1.5.4:
     resolution: {integrity: sha512-MVNK56NiMrOwitFB7cqDwq0CQutbw+0BvLshJSse0MUNU+y1FC3bUS/AQg7oUng+/wKrrki7JfmwtVHkVfPLlw==}
 
-  esbench@0.6.1:
-    resolution: {integrity: sha512-EMEfg6PgEUTapR+XN3CPKlDEYrR3Nxjl46NeBML9yrKdUHlYipHbD0iEdubCk/qv9tkMKEJgr2culTSjdgX3hA==}
+  esbench@0.6.2:
+    resolution: {integrity: sha512-sIdCFFoydpDhCWULBqOgb1bLOr9NXziPY0wJARIt9eF+ofvM/cSgCxFGKtNlXrbKzYnPm7eY+Dsz2ScfN6OVRQ==}
     hasBin: true
     peerDependencies:
       rollup: ^4.17.2
@@ -808,11 +811,14 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  undici-types@5.26.5:
-    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+  undici-types@6.13.0:
+    resolution: {integrity: sha512-xtFJHudx8S2DSoujjMd1WeWvn7KKWFRESZTMeL1RptAYERu29D6jphMjjY+vn96jvN3kVPDNxU/E13VTaXj6jg==}
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
+
+  web-worker@1.3.0:
+    resolution: {integrity: sha512-BSR9wyRsy/KOValMgd5kMyr3JzpdeoR9KVId8u5GVlTTAtNChlsE4yTxeY7zMdNSyOmoKBv8NH2qeRY9Tg+IaA==}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -1013,9 +1019,9 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@20.14.13':
+  '@types/node@22.1.0':
     dependencies:
-      undici-types: 5.26.5
+      undici-types: 6.13.0
 
   '@typescript-eslint/eslint-plugin@7.17.0(@typescript-eslint/parser@7.17.0(eslint@9.8.0)(typescript@5.5.4))(eslint@9.8.0)(typescript@5.5.4)':
     dependencies:
@@ -1195,7 +1201,7 @@ snapshots:
 
   es-module-lexer@1.5.4: {}
 
-  esbench@0.6.1(typescript@5.5.4):
+  esbench@0.6.2(typescript@5.5.4):
     dependencies:
       '@kaciras/utilities': 1.0.3
       chalk: 5.3.0
@@ -1584,11 +1590,13 @@ snapshots:
 
   typescript@5.5.4: {}
 
-  undici-types@5.26.5: {}
+  undici-types@6.13.0: {}
 
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
+
+  web-worker@1.3.0: {}
 
   which@2.0.2:
     dependencies:
