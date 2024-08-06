@@ -21,16 +21,41 @@ body {
 	background: none;
 	color: #777;
 	user-select: none;
+	font-size: 1em;
 
 	&:enabled {
 		cursor: pointer;
 		color: blue;
 		border-color: blue;
 	}
+
+	&.busy {
+		background-color: #5d84ff;
+		border-color: #5d84ff;
+		background-size: 32px 32px;
+		color: white;
+
+		background-image: linear-gradient(
+				-45deg,
+				blue 25%,
+				transparent 25%,
+				transparent 50%,
+				blue 50%,
+				blue 75%,
+				transparent 75%
+		);
+
+		animation: barbershop linear .4s infinite;
+	}
 }
 
-#download {
-	display: none;
+@keyframes barbershop {
+	from {
+		background-position: 0;
+	}
+	to {
+		background-position: -32px;
+	}
 }
 
 #file-label {
