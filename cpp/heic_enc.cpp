@@ -3,7 +3,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include "icodec.h"
-#include "libheif/heif.h"
+#include "libheif/heif_cxx.h"
 
 using namespace emscripten;
 
@@ -18,99 +18,70 @@ struct HeicOptions
 	std::string chroma;
 };
 
-heif_error WriteToJS(heif_context *ctx, const void *data, size_t size, void *userdata)
+struct JSWriter : public heif::Context::Writer
 {
-	val *pointer = static_cast<val *>(userdata);
-	*pointer = toUint8Array((uint8_t *)data, size);
-	return heif_error_success;
-}
+	val uint8Array;
+
+	heif_error write(const void *data, size_t size)
+	{
+		uint8Array = toUint8Array((uint8_t *)data, size);
+		return heif_error_success;
+	}
+};
 
 val encode(std::string input, int width, int height, HeicOptions options)
 {
-	auto rgba = reinterpret_cast<uint8_t *>(input.data());
-	heif_context *ctx = heif_context_alloc();
+	auto image = heif::Image();
+	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
+	image.add_plane(heif_channel_interleaved, width, height, COLOR_DEPTH);
 
-	heif_image *image;
-	heif_image_create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, &image);
-	auto error = heif_image_add_plane(image, heif_channel_interleaved, width, height, COLOR_DEPTH);
-	if (error.code)
-	{
-		return val(error.message);
-	}
-
-	int row_bytes = width * CHANNELS_RGB;
+	auto row_bytes = width * CHANNELS_RGB;
 	int stride;
-	uint8_t *p = heif_image_get_plane(image, heif_channel_interleaved, &stride);
-	for (size_t i = 0; i < height; i++)
+	uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
+	for (auto y = 0; y < height; y++)
 	{
-		memcpy(p + stride * i, rgba + row_bytes * i, stride);
+		memcpy(p + stride * y, &input[row_bytes * y], stride);
 	}
 
-	// get the default encoder
-	heif_encoder *encoder;
-	heif_context_get_encoder_for_format(ctx, heif_compression_HEVC, &encoder);
-	heif_encoder_set_parameter_integer(encoder, "threads", 1);
-
-	// set the encoder parameters
-	heif_encoder_set_lossy_quality(encoder, options.quality);
-	heif_encoder_set_lossless(encoder, (int)options.lossless);
-	heif_encoder_set_parameter_string(encoder, "preset", options.preset.c_str());
-	heif_encoder_set_parameter_string(encoder, "tune", options.tune.c_str());
-	heif_encoder_set_parameter_integer(encoder, "tu-intra-depth", options.tuIntraDepth);
-	heif_encoder_set_parameter_integer(encoder, "complexity", options.complexity);
-	heif_encoder_set_parameter_string(encoder, "chroma", options.chroma.c_str());
+	auto encoder = heif::Encoder(heif_compression_HEVC);
+	encoder.set_lossy_quality(options.quality);
+	encoder.set_lossless(options.lossless);
+	encoder.set_string_parameter("preset", options.preset);
+	encoder.set_string_parameter("tune", options.tune);
+	encoder.set_integer_parameter("tu-intra-depth", options.tuIntraDepth);
+	encoder.set_integer_parameter("complexity", options.complexity);
+	encoder.set_string_parameter("chroma", options.chroma);
 
 	// encode the image
-	error = heif_context_encode_image(ctx, image, encoder, nullptr, nullptr);
-	if (error.code)
-	{
-		return val(error.message);
-	}
+	auto ctx = heif::Context();
+	ctx.encode_image(image, encoder);
 
-	heif_writer writer;
-	writer.writer_api_version = 1;
-	writer.write = WriteToJS;
-
-	val result;
-	heif_context_write(ctx, &writer, &result);
-
-	heif_image_release(image);
-	heif_encoder_release(encoder);
-	heif_context_free(ctx);
-
-	return result;
+	auto writer = JSWriter();
+	ctx.write(writer);
+	return writer.uint8Array;
 }
 
 val decode(std::string input)
 {
-	heif_context *ctx = heif_context_alloc();
+	auto ctx = heif::Context();
+	ctx.read_from_memory_without_copy(input.c_str(), input.length());
 
-	auto error = heif_context_read_from_memory_without_copy(ctx, input.c_str(), input.length(), nullptr);
-	if (error.code)
-	{
-		return val(error.message);
-	}
+	auto handle = ctx.get_primary_image_handle();
+	auto image = handle.decode_image(heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
 
-	// get a handle to the primary image
-	heif_image_handle *handle;
-	heif_context_get_primary_image_handle(ctx, &handle);
-
-	heif_image *img;
-	error = heif_decode_image(handle, &img, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, nullptr);
-	if (error.code)
-	{
-		return val(error.message);
-	}
-
-	int height = heif_image_handle_get_height(handle);
+	auto width = handle.get_width();
+	auto height = handle.get_height();
 	int stride;
-	const uint8_t *data = heif_image_get_plane_readonly(img, heif_channel_interleaved, &stride);
+	const uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
 
-	heif_image_release(img);
-	heif_image_handle_release(handle);
-	heif_context_free(ctx);
+	auto row_bytes = width * CHANNELS_RGB;
+	auto rgba = std::make_unique<uint8_t[]>(row_bytes * height);
+	for (auto y = 0; y < height; y++)
+	{
+		memcpy(&rgba[row_bytes * y], p + stride * y, row_bytes);
+	}
 
-	return toImageData(data, (uint32_t)stride / CHANNELS_RGB, (uint32_t)height);
+	return toImageData(rgba.get(), (uint32_t)width, (uint32_t)height);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_HEIC)
