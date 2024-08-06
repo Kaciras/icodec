@@ -1,5 +1,7 @@
 # icodec
 
+[![NPM Version](https://img.shields.io/npm/v/icodec?style=flat-square)](https://www.npmjs.com/package/icodec)
+
 Image encoders & decoders with WebAssembly.
 
 Supported codecs:
