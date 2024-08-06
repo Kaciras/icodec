@@ -1,6 +1,6 @@
 import { execFile, execFileSync } from "child_process";
 import { join } from "path";
-import { existsSync, mkdirSync, renameSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { promisify } from "util";
 
 export const config = {
@@ -100,7 +100,9 @@ function emcc(output, sourceArguments) {
 		"-o", output,
 		...sourceArguments,
 	];
-	if (!config.debug) {
+	if (config.debug) {
+		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
+	} else {
 		args.push("-s", "FILESYSTEM=0");
 	}
 	if (config.wasm64) {
