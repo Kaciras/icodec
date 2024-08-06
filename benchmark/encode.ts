@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { Sharp } from "sharp";
+import sharp, { Sharp } from "sharp";
 import { defineSuite } from "esbench";
 import * as codecs from "../lib/node.js";
 
@@ -9,16 +9,21 @@ const rgbaFixture = {
 	data: readFileSync("test/snapshot/image.bin"),
 };
 
-const sharpEncodes: Record<string, (image: Sharp) => Sharp> = {
-	avif: image => image.avif(),
-	jpeg: image => image.jpeg(),
-	png: image => image.png({ quality: 75, palette: true }),
-	// jxl: image => image.jxl(),
-	webp: image => image.webp(),
+const sharpImage = sharp(rgbaFixture.data, {
+	raw: { width: 417, height: 114, channels: 4 },
+});
+
+const sharpEncodes: Record<string, () => Sharp> = {
+	avif: () => sharpImage.avif(),
+	jpeg: () => sharpImage.jpeg(),
+	png: () => sharpImage.png({ quality: 75, palette: true }),
+	// jxl: () => sharpImage.jxl(),14,656,268 bytes
+	webp: () => sharpImage.webp(),
 };
 
 const encoders = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].encode);
 
+// pnpm exec esbench --file encode.ts
 export default defineSuite({
 	params: {
 		codec: encoders,

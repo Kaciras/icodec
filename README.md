@@ -48,6 +48,8 @@ Supported codecs:
 
 # Usage
 
+Requirement: The target environment must support [WebAssembly SIMD](https://caniuse.com/wasm-simd).
+
 ```shell
 pnpm add icodec
 ```
@@ -114,7 +116,7 @@ await avif.loadDecoder(AVIFEncWASM);
 await jxl.loadEncoder(JxlDecWASM);
 ```
 
-# Build
+# Contribute
 
 To build WASM modules, you will need to install:
 
@@ -131,3 +133,7 @@ Run the build script:
 node build.js
 ```
 
+TODOs:
+
+* Could it be possible to remove HEIC encoder dependency on pthread, or limit the number of threads?
+* vvenc cannot be compiled with Emscripten.

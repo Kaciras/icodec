@@ -12,25 +12,21 @@ const ctx2D = canvas.getContext("2d");
 
 document.getElementById("file").oninput = async event => {
 	const [file] = event.currentTarget.files;
-	const imageData = await decode(file);
-
+	await decode(file);
 	encodeButton.removeAttribute("disabled");
-	canvas.width = imageData.width;
-	canvas.height = imageData.height;
-	ctx2D.putImageData(imageData, 0, 0);
 };
 
 function decode(blob) {
-	if (file.name.endsWith(".heic")) {
+	if (blob.name.endsWith(".heic")) {
 		return wasmDecode(blob, codecs.heic);
 	}
-	if (file.name.endsWith(".wp2")) {
+	if (blob.name.endsWith(".wp2")) {
 		return wasmDecode(blob, codecs.wp2);
 	}
-	if (file.name.endsWith(".qoi")) {
+	if (blob.name.endsWith(".qoi")) {
 		return wasmDecode(blob, codecs.qoi);
 	}
-	switch (file.type) {
+	switch (blob.type) {
 		case "image/JXL":
 			return wasmDecode(blob, codecs.jxl);
 		case "image/avif":
