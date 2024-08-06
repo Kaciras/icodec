@@ -72,7 +72,16 @@ const image = avif.decode(await response.arrayBuffer());
 
 // Encode the image to JPEG XL, also need to load the encoder WASM first.
 await jxl.loadEncoder();
-const encoded = jxl.encode(image.data, image.width, image.height);
+
+/*
+ * The image parameter must have properties:
+ * {
+ *     width: number;
+ *     height: number;
+ *     data: Uint8Array | Uint8ClampedArray;
+ * }
+ */
+const encoded = jxl.encode(image, /*{ options }*/);
 ```
 
 Each codec module exports:
@@ -83,7 +92,7 @@ Each codec module exports:
 
   This function returns the underlying WASM module, which is not part of the public API and can be changed at any time.
 
-- `encode(buffer, width, height, options?)`: Encode the RGBA buffer.
+- `encode(imageData, options?)`: Encode an image.
 - `mimeType`: The MIME type string of the codec.
 - `extension`: File extension of the format.
 - `defaultOptions`: The default options for `encode` function.
@@ -96,7 +105,7 @@ If the module support decoding, it will also export:
 
 The `png` module export extra members:
 
-- `reduceColors(buffer, width, height, options?)`: Reduces the colors used in the image at a slight loss, returns `Uint8Array`.
+- `reduceColors(imageData, options?)`: Reduces the colors used in the image at a slight loss, returns `Uint8Array`.
 - `type QuantizeOptions`: Type definition of the options in `reduceColors`.
 
 To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch` for file reading.
