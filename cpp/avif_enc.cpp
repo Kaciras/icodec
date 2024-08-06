@@ -27,18 +27,7 @@ struct AvifOptions
 
 val encode(std::string input, int width, int height, AvifOptions options)
 {
-	avifResult status; // To check the return status for avif API's
-
-	if (options.qualityAlpha == -1)
-	{
-		options.qualityAlpha = options.quality;
-	}
-
 	auto format = (avifPixelFormat)options.subsample;
-
-	auto lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
-					options.qualityAlpha == AVIF_QUALITY_LOSSLESS &&
-					format == AVIF_PIXEL_FORMAT_YUV444;
 
 	// Smart pointer for the input image in YUV format
 	auto image = toRAII(avifImageCreate(width, height, COLOR_DEPTH, format), avifImageDestroy);
@@ -47,6 +36,13 @@ val encode(std::string input, int width, int height, AvifOptions options)
 		return val("Out of memory");
 	}
 
+	if (options.qualityAlpha == -1)
+	{
+		options.qualityAlpha = options.quality;
+	}
+	auto lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
+					options.qualityAlpha == AVIF_QUALITY_LOSSLESS &&
+					format == AVIF_PIXEL_FORMAT_YUV444;
 	if (lossless)
 	{
 		image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
@@ -65,7 +61,7 @@ val encode(std::string input, int width, int height, AvifOptions options)
 		srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
 	}
 
-	status = avifImageRGBToYUV(image.get(), &srcRGB);
+	avifResult status = avifImageRGBToYUV(image.get(), &srcRGB);
 	if (status != AVIF_RESULT_OK)
 	{
 		return val(avifResultToString(status));
@@ -73,56 +69,43 @@ val encode(std::string input, int width, int height, AvifOptions options)
 
 	// Create a smart pointer for the encoder
 	auto encoder = toRAII(avifEncoderCreate(), avifEncoderDestroy);
-	if (image == nullptr)
+	if (encoder == nullptr)
 	{
 		return val("Out of memory");
 	}
-
-	if (lossless)
-	{
-		encoder->quality = AVIF_QUALITY_LOSSLESS;
-		encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
-	}
-	else
-	{
-		status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness", std::to_string(options.sharpness).c_str());
-		if (status != AVIF_RESULT_OK)
-		{
-			return val(avifResultToString(status));
-		}
-
-		encoder->quality = options.quality;
-		encoder->qualityAlpha = options.qualityAlpha;
-
-		if (options.tune == 2 || (options.tune == 0 && options.quality >= 50))
-		{
-			status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
-			if (status != AVIF_RESULT_OK)
-			{
-				return val(avifResultToString(status));
-			}
-		}
-
-		if (options.chromaDeltaQ)
-		{
-			status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
-			if (status != AVIF_RESULT_OK)
-			{
-				return val(avifResultToString(status));
-			}
-		}
-
-		status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
-		if (status != AVIF_RESULT_OK)
-		{
-			return val(avifResultToString(status));
-		}
-	}
-
 	encoder->maxThreads = 1;
+	encoder->quality = options.quality;
+	encoder->qualityAlpha = options.qualityAlpha;
+	encoder->speed = options.speed;
 	encoder->tileRowsLog2 = options.tileRowsLog2;
 	encoder->tileColsLog2 = options.tileColsLog2;
-	encoder->speed = options.speed;
+
+	status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness", std::to_string(options.sharpness).c_str());
+	if (status != AVIF_RESULT_OK)
+	{
+		return val(avifResultToString(status));
+	}
+	if (options.tune == 2 || (options.tune == 0 && options.quality >= 50))
+	{
+		status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
+		if (status != AVIF_RESULT_OK)
+		{
+			return val(avifResultToString(status));
+		}
+	}
+	if (options.chromaDeltaQ)
+	{
+		status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
+		if (status != AVIF_RESULT_OK)
+		{
+			return val(avifResultToString(status));
+		}
+	}
+	status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
+	if (status != AVIF_RESULT_OK)
+	{
+		return val(avifResultToString(status));
+	}
 
 	avifRWData output = AVIF_DATA_EMPTY;
 	status = avifEncoderWrite(encoder.get(), image.get(), &output);
