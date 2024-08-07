@@ -34,23 +34,21 @@ val encode(std::string input, int width, int height, WP2Options options)
 	config.error_diffusion = options.error_diffusion;
 	config.use_random_matrix = options.use_random_matrix;
 
-	auto buffer = (uint8_t *)input.c_str();
+	auto buffer = reinterpret_cast<const uint8_t *>(input.c_str());
 	WP2::ArgbBuffer src = WP2::ArgbBuffer();
 
 	// Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
 	WP2Status status = src.Import(WP2_rgbA_32, width, height, buffer, CHANNELS_RGB * width);
 	if (status != WP2_STATUS_OK)
 	{
-		return val::null();
+		return val(WP2GetStatusText(status));
 	}
 
 	WP2::MemoryWriter memory_writer;
-	// In WebP2, thread_level is number of *extra* threads to use (0 for no multithreading).
-	// config.thread_level = emscripten_num_logical_cores() - 1;
 	status = WP2::Encode(src, &memory_writer, config);
 	if (status != WP2_STATUS_OK)
 	{
-		return val::null();
+		return val(WP2GetStatusText(status));
 	}
 	return toUint8Array(memory_writer.mem_, memory_writer.size_);
 }
