@@ -12,6 +12,7 @@ using namespace jxl;
 
 struct JXLOptions
 {
+	bool lossless;
 	float quality;
 	int effort;
 	bool progressive;
@@ -84,6 +85,11 @@ val encode(std::string image, int width, int height, JXLOptions options)
 		}
 	}
 
+	if (options.lossless)
+	{
+		cparams.SetLossless();
+	}
+
 	io.metadata.m.SetAlphaBits(8);
 	if (!io.metadata.size.Set(width, height))
 	{
@@ -116,6 +122,7 @@ EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
 	function("encode", &encode);
 
 	value_object<JXLOptions>("JXLOptions")
+		.field("lossless", &JXLOptions::lossless)
 		.field("quality", &JXLOptions::quality)
 		.field("effort", &JXLOptions::effort)
 		.field("progressive", &JXLOptions::progressive)
