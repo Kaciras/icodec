@@ -122,9 +122,9 @@ export function buildMozJPEG() {
 		WITH_TURBOJPEG: "0",
 		PNG_SUPPORTED: "0",
 	});
-	emcc("jpeg-enc.js", [
+	emcc("mozjpeg.js", [
 		"-I vendor/mozjpeg",
-		"cpp/mozjpeg_enc.cpp",
+		"cpp/mozjpeg.cpp",
 		"vendor/mozjpeg/libjpeg.a",
 		"vendor/mozjpeg/rdswitch.c",
 	]);

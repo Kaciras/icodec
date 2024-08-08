@@ -61,15 +61,21 @@ export const defaultOptions: Required<Options> = {
 export const mimeType = "image/jpeg";
 export const extension = "jpg";
 
-let encoderWASM: any;
+let codecWASM: any;
 
 export async function loadEncoder(input?: WasmSource) {
-	return encoderWASM = await loadES(wasmFactoryEnc, input);
+	return codecWASM = await loadES(wasmFactoryEnc, input);
 }
+
+export const loadDecoder = loadEncoder;
 
 export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
 	const { data, width, height } = image;
-	const result = encoderWASM.encode(data, width, height, options);
+	const result = codecWASM.encode(data, width, height, options);
 	return check<Uint8Array>(result, "JPEG Encode");
+}
+
+export function decode(input: BufferSource) {
+	return check<ImageData>(codecWASM.decode(input), "JPEG Decode");
 }

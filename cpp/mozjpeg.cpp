@@ -11,7 +11,7 @@
 
 extern "C"
 {
-	#include "cdjpeg.h"
+#include "cdjpeg.h"
 }
 
 using namespace emscripten;
@@ -156,9 +156,47 @@ val encode(std::string input, int image_width, int image_height, MozJpegOptions 
 	return toUint8Array(toRAII(output, free).get(), size);
 }
 
+val decode(std::string image_in)
+{
+	uint8_t *image_buffer = (uint8_t *)image_in.c_str();
+
+	jpeg_decompress_struct cinfo;
+	jpeg_error_mgr jerr;
+
+	// Initialize the JPEG decompression object with default error handling.
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_create_decompress(&cinfo);
+
+	jpeg_mem_src(&cinfo, image_buffer, image_in.length());
+
+	// Read file header, set default decompression parameters.
+	jpeg_read_header(&cinfo, TRUE);
+
+	// Force RGBA decoding, even for grayscale images.
+	cinfo.out_color_space = JCS_EXT_RGBA;
+	jpeg_start_decompress(&cinfo);
+
+	// Prepare output buffer
+	size_t output_size = cinfo.output_width * cinfo.output_height * CHANNELS_RGB;
+	std::vector<uint8_t> output_buffer(output_size);
+
+	auto stride = cinfo.output_width * CHANNELS_RGB;
+	while (cinfo.output_scanline < cinfo.output_height)
+	{
+		uint8_t *ptr = &output_buffer[stride * cinfo.output_scanline];
+		jpeg_read_scanlines(&cinfo, &ptr, 1);
+	}
+
+	jpeg_finish_decompress(&cinfo);
+	jpeg_destroy_decompress(&cinfo);
+
+	return toImageData(output_buffer.data(), cinfo.output_width, cinfo.output_height);
+}
+
 EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)
 {
 	function("encode", &encode);
+	function("decode", &decode);
 
 	value_object<MozJpegOptions>("MozJpegOptions")
 		.field("quality", &MozJpegOptions::quality)
