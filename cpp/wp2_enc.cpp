@@ -20,7 +20,7 @@ struct WP2Options
 	bool use_random_matrix;
 };
 
-val encode(std::string input, int width, int height, WP2Options options)
+val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options options)
 {
 	WP2::EncoderConfig config = {};
 
@@ -34,11 +34,11 @@ val encode(std::string input, int width, int height, WP2Options options)
 	config.error_diffusion = options.error_diffusion;
 	config.use_random_matrix = options.use_random_matrix;
 
-	auto buffer = reinterpret_cast<const uint8_t *>(input.c_str());
+	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
 	WP2::ArgbBuffer src = WP2::ArgbBuffer();
 
 	// Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
-	WP2Status status = src.Import(WP2_rgbA_32, width, height, buffer, CHANNELS_RGB * width);
+	WP2Status status = src.Import(WP2_RGBA_32, width, height, rgba, CHANNELS_RGB * width);
 	if (status != WP2_STATUS_OK)
 	{
 		return val(WP2GetStatusText(status));

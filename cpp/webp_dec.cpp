@@ -5,7 +5,6 @@
 
 #include "icodec.h"
 #include "src/webp/decode.h"
-#include "src/webp/demux.h"
 
 using namespace emscripten;
 

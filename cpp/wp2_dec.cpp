@@ -8,7 +8,7 @@ using namespace emscripten;
 
 val decode(std::string input)
 {
-	WP2::ArgbBuffer buffer(WP2_rgbA_32);
+	WP2::ArgbBuffer buffer(WP2_RGBA_32);
 	WP2Status status = WP2::Decode(input, &buffer);
 	if (status != WP2_STATUS_OK)
 	{

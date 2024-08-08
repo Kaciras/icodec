@@ -23,7 +23,7 @@ struct JXLOptions
 	bool lossyModular;
 };
 
-val encode(std::string image, int width, int height, JXLOptions options)
+val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 {
 	static const JxlPixelFormat format = {CHANNELS_RGB, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
@@ -32,11 +32,6 @@ val encode(std::string image, int width, int height, JXLOptions options)
 	CodecInOut io;
 	PaddedBytes bytes;
 	ImageBundle *main = &io.Main();
-	ThreadPoolInternal *pool_ptr = nullptr;
-#ifdef __EMSCRIPTEN_PTHREADS__
-	ThreadPoolInternal pool;
-	pool_ptr = &pool;
-#endif
 
 	size_t st = 10 - options.effort;
 	cparams.speed_tier = SpeedTier(st);
@@ -96,20 +91,20 @@ val encode(std::string image, int width, int height, JXLOptions options)
 		return val("jxl::SizeHeader::Set");
 	}
 
-	auto inBuffer = reinterpret_cast<const uint8_t *>(image.data());
-	auto span = Span(inBuffer, image.size());
+	auto inBuffer = reinterpret_cast<const uint8_t *>(pixels.data());
+	auto span = Span(inBuffer, pixels.size());
 
 	auto status = ConvertFromExternal(
 		span, width, height,
 		ColorEncoding::SRGB(false),
-		8, format, pool_ptr, main
+		8, format, nullptr, main
 	);
 	if (!status)
 	{
 		return val("jxl::ConvertFromExternal");
 	}
 
-	status = EncodeFile(cparams, &io, &passes_enc_state, &bytes, GetJxlCms(), nullptr, pool_ptr);
+	status = EncodeFile(cparams, &io, &passes_enc_state, &bytes, GetJxlCms(), nullptr, nullptr);
 	if (!status)
 	{
 		return val("jxl::EncodeFile");

@@ -8,9 +8,9 @@
 
 using namespace emscripten;
 
-val encode(std::string input, int width, int height, WebPConfig config)
+val encode(std::string pixels, int width, int height, WebPConfig config)
 {
-	auto rgba = reinterpret_cast<uint8_t *>(input.data());
+	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
 	WebPPicture pic;
 	WebPMemoryWriter writer;
 

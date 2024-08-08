@@ -50,7 +50,8 @@ val decode(std::string input)
 
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec.get(), EVENTS));
 
-	JxlDecoderSetInput(dec.get(), (const uint8_t *)input.data(), input.size());
+	auto bytes = reinterpret_cast<uint8_t *>(input.data());
+	JxlDecoderSetInput(dec.get(), bytes, input.size());
 	EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec.get()));
 
 	JxlBasicInfo info;

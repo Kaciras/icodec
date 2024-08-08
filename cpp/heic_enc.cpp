@@ -29,7 +29,7 @@ struct JSWriter : public heif::Context::Writer
 	}
 };
 
-val encode(std::string input, int width, int height, HeicOptions options)
+val encode(std::string pixels, int width, int height, HeicOptions options)
 {
 	auto image = heif::Image();
 	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
@@ -40,7 +40,7 @@ val encode(std::string input, int width, int height, HeicOptions options)
 	uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
 	for (auto y = 0; y < height; y++)
 	{
-		memcpy(p + stride * y, &input[row_bytes * y], stride);
+		memcpy(p + stride * y, &pixels[row_bytes * y], stride);
 	}
 
 	auto encoder = heif::Encoder(heif_compression_HEVC);

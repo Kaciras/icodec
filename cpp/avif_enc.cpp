@@ -25,7 +25,7 @@ struct AvifOptions
 	bool enableSharpYUV;
 };
 
-val encode(std::string input, int width, int height, AvifOptions options)
+val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions options)
 {
 	auto format = (avifPixelFormat)options.subsample;
 
@@ -54,7 +54,7 @@ val encode(std::string input, int width, int height, AvifOptions options)
 
 	avifRGBImage srcRGB;
 	avifRGBImageSetDefaults(&srcRGB, image.get());
-	srcRGB.pixels = reinterpret_cast<uint8_t *>(input.data());
+	srcRGB.pixels = reinterpret_cast<uint8_t *>(pixels.data());
 	srcRGB.rowBytes = width * CHANNELS_RGB;
 	if (options.enableSharpYUV)
 	{
@@ -80,6 +80,7 @@ val encode(std::string input, int width, int height, AvifOptions options)
 	encoder->tileRowsLog2 = options.tileRowsLog2;
 	encoder->tileColsLog2 = options.tileColsLog2;
 
+	// https://github.com/AOMediaCodec/libavif/blob/47f154ae4cdefbdb7f9d86c0017acfe118db260e/src/codec_aom.c#L404
 	status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness", std::to_string(options.sharpness).c_str());
 	if (status != AVIF_RESULT_OK)
 	{

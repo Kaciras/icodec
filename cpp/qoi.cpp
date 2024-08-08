@@ -6,13 +6,11 @@
 #include "qoi.h"
 #include "icodec.h"
 
-using std::string;
-
-val encode(string input, uint32_t width, uint32_t height, val _)
+val encode(std::string pixels, uint32_t width, uint32_t height, val _)
 {
 	qoi_desc desc{ width, height, CHANNELS_RGB, QOI_SRGB };
 	int outSize;
-	auto encoded = (uint8_t *)qoi_encode(input.c_str(), &desc, &outSize);
+	auto encoded = (uint8_t *)qoi_encode(pixels.c_str(), &desc, &outSize);
 
 	if (encoded == NULL)
 	{
@@ -21,7 +19,7 @@ val encode(string input, uint32_t width, uint32_t height, val _)
 	return toUint8Array(toRAII(encoded, free).get(), outSize);
 }
 
-val decode(string input)
+val decode(std::string input)
 {
 	qoi_desc desc; // Resultant width and height stored in descriptor.
 

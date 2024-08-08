@@ -36,11 +36,11 @@ struct MozJpegOptions
 	int chroma_quality;
 };
 
-val encode(std::string input, int image_width, int image_height, MozJpegOptions opts)
+val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions options)
 {
 	// The code below is basically the `write_JPEG_file` function from
 	// https://github.com/mozilla/mozjpeg/blob/master/example.c
-	auto image_buffer = (uint8_t *)input.c_str();
+	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
 
 	/* Step 1: allocate and initialize JPEG compression object */
 	jpeg_compress_struct cinfo;
@@ -62,8 +62,8 @@ val encode(std::string input, int image_width, int image_height, MozJpegOptions 
 	jpeg_mem_dest(&cinfo, &output, &size);
 
 	/* Step 3: set parameters for compression */
-	cinfo.image_width = image_width;
-	cinfo.image_height = image_height;
+	cinfo.image_width = width;
+	cinfo.image_height = height;
 	cinfo.input_components = CHANNELS_RGB;
 	cinfo.in_color_space = JCS_EXT_RGBA;
 
@@ -73,50 +73,50 @@ val encode(std::string input, int image_width, int image_height, MozJpegOptions 
 	 * since the defaults depend on the source color space.)
 	 */
 	jpeg_set_defaults(&cinfo);
-	jpeg_set_colorspace(&cinfo, (J_COLOR_SPACE)opts.color_space);
+	jpeg_set_colorspace(&cinfo, (J_COLOR_SPACE)options.color_space);
 
-	if (opts.quant_table != -1)
+	if (options.quant_table != -1)
 	{
-		jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, opts.quant_table);
+		jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, options.quant_table);
 	}
 
-	cinfo.optimize_coding = opts.optimize_coding;
-	cinfo.smoothing_factor = opts.smoothing;
-	if (opts.arithmetic)
+	cinfo.optimize_coding = options.optimize_coding;
+	cinfo.smoothing_factor = options.smoothing;
+	if (options.arithmetic)
 	{
 		cinfo.arith_code = TRUE;
 		cinfo.optimize_coding = FALSE;
 	}
 
-	jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
+	jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, options.trellis_loops);
 	jpeg_c_set_int_param(&cinfo, JINT_DC_SCAN_OPT_MODE, 0);
-	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, opts.trellis_multipass);
-	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero);
-	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
+	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, options.trellis_multipass);
+	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, options.trellis_opt_zero);
+	jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, options.trellis_opt_table);
 
 	// A little hacky to build a string for this, but it means we can use
 	// set_quality_ratings which does some useful heuristic stuff.
-	std::string quality_str = std::to_string(opts.quality);
-	if (opts.separate_chroma_quality && opts.color_space == JCS_YCbCr)
+	std::string quality_str = std::to_string(options.quality);
+	if (options.separate_chroma_quality && options.color_space == JCS_YCbCr)
 	{
-		quality_str += "," + std::to_string(opts.chroma_quality);
+		quality_str += "," + std::to_string(options.chroma_quality);
 	}
 	char const *pqual = quality_str.c_str();
-	set_quality_ratings(&cinfo, (char *)pqual, opts.baseline);
+	set_quality_ratings(&cinfo, (char *)pqual, options.baseline);
 
-	if (!opts.auto_subsample && opts.color_space == JCS_YCbCr)
+	if (!options.auto_subsample && options.color_space == JCS_YCbCr)
 	{
-		cinfo.comp_info[0].h_samp_factor = opts.chroma_subsample;
-		cinfo.comp_info[0].v_samp_factor = opts.chroma_subsample;
+		cinfo.comp_info[0].h_samp_factor = options.chroma_subsample;
+		cinfo.comp_info[0].v_samp_factor = options.chroma_subsample;
 
-		if (opts.chroma_subsample > 2)
+		if (options.chroma_subsample > 2)
 		{
 			// Otherwise encoding fails.
 			jpeg_c_set_int_param(&cinfo, JINT_DC_SCAN_OPT_MODE, 1);
 		}
 	}
 
-	if (!opts.baseline && opts.progressive)
+	if (!options.baseline && options.progressive)
 	{
 		jpeg_simple_progression(&cinfo);
 	}
@@ -136,8 +136,7 @@ val encode(std::string input, int image_width, int image_height, MozJpegOptions 
 	 * To keep things simple, we pass one scanline per call; you can pass
 	 * more if you wish, though.
 	 */
-	int row_stride = image_width * CHANNELS_RGB;
-
+	int stride = width * CHANNELS_RGB;
 	while (cinfo.next_scanline < cinfo.image_height)
 	{
 		/*
@@ -145,8 +144,8 @@ val encode(std::string input, int image_width, int image_height, MozJpegOptions 
 		 * Here the array is only one element long, but you could pass
 		 * more than one scanline at a time if that's more convenient.
 		 */
-		JSAMPROW row_pointer = &image_buffer[cinfo.next_scanline * row_stride];
-		(void)jpeg_write_scanlines(&cinfo, &row_pointer, 1);
+		JSAMPROW p = &rgba[cinfo.next_scanline * stride];
+		(void)jpeg_write_scanlines(&cinfo, &p, 1);
 	}
 
 	/* Step 6: Finish compression */
