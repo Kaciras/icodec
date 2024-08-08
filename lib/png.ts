@@ -1,4 +1,4 @@
-import wasmFactory, { optimize, png_to_image_data, quantize } from "../dist/pngquant.js";
+import wasmFactory, { optimize, png_to_rgba, quantize } from "../dist/pngquant.js";
 import { ImageDataLike, WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
@@ -99,6 +99,6 @@ export function encode(image: ImageDataLike, options?: Options) {
 }
 
 export function decode(input: Uint8Array) {
-	const [data, width] = png_to_image_data(input);
+	const [data, width] = png_to_rgba(input);
 	return new _ICodec_ImageData(data, width, data.byteLength / width / 4);
 }

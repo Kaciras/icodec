@@ -1,104 +1,134 @@
+use bytemuck::AnyBitPattern;
 use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
-use imagequant::RGBA;
+use rgb::{
+    alt::{Gray, GrayAlpha},
+    RGB, RGBA,
+};
 use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
 use serde_wasm_bindgen::from_value;
+use wasm_bindgen::prelude::*;
 
 #[global_allocator]
-static ALLOC: AssumeSingleThreaded<FreeListAllocator> = unsafe {
-	AssumeSingleThreaded::new(FreeListAllocator::new())
-};
+static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
+    unsafe { AssumeSingleThreaded::new(FreeListAllocator::new()) };
 
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
-	pub speed: i32,
-	pub quality: u8,
-	pub min_quality: u8,
-	pub dithering: f32,
+    pub speed: i32,
+    pub quality: u8,
+    pub min_quality: u8,
+    pub dithering: f32,
 }
 
 #[wasm_bindgen]
 pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
-	let options: QuantizeOptions = from_value(options).unwrap_throw();
+    let options: QuantizeOptions = from_value(options).unwrap_throw();
 
-	let mut quantizer = imagequant::new();
-	quantizer.set_speed(options.speed).unwrap_throw();
-	quantizer.set_quality(options.min_quality, options.quality).unwrap_throw();
+    let mut quantizer = imagequant::new();
+    quantizer.set_speed(options.speed).unwrap_throw();
+    quantizer
+        .set_quality(options.min_quality, options.quality)
+        .unwrap_throw();
 
-	let rgba: &mut [RGBA] = bytemuck::cast_slice_mut(data.as_mut_slice());
-	let mut image = quantizer.new_image(&*rgba, width, height, 0.0).unwrap_throw();
+    let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(data.as_mut_slice());
+    let mut image = quantizer
+        .new_image(&*rgba, width, height, 0.0)
+        .unwrap_throw();
 
-	let mut res = match quantizer.quantize(&mut image) {
-		Ok(res) => res,
-		Err(err) => panic!("Quantization failed, because: {err:?}"),
-	};
+    let mut res = match quantizer.quantize(&mut image) {
+        Ok(res) => res,
+        Err(err) => panic!("Quantization failed, because: {err:?}"),
+    };
 
-	// Enable dithering for subsequent remappings.
-	res.set_dithering_level(options.dithering).unwrap_throw();
+    // Enable dithering for subsequent remappings.
+    res.set_dithering_level(options.dithering).unwrap_throw();
 
-	// You can reuse the result to generate several images with the same palette.
-	let (palette, pixels) = res.remapped(&mut image).unwrap_throw();
+    // You can reuse the result to generate several images with the same palette.
+    let (palette, pixels) = res.remapped(&mut image).unwrap_throw();
 
-	// Convert RGBAs back from the palette and the color references.
-	for i in 0..pixels.len() {
-		rgba[i] = palette[pixels[i] as usize]
-	}
+    // Convert RGBAs back from the palette and the color references.
+    for i in 0..pixels.len() {
+        rgba[i] = palette[pixels[i] as usize]
+    }
 
-	return data; // Modifications are not propagated to JS, so we need to return the data.
+    return data; // Modifications are not propagated to JS, so we need to return the data.
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct EncodeOptions {
-	pub quantize: bool,
-	pub level: u8,
-	pub interlace: bool,
+    pub quantize: bool,
+    pub level: u8,
+    pub interlace: bool,
 }
 
 pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions) -> Vec<u8> {
-	let mut optimization = oxipng::Options::from_preset(options.level);
-	optimization.optimize_alpha = true;
-	optimization.interlace = Some(if options.interlace {
-		oxipng::Interlacing::Adam7
-	} else {
-		oxipng::Interlacing::None
-	});
+    let mut optimization = oxipng::Options::from_preset(options.level);
+    optimization.optimize_alpha = true;
+    optimization.interlace = Some(if options.interlace {
+        oxipng::Interlacing::Adam7
+    } else {
+        oxipng::Interlacing::None
+    });
 
-	let raw = oxipng::RawImage::new(
-		width,
-		height,
-		oxipng::ColorType::RGBA,
-		oxipng::BitDepth::Eight,
-		data,
-	);
-	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
+    let raw = oxipng::RawImage::new(
+        width,
+        height,
+        oxipng::ColorType::RGBA,
+        oxipng::BitDepth::Eight,
+        data,
+    );
+    return raw
+        .unwrap_throw()
+        .create_optimized_png(&optimization)
+        .unwrap_throw();
 }
 
 // Data needs to be copied between the managed JS heap and the WASM memory,
 // so here we call two functions internally to avoid the copying overhead.
 #[wasm_bindgen]
 pub fn optimize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue) -> Vec<u8> {
-	let config: EncodeOptions = from_value(options.clone()).unwrap_throw();
-	if config.quantize {
-		data = quantize(data, width, height, options);
-	}
-	return png_encode(data, width as u32, height as u32, config)
+    let config: EncodeOptions = from_value(options.clone()).unwrap_throw();
+    if config.quantize {
+        data = quantize(data, width, height, options);
+    }
+    return png_encode(data, width as u32, height as u32, config);
+}
+
+fn cast_pixels<T>(buf: &mut [u8])
+where
+    T: Into<RGBA<u8>> + AnyBitPattern,
+{
+    for i in (0..buf.len() / 4).rev() {
+        let src: &[T] = bytemuck::cast_slice(buf);
+        let p = src[i];
+
+        let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(buf);
+        rgba[i] = p.into();
+    }
 }
 
 #[wasm_bindgen]
-pub fn decode(mut data: &[u8]) -> js_sys::Array {
-	let mut decoder = png::Decoder::new(&mut data);
-	decoder.set_transformations(
-        png::Transformations::ALPHA |
-        png::Transformations::STRIP_16,
-    );
-	let mut reader = decoder.read_info().unwrap_throw();
+pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
+    let mut decoder = png::Decoder::new(&mut data);
+    decoder.set_transformations(png::Transformations::ALPHA | png::Transformations::STRIP_16);
+    let mut reader = decoder.read_info().unwrap_throw();
 
-	let info = reader.info();
-	let width = info.width;
-	let mut buf = vec![0u8; (width * info.height * 4) as usize];
+    let info = reader.info();
+    let width = info.width;
+    let color_type = info.color_type;
+    let mut buf = vec![0u8; (width * info.height * 4) as usize];
 
-	reader.next_frame(&mut buf).unwrap_throw();
+    reader.next_frame(&mut buf).unwrap();
 
-	let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
-	return js_sys::Array::of2(&JsValue::from(data), &JsValue::from(width));
+    match color_type {
+        png::ColorType::Grayscale => cast_pixels::<GrayAlpha<u8>>(&mut buf),
+        png::ColorType::GrayscaleAlpha => cast_pixels::<GrayAlpha<u8>>(&mut buf),
+        png::ColorType::Rgb => {},
+        png::ColorType::Rgba => {},
+        png::ColorType::Indexed => {},
+        _ => unreachable!("Missing handing of ColorType"),
+    }
+
+    let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
+    return js_sys::Array::of2(&JsValue::from(data), &JsValue::from(width));
 }

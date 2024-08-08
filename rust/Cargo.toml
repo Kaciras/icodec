@@ -17,6 +17,7 @@ serde-wasm-bindgen = "0.6.5"
 bytemuck = "1.16.3"
 lol_alloc = "0.4.1"
 png = "0.17.13"
+rgb = "0.8.48"
 js-sys = "0.3.69"
 imagequant = { version = "4", default-features = false }
 oxipng = { version = "9", features = ["freestanding"], default-features = false }
