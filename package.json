@@ -32,9 +32,12 @@
 			"types": "./lib/index.d.ts",
 			"default": "./lib/node.js"
 		},
-		"./png-enc.wasm": "./dist/png_bg.wasm",
 		"./qoi-enc.wasm": "./dist/qoi.wasm",
 		"./qoi-dec.wasm": "./dist/qoi.wasm",
+		"./png-enc.wasm": "./dist/pngquant_bg.wasm",
+		"./png-dec.wasm": "./dist/pngquant_bg.wasm",
+		"./jpeg-enc.wasm": "./dist/mozjpeg.wasm",
+		"./jpeg-dec.wasm": "./dist/mozjpeg.wasm",
 		"./*.wasm": "./dist/*.wasm"
 	},
 	"devDependencies": {

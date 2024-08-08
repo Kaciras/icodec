@@ -29,26 +29,38 @@ export interface Options {
 	 */
 	qualityAlpha?: number;
 	/**
+	 * [0 - 10], 0 = slowest, 10 = fastest
+	 */
+	speed?: number;
+	/**
+	 * Chrome subsampling type.
+	 *
+	 * @default YUV420
+	 */
+	subsample?: Subsampling;
+	/**
 	 * [0 - 6], Creates 2^n tiles in that dimension
 	 */
 	tileRowsLog2?: number;
 	tileColsLog2?: number;
 	/**
-	 * [0 - 10], 0 = slowest, 10 = fastest
-	 */
-	speed?: number;
-
-	subsample?: Subsampling;
-	/**
-	 * Extra chroma compression
+	 * Extra chroma compression, cannot be used in lossless mode.
 	 */
 	chromaDeltaQ?: boolean;
-
-	/** [0-7] */
+	/**
+	 * Bias towards block sharpness in rate-distortion
+	 * optimization of transform coefficients [0, 7]
+	 *
+	 * @default 0
+	 */
 	sharpness?: number;
-	/** [0-50] */
+	/**
+	 * Amount of noise (from 0 = don't denoise, to 50)
+	 */
 	denoiseLevel?: number;
-
+	/**
+	 * Distortion metric tuned with.
+	 */
 	tune?: AVIFTune;
 	/**
 	 * toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
@@ -59,10 +71,10 @@ export interface Options {
 export const defaultOptions: Required<Options> = {
 	quality: 50,
 	qualityAlpha: -1,
-	tileColsLog2: 0,
-	tileRowsLog2: 0,
 	speed: 6,
 	subsample: Subsampling.YUV420,
+	tileColsLog2: 0,
+	tileRowsLog2: 0,
 	chromaDeltaQ: false,
 	sharpness: 0,
 	denoiseLevel: 0,
@@ -74,7 +86,7 @@ export const mimeType = "image/avif";
 export const extension = "avif";
 
 let encoderWASM: any;
-let decoderWASM: any;
+let decoderWASM: any;//358,466
 
 export async function loadEncoder(input?: WasmSource) {
 	return encoderWASM = await loadES(wasmFactoryEnc, input);

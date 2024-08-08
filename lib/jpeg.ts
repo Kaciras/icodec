@@ -1,4 +1,4 @@
-import wasmFactoryEnc from "../dist/jpeg-enc.js";
+import wasmFactoryEnc from "../dist/mozjpeg.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export enum ColorSpace {

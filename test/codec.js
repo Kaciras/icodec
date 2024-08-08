@@ -47,6 +47,8 @@ describe("encode", () => {
 });
 
 describe("decode", () => {
+	test("JPEG", testDecode.bind(jpeg));
+	test("PNG", testDecode.bind(png));
 	test("QOI", testDecode.bind(qoi));
 	test("WebP", testDecode.bind(webp));
 	test("AVIF", testDecode.bind(avif));

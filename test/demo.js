@@ -42,7 +42,7 @@ function decode(blob) {
 }
 
 async function wasmDecode(file, decoder) {
-	const input = await file.arrayBuffer();
+	const input = await file.bytes();
 	await decoder.loadDecoder();
 	const image = decoder.decode(input);
 

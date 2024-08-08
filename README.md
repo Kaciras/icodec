@@ -17,13 +17,12 @@ Supported codecs:
     <tbody>
         <tr>
             <td>jpeg</td>
-            <td>MozJPEG</td>
-            <td>❌</td>
+            <td colspan='2'>MozJPEG</td>
         </tr>
         <tr>
             <td>png</td>
             <td>OxiPNG + imagequant</td>
-            <td>❌</td>
+            <td>image-png</td>
         </tr>
         <tr>
             <td>qoi</td>
@@ -35,7 +34,7 @@ Supported codecs:
         </tr>
         <tr>
             <td>avif</td>
-            <td colspan='2'>libavif, aom</td>
+            <td colspan='2'>libavif + aom</td>
         </tr>
         <tr>
             <td>jxl</td>
@@ -93,15 +92,12 @@ Each codec module exports:
   This function returns the underlying WASM module, which is not part of the public API and can be changed at any time.
 
 - `encode(imageData, options?)`: Encode an image.
+- `loadDecoder(input?)`: Like `loadEncoder`, but for `decode`.
+- `decode(uint8Array)`: Convert the image to RGBA data, the return value is an `ImageData` type.
 - `mimeType`: The MIME type string of the codec.
 - `extension`: File extension of the format.
 - `defaultOptions`: The default options for `encode` function.
 - `type Options`: Type definition of the encode options.
-
-If the module support decoding, it will also export: 
-
-- `loadDecoder(input?)`: Like `loadEncoder`, but for `decode`.
-- `decode(buffer)`: Convert the image to RGBA data, the return value is an `ImageData` type.
 
 The `png` module export extra members:
 

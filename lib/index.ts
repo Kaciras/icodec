@@ -20,32 +20,21 @@ globalThis._ICodec_ImageData = ImageData;
  * Provides a uniform type for codec modules that support encoding.
  *
  * @example
- * import { wp2, ICodecEncoder } from "icodec";
+ * import { wp2, ICodecModule } from "icodec";
  *
- * const encoder: ICodecEncoder<wp2.Options> = wp2;
+ * const encoder: ICodecModule<wp2.Options> = wp2;
  */
-export interface ICodecEncoder<T = any> {
+export interface ICodecModule<T = any> {
 
 	defaultOptions: Required<T>;
 	mimeType: string;
 	extension: string;
 
+	loadDecoder(source?: WasmSource): Promise<any>;
+
+	decode(input: Uint8Array): ImageData;
+
 	loadEncoder(source?: WasmSource): Promise<any>;
 
 	encode(image: ImageDataLike, options?: T): Uint8Array;
-}
-
-/**
- * Provides a uniform type for codec modules that support decoding.
- *
- * @example
- * import { wp2, ICodecEncoder, ICodecDecoder } from "icodec";
- *
- * const convertor: ICodecEncoder<wp2.Options> & ICodecDecoder = wp2;
- */
-export interface ICodecDecoder {
-
-	loadDecoder(source?: WasmSource): Promise<any>;
-
-	decode(input: BufferSource): ImageData;
 }
