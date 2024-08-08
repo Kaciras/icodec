@@ -52,9 +52,24 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 	encoder.set_integer_parameter("complexity", options.complexity);
 	encoder.set_string_parameter("chroma", options.chroma);
 
-	// encode the image
 	auto ctx = heif::Context();
-	ctx.encode_image(image, encoder);
+	auto outputOpts = heif::Context::EncodingOptions();
+
+	// Must set `matrix_coefficients=0` for exact lossless.
+	// https://github.com/strukturag/libheif/pull/1039#issuecomment-1866023028
+	if (options.lossless && options.chroma == "444")
+	{
+		auto nclx = heif_nclx_color_profile_alloc();
+		nclx->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
+		outputOpts.output_nclx_profile = nclx;
+
+		ctx.encode_image(image, encoder, outputOpts);
+		heif_nclx_color_profile_free(nclx);
+	}
+	else
+	{
+		ctx.encode_image(image, encoder, outputOpts);
+	}
 
 	auto writer = JSWriter();
 	ctx.write(writer);
