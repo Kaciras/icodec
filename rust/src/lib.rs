@@ -94,16 +94,11 @@ pub fn optimize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
     return png_encode(data, width as u32, height as u32, config);
 }
 
-fn cast_pixels<T>(buf: &mut [u8])
-where
-    T: Into<RGBA<u8>> + AnyBitPattern,
-{
-    for i in (0..buf.len() / 4).rev() {
-        let src: &[T] = bytemuck::cast_slice(buf);
-        let p = src[i];
-
-        let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(buf);
-        rgba[i] = p.into();
+fn cast_pixels(buf: &mut [u8]) {
+	let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(buf);
+    for i in (0..rgba.len()).rev() {
+        let src: &[GrayAlpha<u8>] = bytemuck::cast_slice(rgba);
+        rgba[i] = src[i].into();
     }
 }
 
@@ -121,12 +116,10 @@ pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
     reader.next_frame(&mut buf).unwrap();
 
     match color_type {
-        png::ColorType::Grayscale => cast_pixels::<GrayAlpha<u8>>(&mut buf),
-        png::ColorType::GrayscaleAlpha => cast_pixels::<GrayAlpha<u8>>(&mut buf),
-        png::ColorType::Rgb => {},
-        png::ColorType::Rgba => {},
-        png::ColorType::Indexed => {},
-        _ => unreachable!("Missing handing of ColorType"),
+        png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
+            cast_pixels(&mut buf);
+        }
+        _ => {/* Transformations ensure RGB & pattled image to RGBA */}
     }
 
     let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
