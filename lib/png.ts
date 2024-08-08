@@ -1,4 +1,4 @@
-import wasmFactory, { optimize, quantize } from "../dist/png.js";
+import wasmFactory, { optimize, png_to_image_data, quantize } from "../dist/pngquant.js";
 import { ImageDataLike, WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
@@ -77,6 +77,7 @@ export const mimeType = "image/png";
 export const extension = "png";
 
 export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<any>;
+export const loadDecoder = loadEncoder;
 
 /**
  * Reduces the colors used in the image at a slight loss,
@@ -95,4 +96,9 @@ export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
 	const { data, width, height } = image;
 	return optimize(data as any, width, height, { ...defaultOptions, ...options });
+}
+
+export function decode(input: Uint8Array) {
+	const [data, width] = png_to_image_data(input);
+	return new _ICodec_ImageData(data, width, data.byteLength / width / 4);
 }

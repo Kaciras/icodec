@@ -83,3 +83,22 @@ pub fn optimize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 	}
 	return png_encode(data, width as u32, height as u32, config)
 }
+
+#[wasm_bindgen]
+pub fn decode(mut data: &[u8]) -> js_sys::Array {
+	let mut decoder = png::Decoder::new(&mut data);
+	decoder.set_transformations(
+        png::Transformations::ALPHA |
+        png::Transformations::STRIP_16,
+    );
+	let mut reader = decoder.read_info().unwrap_throw();
+
+	let info = reader.info();
+	let width = info.width;
+	let mut buf = vec![0u8; (width * info.height * 4) as usize];
+
+	reader.next_frame(&mut buf).unwrap_throw();
+
+	let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
+	return js_sys::Array::of2(&JsValue::from(data), &JsValue::from(width));
+}

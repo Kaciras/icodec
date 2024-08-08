@@ -32,9 +32,11 @@ function decode(blob) {
 		case "image/avif":
 			return wasmDecode(blob, codecs.avif);
 		case "image/jpeg":
+			return wasmDecode(blob, codecs.jpeg);
 		case "image/png":
+			return wasmDecode(blob, codecs.png);
 		case "image/webp":
-			return builtinDecode(blob);
+			return wasmDecode(blob, codecs.webp);
 	}
 	window.alert("Invalid image type: " + blob.type);
 }

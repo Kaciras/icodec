@@ -151,8 +151,8 @@ export function buildPNGQuant() {
 	execFileSync("wasm-pack", args, { stdio: "inherit", env });
 
 	// `--out-dir` cannot be out of the rust workspace.
-	renameSync("rust/pkg/png.js", `${config.outDir}/png.js`);
-	renameSync("rust/pkg/png_bg.wasm", `${config.outDir}/png_bg.wasm`);
+	renameSync("rust/pkg/pngquant.js", `${config.outDir}/pngquant.js`);
+	renameSync("rust/pkg/pngquant_bg.wasm", `${config.outDir}/pngquant_bg.wasm`);
 }
 
 export function buildQOI() {
