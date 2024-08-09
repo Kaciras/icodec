@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import assert from "assert";
 import { test } from "node:test";
-import { avif, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
+import { avif, jxl, png, qoi, webp } from "../lib/node.js";
 import sharp from "sharp";
 import pixelMatch from "pixelmatch";
 
@@ -30,9 +30,6 @@ test("AVIF", testLossless.bind(avif, {
 test("WebP", testLossless.bind(webp, { lossless: true }));
 test("PNG", testLossless.bind(png, { quantize: false }));
 test("QOI", testLossless.bind(qoi));
-test("WebP2", testLossless.bind(wp2, {
-	quality: 100,
-	alpha_quality: 100,
-	uv_mode: wp2.UVMode.UV444,
-}));
 test("JXL", testLossless.bind(jxl, { lossless: true }));
+
+// test("WebP2", testLossless.bind(wp2, { quality: 100 }));

@@ -3,7 +3,7 @@ import { describe, test } from "node:test";
 import * as assert from "assert";
 import { join } from "path";
 import pixelMatch from "pixelmatch";
-import { avif, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
+import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 
 const snapshotDirectory = "test/snapshot";
 
@@ -51,6 +51,7 @@ describe("decode", () => {
 	test("PNG", testDecode.bind(png));
 	test("QOI", testDecode.bind(qoi));
 	test("WebP", testDecode.bind(webp));
+	test("HEIC", testDecode.bind(heic));
 	test("AVIF", testDecode.bind(avif));
 	test("JXL", testDecode.bind(jxl));
 	test("WebP2", testDecode.bind(wp2));
