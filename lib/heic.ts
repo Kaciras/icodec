@@ -1,35 +1,65 @@
 import wasmFactoryEnc from "../dist/heic-enc.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
+export const Presets = ["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo"] as const;
+export const Subsampling = ["420", "422", "444"] as const;
+
 export interface Options {
 	/**
-	 * [0, 100], default 50.
+	 * Quality-based VBR [0, 100], it will map to `--crf` parameter of x265.
+	 * quality=0   -> crf=50
+	 * quality=50  -> crf=25
+	 * quality=100 -> crf=0
+	 *
+	 * @default 50
 	 */
 	quality?: number;
+
 	/**
+	 * If true, Bypass transform, quant and loop filters.
+	 *
+	 * Note: it does not bypass chroma subsampling, you need
+	 *       also to set `chroma` to "444" for exact lossless.
+	 *
 	 * @default false
 	 */
 	lossless?: boolean;
+
 	/**
+	 * Trade off performance for compression efficiency.
+	 *
 	 * @default "slow"
 	 */
-	preset?: "ultrafast" | "superfast" | "veryfast" | "faster" | "fast" | "medium" | "slow" | "slower" | "veryslow" | "placebo";
+	preset?: typeof Presets[number];
+
 	/**
+	 * Tune the settings for a particular type of source or situation.
+	 *
 	 * @default "ssim"
 	 */
 	tune?: "psnr" | "ssim" | "grain" | "fastdecode";
+
 	/**
+	 * Max TU recursive depth for intra CUs。
+	 *
 	 * [1, 4], default 2.
 	 */
 	tuIntraDepth?: number;
+
 	/**
-	 * [0, 100], default 50.
+	 * CPU effort, larger value increases encode time.
+	 * Range is [0, 100], but only changes at a few values.
+	 *
+	 * @default 50
 	 */
 	complexity?: number;
+
 	/**
+	 * Specify chroma subsampling method.
+	 *
 	 * @default "420"
 	 */
-	chroma?: "420" | "422" | "444";
+	chroma?: typeof Subsampling[number];
 }
 
 export const defaultOptions: Required<Options> = {

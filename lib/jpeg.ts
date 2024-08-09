@@ -21,14 +21,60 @@ export enum Quantization {
 }
 
 export interface Options {
+	/**
+	 * Compression quality [0..100], 5-95 is most useful range.
+	 *
+	 * @default 75
+	 */
 	quality?: number;
+
+	/**
+	 * Create baseline JPEG file (disable progressive coding).
+	 *
+	 * @default false
+	 */
 	baseline?: boolean;
+
+	/**
+	 * Use arithmetic coding.
+	 *
+	 * @default false
+	 */
 	arithmetic?: boolean;
+
+	/**
+	 * Create progressive JPEG file.
+	 *
+	 * @default true
+	 */
 	progressive?: boolean;
+
+	/**
+	 * Optimize Huffman table (smaller file, but slow compression)
+	 *
+	 * @default true
+	 */
 	optimize_coding?: boolean;
+
+	/**
+	 * Smooth dithered input (N=1..100 is strength)
+	 *
+	 * @default 0
+	 */
 	smoothing?: number;
+
+	/**
+	 * @default ColorSpace.YCbCr
+	 */
 	color_space?: ColorSpace;
+
+	/**
+	 * Select the predefined quantization table to use.
+	 *
+	 * @default Quantization.ImageMagick
+	 */
 	quant_table?: Quantization;
+
 	trellis_multipass?: boolean;
 	trellis_opt_zero?: boolean;
 	trellis_opt_table?: boolean;

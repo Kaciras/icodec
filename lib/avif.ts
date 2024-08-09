@@ -22,31 +22,43 @@ export interface Options {
 	 * @default 50
 	 */
 	quality?: number;
+
 	/**
 	 * As above, but -1 means 'use quality'
 	 *
 	 * @default -1
 	 */
 	qualityAlpha?: number;
+
 	/**
-	 * [0 - 10], 0 = slowest, 10 = fastest
+	 * [0 - 10], 0 = slowest, 10 = fastest.
+	 *
+	 * @default 6
 	 */
 	speed?: number;
+
 	/**
 	 * Chrome subsampling type.
 	 *
 	 * @default YUV420
 	 */
 	subsample?: Subsampling;
+
 	/**
 	 * [0 - 6], Creates 2^n tiles in that dimension
+	 *
+	 * @default 0
 	 */
 	tileRowsLog2?: number;
 	tileColsLog2?: number;
+
 	/**
 	 * Extra chroma compression, cannot be used in lossless mode.
+	 *
+	 * @default false
 	 */
 	chromaDeltaQ?: boolean;
+
 	/**
 	 * Bias towards block sharpness in rate-distortion
 	 * optimization of transform coefficients [0, 7]
@@ -54,16 +66,25 @@ export interface Options {
 	 * @default 0
 	 */
 	sharpness?: number;
+
 	/**
 	 * Amount of noise (from 0 = don't denoise, to 50)
+	 *
+	 * @default 0
 	 */
 	denoiseLevel?: number;
+
 	/**
 	 * Distortion metric tuned with.
+	 *
+	 * @default  AVIFTune.Auto
 	 */
 	tune?: AVIFTune;
+
 	/**
 	 * toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
+	 *
+	 * @default false
 	 */
 	enableSharpYUV?: boolean;
 }
