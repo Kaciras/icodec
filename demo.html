@@ -9,13 +9,15 @@
 <body>
 <section id='input'>
 	<p>
-		A simple demo page to test encode/decode image with WASM.
-		For full-featured production please see
+		A simple demo page to test encode/decode images.
+		For full-featured app please see
 		<a href='https://ic-analyzer.kaciras.com/'>ICAnalyzer</a>
 	</p>
+
 	<label id='file-label'>
 		Select a file: <input id='file' type='file'>
 	</label>
+
 	<label id='encoder-label'>
 		Encoder:
 		<select>
@@ -29,13 +31,16 @@
 			<option>wp2</option>
 		</select>
 	</label>
-	<button id='encode' disabled>Encode</button>
+
+	if (output.error) {
+	return window.alert("Failed, see console for reason");
+	}
 	<a id='download' hidden='hidden'></a>
+	<button id='encode' disabled>Encode</button>
 </section>
+
 <canvas width='100' height='100'></canvas>
-<label id='options'>
-	Encode Options:
-	<textarea></textarea>
-</label>
+
+<label id='options'>Encode Options<textarea></textarea></label>
 </body>
 </html>
