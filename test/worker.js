@@ -5,6 +5,6 @@ self.addEventListener("message", async event => {
 	const encoder = codecs[codec];
 
 	await encoder.loadEncoder();
-	const result = encoder.encode(image, options);
-	postMessage(result, [result.buffer]);
+	const output = encoder.encode(image, options);
+	postMessage(output, [output.buffer]);
 });
