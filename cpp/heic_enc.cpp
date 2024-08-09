@@ -16,6 +16,7 @@ struct HeicOptions
 	int tuIntraDepth;
 	int complexity;
 	std::string chroma;
+	bool sharpYUV;
 };
 
 struct JSWriter : public heif::Context::Writer
@@ -54,6 +55,12 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 
 	auto ctx = heif::Context();
 	auto outputOpts = heif::Context::EncodingOptions();
+
+	if (options.sharpYUV)
+	{
+		outputOpts.color_conversion_options.only_use_preferred_chroma_algorithm = true;
+		outputOpts.color_conversion_options.preferred_chroma_downsampling_algorithm = heif_chroma_downsampling_sharp_yuv;
+	}
 
 	// Must set `matrix_coefficients=0` for exact lossless.
 	// https://github.com/strukturag/libheif/pull/1039#issuecomment-1866023028
@@ -111,5 +118,6 @@ EMSCRIPTEN_BINDINGS(icodec_module_HEIC)
 		.field("tune", &HeicOptions::tune)
 		.field("tuIntraDepth", &HeicOptions::tuIntraDepth)
 		.field("complexity", &HeicOptions::complexity)
-		.field("chroma", &HeicOptions::chroma);
+		.field("chroma", &HeicOptions::chroma)
+		.field("sharpYUV", &HeicOptions::sharpYUV);
 }

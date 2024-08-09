@@ -329,19 +329,21 @@ function buildHEIC() {
 	});
 
 	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
-		WITH_LIBSHARPYUV: "0",
+		CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
+		WITH_AOM_DECODER: "0",
+		WITH_AOM_ENCODER: "0",
 		WITH_EXAMPLES: "0",
 		WITH_GDK_PIXBUF: "0",
 		ENABLE_MULTITHREADING_SUPPORT: "0",
 		BUILD_TESTING: "0",
 		BUILD_SHARED_LIBS: "0",
-		CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
 
-		WITH_X265: "1",
+		LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
+		LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
+
 		X265_INCLUDE_DIR: "vendor/x265/source",
 		X265_LIBRARY: "vendor/x265/source/libx265.a",
 
-		WITH_LIBDE265: "1",
 		LIBDE265_INCLUDE_DIR: "vendor/libde265",
 		LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
 	});
@@ -352,6 +354,7 @@ function buildHEIC() {
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
 		"cpp/heic_enc.cpp",
+		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
 		"vendor/libde265/libde265/libde265.a",
 		"vendor/libheif/libheif/libheif.a",

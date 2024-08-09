@@ -60,6 +60,13 @@ export interface Options {
 	 * @default "420"
 	 */
 	chroma?: typeof Subsampling[number];
+
+	/**
+	 * Use more accurate and sharper RGB->YUV conversion if needed.
+	 *
+	 * @default false
+	 */
+	sharpYUV?: boolean;
 }
 
 export const defaultOptions: Required<Options> = {
@@ -70,6 +77,7 @@ export const defaultOptions: Required<Options> = {
 	tuIntraDepth: 2,
 	complexity: 50,
 	chroma: "420",
+	sharpYUV: false,
 };
 
 export const mimeType = "image/heic";
