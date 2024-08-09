@@ -85,6 +85,10 @@ async function encode(codec = select.value) {
 	const output = await invokeInWorker([codec, sharedImageData, options]);
 	encodeButton.classList.remove("busy");
 
+	if (output.error) {
+		return window.alert("Failed, see console for reason");
+	}
+
 	let { name } = fileChooser.files[0];
 	const dot = name.lastIndexOf(".");
 	if (dot !== -1) {
