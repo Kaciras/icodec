@@ -1,39 +1,25 @@
-import { readFileSync, writeFileSync } from "fs";
 import { describe, test } from "node:test";
 import * as assert from "assert";
-import { join } from "path";
-import pixelMatch from "pixelmatch";
 import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
-
-const snapshotDirectory = "test/snapshot";
-
-const rgbaFixture = {
-	width: 417,
-	height: 114,
-	data: readFileSync("test/snapshot/image.bin"),
-};
-
-function assertImageEqual(buffer1, { width, height, data }) {
-	assert.strictEqual(buffer1.byteLength, data.byteLength);
-
-	const diff = new Uint8ClampedArray(width * height * 4);
-	const diffs = pixelMatch(buffer1, data, diff, width, height, { threshold: 0.2 });
-	assert.ok(diffs < width * height / 100, "Wrong decode output");
-}
+import { assertSimilar, getRawPixels, getSnapshot, updateSnapshot } from "./fixtures.js";
 
 async function testEncode() {
-	const { loadEncoder, extension, encode } = this;
+	const { loadEncoder, encode } = this;
 	await loadEncoder();
-	const encoded = encode(rgbaFixture);
-	writeFileSync(join(snapshotDirectory, "image." + extension), encoded);
+	const encoded = encode(getRawPixels("image"));
+
+	updateSnapshot("image", this, encoded);
 	assert.ok(encoded.length < 18 * 1024);
 }
 
 async function testDecode() {
-	const { loadDecoder, extension, decode } = this;
+	const input = getSnapshot("image", this);
+	const { loadDecoder, decode } = this;
+
 	await loadDecoder();
-	const output = decode(readFileSync("test/snapshot/image." + extension));
-	assertImageEqual(output.data, rgbaFixture);
+	const output = decode(input);
+
+	assertSimilar(getRawPixels("image"), output, 0.01, 0.2);
 }
 
 describe("encode", () => {

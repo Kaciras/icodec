@@ -1,13 +1,7 @@
 import { describe, test } from "node:test";
 import { avif, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import assert from "assert";
-import { readFileSync } from "fs";
-
-const rgbaFixture = {
-	width: 417,
-	height: 114,
-	data: readFileSync("test/snapshot/image.bin"),
-};
+import { getRawPixels, getSnapshot } from "./fixtures.js";
 
 const leakTestRuns = 20;
 
@@ -17,30 +11,33 @@ function getMemoryBuffer(wasm) {
 
 async function testEncodeLeak() {
 	const { loadEncoder, encode } = this;
+	const image = getRawPixels("image");
+
 	const wasm = await loadEncoder();
-	encode(rgbaFixture);
+	encode(image); // Ensure memory grown.
 
 	const memory = getMemoryBuffer(wasm);
 	const before = memory.byteLength;
 
 	for (let i = 0; i < leakTestRuns; i++) {
-		encode(rgbaFixture);
+		encode(image);
 	}
 	const after = memory.byteLength;
 	assert.strictEqual(after, before);
 }
 
 async function testDecodeLeak() {
-	const { loadDecoder, extension, decode } = this;
+	const { loadDecoder, decode } = this;
+	const input = getSnapshot("image", this);
+
 	const wasm = await loadDecoder();
-	const file = readFileSync("test/snapshot/image." + extension);
-	decode(file);
+	decode(input); // Ensure memory grown.
 
 	const memory = getMemoryBuffer(wasm);
 	const before = memory.byteLength;
 
 	for (let i = 0; i < leakTestRuns; i++) {
-		decode(file);
+		decode(input);
 	}
 	const after = memory.byteLength;
 	assert.strictEqual(after, before);

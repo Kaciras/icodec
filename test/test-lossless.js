@@ -1,26 +1,19 @@
-import { readFileSync } from "fs";
-import assert from "assert";
 import { test } from "node:test";
 import { avif, jxl, png, qoi, webp } from "../lib/node.js";
-import sharp from "sharp";
-import pixelMatch from "pixelmatch";
+import { assertSimilar, getRawPixels } from "./fixtures.js";
 
-const data = readFileSync("test/snapshot/alpha.bin");
-const width = 101;
-const height = 101;
+const image = getRawPixels("alpha");
 
 async function testLossless(options) {
 	const { loadEncoder, encode, loadDecoder, decode } = this;
 
 	await loadEncoder();
-	const encoded = encode({ data, width, height }, options);
+	await loadDecoder();
 
-	const back = this === png
-		? await sharp(encoded).raw().toBuffer()
-		: await loadDecoder().then(() => decode(encoded).data);
+	const encoded = encode(image, options);
+	const back = decode(encoded);
 
-	const differences = pixelMatch(data, back, null, width, height, { threshold: 0 });
-	assert.equal(differences, 0);
+	assertSimilar(image, back, 0, 0);
 }
 
 test("AVIF", testLossless.bind(avif, {
