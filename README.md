@@ -144,3 +144,15 @@ TODOs:
 
 * Could it be possible to remove HEIC encoder dependency on pthread, or limit the number of threads?
 * vvenc cannot be compiled with Emscripten.
+
+Rnn tests:
+
+```shell
+node --test test/test-*.js
+```
+
+Start web demo:
+
+```shell
+node start-demo.js
+```
