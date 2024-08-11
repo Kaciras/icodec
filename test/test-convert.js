@@ -1,5 +1,6 @@
 import { describe, test } from "node:test";
 import * as assert from "assert";
+import sharp from "sharp";
 import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import { assertSimilar, getRawPixels, getSnapshot, updateSnapshot } from "./fixtures.js";
 
@@ -41,4 +42,15 @@ describe("decode", () => {
 	test("AVIF", testDecode.bind(avif));
 	test("JXL", testDecode.bind(jxl));
 	test("WebP2", testDecode.bind(wp2));
+});
+
+test("decode gray PNG", async () => {
+	const buffer = getSnapshot("4bitGray", png);
+
+	await png.loadDecoder();
+	const image = png.decode(buffer);
+
+	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
+	const expected = { data, width: 150, height: 200 };
+	assertSimilar(expected, image, 0, 0);
 });

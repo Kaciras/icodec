@@ -1,5 +1,5 @@
 import { describe, test } from "node:test";
-import { avif, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
+import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import assert from "assert";
 import { getRawPixels, getSnapshot } from "./fixtures.js";
 
@@ -54,8 +54,11 @@ describe("encode", () => {
 });
 
 describe("decode", () => {
+	test("JPEG", testDecodeLeak.bind(jpeg));
+	test("PNG", testDecodeLeak.bind(png));
 	test("QOI", testDecodeLeak.bind(qoi));
 	test("WebP", testDecodeLeak.bind(webp));
+	test("HEIC", testDecodeLeak.bind(heic));
 	test("AVIF", testDecodeLeak.bind(avif));
 	test("JXL", testDecodeLeak.bind(jxl));
 	test("WebP2", testDecodeLeak.bind(wp2));
