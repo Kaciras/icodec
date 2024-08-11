@@ -1,6 +1,9 @@
 import wasmFactory from "../dist/qoi.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
+/**
+ * QOI encoder does not have options, it's always lossless.
+ */
 export type Options = never;
 
 export const defaultOptions = undefined as never;

@@ -2,7 +2,7 @@
 
 [![NPM Version](https://img.shields.io/npm/v/icodec?style=flat-square)](https://www.npmjs.com/package/icodec)
 
-Image encoders & decoders with WebAssembly.
+Image encoders & decoders built with WebAssembly.
 
 Supported codecs:
 
@@ -63,7 +63,7 @@ import { avif, jxl } from "icodec";
 
 const response = await fetch("https://raw.githubusercontent.com/Kaciras/icodec/master/test/snapshot/image.avif")
 
-// This should be called once before you invoke `encode()`
+// This should be called once before you invoke `decode()`
 await avif.loadDecoder();
 
 // Decode AVIF to ImageData.
@@ -91,7 +91,7 @@ Each codec module exports:
 
   This function returns the underlying WASM module, which is not part of the public API and can be changed at any time.
 
-- `encode(imageData, options?)`: Encode an image.
+- `encode(imageData, options?)`: Encode an image with RGBA pixels data.
 - `loadDecoder(input?)`: Like `loadEncoder`, but for `decode`.
 - `decode(uint8Array)`: Convert the image to RGBA data, the return value is an `ImageData` type.
 - `mimeType`: The MIME type string of the codec.
@@ -104,7 +104,7 @@ The `png` module export extra members:
 - `reduceColors(imageData, options?)`: Reduces the colors used in the image at a slight loss, returns `Uint8Array`.
 - `type QuantizeOptions`: Type definition of the options in `reduceColors`.
 
-To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch` for file reading.
+To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
 
 ```javascript
 import { avif, jxl } from "icodec/node";
@@ -148,6 +148,7 @@ TODOs:
 Rnn tests:
 
 ```shell
+pnpm exec tsc
 node --test test/test-*.js
 ```
 

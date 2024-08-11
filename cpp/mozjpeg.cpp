@@ -155,9 +155,9 @@ val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions o
 	return toUint8Array(toRAII(output, free).get(), size);
 }
 
-val decode(std::string image_in)
+val decode(std::string input)
 {
-	uint8_t *image_buffer = (uint8_t *)image_in.c_str();
+	auto inBuffer = reinterpret_cast<const uint8_t *>(input.c_str());
 
 	jpeg_decompress_struct cinfo;
 	jpeg_error_mgr jerr;
@@ -166,7 +166,7 @@ val decode(std::string image_in)
 	cinfo.err = jpeg_std_error(&jerr);
 	jpeg_create_decompress(&cinfo);
 
-	jpeg_mem_src(&cinfo, image_buffer, image_in.length());
+	jpeg_mem_src(&cinfo, inBuffer, input.length());
 
 	// Read file header, set default decompression parameters.
 	jpeg_read_header(&cinfo, TRUE);
@@ -177,19 +177,19 @@ val decode(std::string image_in)
 
 	// Prepare output buffer
 	size_t output_size = cinfo.output_width * cinfo.output_height * CHANNELS_RGB;
-	std::vector<uint8_t> output_buffer(output_size);
+	std::vector<uint8_t> output(output_size);
 
 	auto stride = cinfo.output_width * CHANNELS_RGB;
 	while (cinfo.output_scanline < cinfo.output_height)
 	{
-		uint8_t *ptr = &output_buffer[stride * cinfo.output_scanline];
+		uint8_t *ptr = &output[stride * cinfo.output_scanline];
 		jpeg_read_scanlines(&cinfo, &ptr, 1);
 	}
 
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
 
-	return toImageData(output_buffer.data(), cinfo.output_width, cinfo.output_height);
+	return toImageData(output.data(), cinfo.output_width, cinfo.output_height);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)

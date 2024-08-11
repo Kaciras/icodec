@@ -3,14 +3,57 @@ import wasmFactoryDec from "../dist/jxl-dec.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export interface Options {
+	/**
+	 * If true, encode the image without any loss.
+	 *
+	 * @default false
+	 */
 	lossless?: boolean;
+
+	/**
+	 * Sets encoder effort/speed level without affecting decoding speed.
+	 * Valid values are, from faster to slower speed: [1, 9].
+	 *
+	 * @default 7
+	 */
 	effort?: number;
+
 	quality?: number;
 	progressive?: boolean;
+
+	/**
+	 * Edge preserving filter level, -1 to 3.
+	 * Use -1 for the default (encoder chooses), 0 to 3 to set a strength.
+	 *
+	 * @default -1
+	 */
 	epf?: number;
+
+	/**
+	 * Enables or disables delta palette. Use -1 for the default (encoder chooses),
+	 * 0 to disable, 1 to enable. Used in modular mode.
+	 */
 	lossyPalette?: boolean;
+
+	/**
+	 * Sets the decoding speed tier for the provided options.
+	 *
+	 * Minimum is 0 (slowest to decode, best quality/density), and
+	 * maximum is 4 (fastest to decode, at the cost of some quality/density).
+	 *
+	 * @default 0
+	 */
 	decodingSpeedTier?: number;
+
+	/**
+	 * Adds noise to the image emulating photographic film noise, the higher the
+	 * given number, the grainier the image will be. As an example, a value of 100
+	 * gives low noise whereas a value of 3200 gives a lot of noise.
+	 *
+	 * @default 0
+	 */
 	photonNoiseIso?: number;
+
 	lossyModular?: boolean;
 }
 

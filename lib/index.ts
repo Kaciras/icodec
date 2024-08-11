@@ -25,16 +25,48 @@ globalThis._ICodec_ImageData = ImageData;
  * const encoder: ICodecModule<wp2.Options> = wp2;
  */
 export interface ICodecModule<T = any> {
-
+	/**
+	 * The default options of `encode` function.
+	 */
 	defaultOptions: Required<T>;
+
+	/**
+	 * The MIME type string of the format.
+	 */
 	mimeType: string;
+
+	/**
+	 * File extension (without the dot) of this format.
+	 */
 	extension: string;
 
+	/**
+	 * Load the decoder WASM file, must be called once before decode.
+	 *
+	 * @param source If pass a string, it's the URL of WASM file to fetch,
+	 *               else it will be treated as the WASM bytes.
+	 * @return the underlying WASM module, which is not part of
+	 *               the public API and can be changed at any time.
+	 */
 	loadDecoder(source?: WasmSource): Promise<any>;
 
+	/**
+	 * Convert the image to raw RGBA data.
+	 */
 	decode(input: Uint8Array): ImageData;
 
+	/**
+	 * Load the encoder WASM file, must be called once before encode.
+	 *
+	 * @param source If pass a string, it's the URL of WASM file to fetch,
+	 *               else it will be treated as the WASM bytes.
+	 * @return the underlying WASM module, which is not part of
+	 *               the public API and can be changed at any time.
+	 */
 	loadEncoder(source?: WasmSource): Promise<any>;
 
+	/**
+	 * Encode an image with RGBA pixels data.
+	 */
 	encode(image: ImageDataLike, options?: T): Uint8Array;
 }

@@ -1,12 +1,9 @@
-use bytemuck::AnyBitPattern;
 use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
-use rgb::{
-    alt::{Gray, GrayAlpha},
-    RGB, RGBA,
-};
+use rgb::RGBA;
+use rgb::alt::GrayAlpha;
+use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
-use wasm_bindgen::prelude::*;
 
 #[global_allocator]
 static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
@@ -77,10 +74,7 @@ pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions
         oxipng::BitDepth::Eight,
         data,
     );
-    return raw
-        .unwrap_throw()
-        .create_optimized_png(&optimization)
-        .unwrap_throw();
+    return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
 }
 
 // Data needs to be copied between the managed JS heap and the WASM memory,
@@ -119,7 +113,7 @@ pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
         png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
             cast_pixels(&mut buf);
         }
-        _ => {/* Transformations ensure RGB & pattled image to RGBA */}
+        _ => {/* Transformations ensure RGB & platted image to RGBA */}
     }
 
     let data = js_sys::Uint8ClampedArray::from(buf.as_slice());

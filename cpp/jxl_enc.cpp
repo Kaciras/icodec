@@ -33,9 +33,7 @@ val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 	PaddedBytes bytes;
 	ImageBundle *main = &io.Main();
 
-	size_t st = 10 - options.effort;
-	cparams.speed_tier = SpeedTier(st);
-
+	cparams.speed_tier = SpeedTier(10 - options.effort);
 	cparams.epf = options.epf;
 	cparams.decoding_speed_tier = options.decodingSpeedTier;
 	cparams.photon_noise_iso = options.photonNoiseIso;

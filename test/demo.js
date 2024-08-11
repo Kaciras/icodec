@@ -48,9 +48,8 @@ function getCodec(blob) {
 }
 
 async function decode(file, decoder) {
-	const input = await file.bytes();
 	await decoder.loadDecoder();
-	const image = decoder.decode(input);
+	const image = decoder.decode(await file.bytes());
 
 	const { data, width, height } = image;
 	canvas.width = width;
@@ -92,7 +91,7 @@ async function encode(codec = select.value) {
 	let { name } = fileChooser.files[0];
 	const dot = name.lastIndexOf(".");
 	if (dot !== -1) {
-		name = name.slice(0, dot - 1);
+		name = name.slice(0, dot + 1);
 	}
 	download(new File([output], name + codecs[codec].extension));
 }

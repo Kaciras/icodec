@@ -1,4 +1,6 @@
 {
+	"include": ["./lib/*.ts"],
+	"exclude": ["dist"],
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "NodeNext",

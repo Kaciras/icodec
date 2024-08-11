@@ -1,9 +1,9 @@
 import { readFileSync, writeFileSync } from "fs";
 import assert from "assert";
-import pixelMatch from "pixelmatch";
 import sharp from "sharp";
+import pixelMatch from "pixelmatch";
 
-// Absolute path is ImageData, relative path is snapshot.
+const directory = `${import.meta.dirname}/snapshot`;
 const cache = new Map();
 
 // A simple format, 4-bytes width + 4-bytes height + RGBA data.
@@ -15,8 +15,8 @@ function decodeBin(bytes) {
 }
 
 export function getRawPixels(name) {
-	const path = `${import.meta.dirname}/snapshot/${name}.bin`;
-	let image = cache.get(name);
+	const path = `${directory}/${name}.bin`;
+	let image = cache.get(path);
 	if (image) {
 		return image;
 	}
@@ -30,17 +30,27 @@ export function getSnapshot(name, codec) {
 	if (item) {
 		return item;
 	}
-	const path = `${import.meta.dirname}/snapshot/${name}`;
-	item = readFileSync(path);
+	item = readFileSync(`${directory}/${name}`);
 	return cache.set(name, item) && item;
 }
 
 export function updateSnapshot(name, codec, data) {
 	name = `${name}.${codec.extension}`;
 	cache.set(name, data);
-	writeFileSync(`${import.meta.dirname}/snapshot/${name}`, data);
+	writeFileSync(`${directory}/${name}`, data);
 }
 
+/**
+ * Asserts that the two images are similar, that they have the same dimensions,
+ * and that the differences in content are within specified limits.
+ *
+ * Set `toleration` & `threshold` to 0 to assert images are equal.
+ *
+ * @param expected Image data of the images to compare.
+ * @param actual Image data of the images to compare.
+ * @param toleration If different pixels percentage greater than it, the assertion failed.
+ * @param threshold From 0 to 1. Smaller values make the comparison more sensitive.
+ */
 export function assertSimilar(expected, actual, toleration, threshold) {
 	const { width, height, data } = expected;
 	assert.strictEqual(actual.width, width);
