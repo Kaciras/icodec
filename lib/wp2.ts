@@ -94,11 +94,11 @@ let encoderWASM: any;
 let decoderWASM: any;
 
 export async function loadEncoder(input?: WasmSource) {
-	return encoderWASM = await loadES(wasmFactoryEnc, input);
+	return encoderWASM ??= await loadES(wasmFactoryEnc, input);
 }
 
 export async function loadDecoder(input?: WasmSource) {
-	return decoderWASM = await loadES(wasmFactoryDec, input);
+	return decoderWASM ??= await loadES(wasmFactoryDec, input);
 }
 
 export function encode(image: ImageDataLike, options?: Options) {
