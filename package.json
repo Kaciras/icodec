@@ -1,6 +1,6 @@
 {
 	"name": "icodec",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "WebAssembly image encoders & decoders",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
@@ -19,6 +19,7 @@
 		"qoi",
 		"jxl",
 		"wp2",
+		"heic",
 		"mozjpeg",
 		"pngquant"
 	],
