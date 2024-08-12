@@ -68,7 +68,7 @@ function cmake(settings) {
 		"--fresh",
 		"-Wno-dev",
 		`-DCMAKE_C_FLAGS="${cxxFlags}"`,
-		`-DCMAKE_CXX_FLAGS="${cxxFlags}"`,
+		`-DCMAKE_CXX_FLAGS="${cxxFlags} -std=c++23"`,
 		"-DCMAKE_WARN_DEPRECATED=OFF",
 	];
 	if (config.cmakeBuilder) {
@@ -106,6 +106,9 @@ function emcc(output, sourceArguments) {
 		"-o", output,
 		...sourceArguments,
 	];
+	if (!sourceArguments.some(arg => arg.endsWith(".c"))) {
+		args.push("-std=c++23");
+	}
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
 	} else {
