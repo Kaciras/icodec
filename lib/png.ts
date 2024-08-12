@@ -80,8 +80,10 @@ export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<any>;
 export const loadDecoder = loadEncoder;
 
 /**
- * Reduces the colors used in the image at a slight loss,
- * using a combination of vector quantization algorithms.
+ * Reduces the colors used in the image at a slight loss, using a combination
+ * of vector quantization algorithms.
+ *
+ * Can be used before other compression algorithm to boost compression ratio.
  */
 export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 	options = { ...defaultOptions, ...options };

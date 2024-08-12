@@ -1,5 +1,7 @@
 import { ImageDataLike, WasmSource } from "./common.js";
 
+export { ImageDataLike };
+
 export * as avif from "./avif.js";
 export * as png from "./png.js";
 export * as jpeg from "./jpeg.js";

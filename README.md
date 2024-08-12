@@ -4,8 +4,6 @@
 
 Image encoders & decoders built with WebAssembly.
 
-Supported codecs:
-
 <table>
     <thead>
         <tr>
@@ -33,6 +31,11 @@ Supported codecs:
             <td colspan='2'>libwebp</td>
         </tr>
         <tr>
+            <td>heic</td>
+            <td>libheif + x265</td>
+            <td>libheif + libde265</td>
+        </tr>
+        <tr>
             <td>avif</td>
             <td colspan='2'>libavif + aom</td>
         </tr>
@@ -46,6 +49,9 @@ Supported codecs:
         </tr>
     </tbody>
 </table>
+
+> [!WARNING]
+> Since libheif does not support specify thread count for x265 encoder, call `encode` of the heic module must in webworker, and it does not support Node.
 
 # Usage
 
