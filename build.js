@@ -95,6 +95,7 @@ function emcc(output, sourceArguments) {
 		"--bind",
 		"-msimd128",
 		"-fno-exceptions",
+		"-flto",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
