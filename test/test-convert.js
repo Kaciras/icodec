@@ -13,16 +13,6 @@ async function testEncode() {
 	assert.ok(encoded.length < 18 * 1024);
 }
 
-async function testDecode() {
-	const input = getSnapshot("image", this);
-	const { loadDecoder, decode } = this;
-
-	await loadDecoder();
-	const output = decode(input);
-
-	assertSimilar(getRawPixels("image"), output, 0.01, 0.2);
-}
-
 describe("encode", () => {
 	test("JPEG", testEncode.bind(jpeg));
 	test("PNG", testEncode.bind(png));
@@ -32,6 +22,16 @@ describe("encode", () => {
 	test("JXL", testEncode.bind(jxl));
 	test("WebP2", testEncode.bind(wp2));
 });
+
+async function testDecode() {
+	const input = getSnapshot("image", this);
+	const { loadDecoder, decode } = this;
+
+	await loadDecoder();
+	const output = decode(input);
+
+	assertSimilar(getRawPixels("image"), output, 0.01, 0.2);
+}
 
 describe("decode", () => {
 	test("JPEG", testDecode.bind(jpeg));
@@ -53,4 +53,23 @@ test("decode gray PNG", async () => {
 	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
 	const expected = { data, width: 150, height: 200 };
 	assertSimilar(expected, image, 0, 0);
+});
+
+async function testDecodeBroken() {
+	const image = getRawPixels("image");
+	const { loadDecoder, decode } = this;
+
+	await loadDecoder();
+	assert.throws(() => decode(image.data));
+}
+
+describe("decode broken", () => {
+	test("JPEG", testDecodeBroken.bind(jpeg));
+	test("PNG", testDecodeBroken.bind(png));
+	test("QOI", testDecodeBroken.bind(qoi));
+	test("WebP", testDecodeBroken.bind(webp));
+	test("HEIC", testDecodeBroken.bind(heic));
+	test("AVIF", testDecodeBroken.bind(avif));
+	test("JXL", testDecodeBroken.bind(jxl));
+	test("WebP2", testDecodeBroken.bind(wp2));
 });
