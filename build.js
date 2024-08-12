@@ -59,6 +59,9 @@ function cmake(settings) {
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}
+	if (!settings.exceptions) {
+		cxxFlags += " -fno-exceptions";
+	}
 
 	const args = [
 		"cmake", "-S", src, "-B", dist,
@@ -91,6 +94,7 @@ function emcc(output, sourceArguments) {
 		config.debug ? "-g" : "-O3",
 		"--bind",
 		"-msimd128",
+		"-fno-exceptions",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
@@ -361,6 +365,7 @@ function buildHEIC() {
 	cmake({
 		outFile: "vendor/libheif/libheif/libheif.a",
 		src: "vendor/libheif",
+		exceptions: true,
 		options: {
 			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
 			WITH_AOM_DECODER: "0",
@@ -387,6 +392,7 @@ function buildHEIC() {
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
+		"-fexceptions",
 		"cpp/heic_enc.cpp",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
