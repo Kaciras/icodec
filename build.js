@@ -49,8 +49,9 @@ function gitClone(directory, branch, url) {
 	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
 }
 
-function cmake(checkFile, src, dist, options) {
-	if (!config.rebuild && existsSync(checkFile)) {
+function cmake(settings) {
+	const { outFile, src, dist = src, options } = settings;
+	if (!config.rebuild && existsSync(outFile)) {
 		return;
 	}
 
@@ -116,11 +117,15 @@ function emcc(output, sourceArguments) {
 
 export function buildMozJPEG() {
 	gitClone("vendor/mozjpeg", "v4.1.5", "https://github.com/mozilla/mozjpeg");
-	cmake("vendor/mozjpeg/libjpeg.a", "vendor/mozjpeg", "vendor/mozjpeg", {
-		WITH_SIMD: "0",
-		ENABLE_SHARED: "0",
-		WITH_TURBOJPEG: "0",
-		PNG_SUPPORTED: "0",
+	cmake({
+		outFile: "vendor/mozjpeg/libjpeg.a",
+		src: "vendor/mozjpeg",
+		options: {
+			WITH_SIMD: "0",
+			ENABLE_SHARED: "0",
+			WITH_TURBOJPEG: "0",
+			PNG_SUPPORTED: "0",
+		},
 	});
 	emcc("mozjpeg.js", [
 		"-I vendor/mozjpeg",
@@ -162,20 +167,24 @@ export function buildQOI() {
 
 export function buildWebP() {
 	gitClone("vendor/libwebp", "v1.4.0", "https://github.com/webmproject/libwebp");
-	cmake("vendor/libwebp/libwebp.a", "vendor/libwebp", "vendor/libwebp", {
-		WEBP_ENABLE_SIMD: "1",
+	cmake({
+		outFile: "vendor/libwebp/libwebp.a",
+		src: "vendor/libwebp",
+		options: {
+			WEBP_ENABLE_SIMD: "1",
 
-		WEBP_BUILD_CWEBP: "0",
-		WEBP_BUILD_DWEBP: "0",
-		WEBP_BUILD_GIF2WEBP: "0",
-		WEBP_BUILD_IMG2WEBP: "0",
-		WEBP_BUILD_VWEBP: "0",
-		WEBP_BUILD_WEBPINFO: "0",
-		WEBP_BUILD_LIBWEBPMUX: "0",
-		WEBP_BUILD_WEBPMUX: "0",
-		WEBP_BUILD_EXTRAS: "0",
-		WEBP_USE_THREAD: "0",
-		WEBP_BUILD_ANIM_UTILS: "0",
+			WEBP_BUILD_CWEBP: "0",
+			WEBP_BUILD_DWEBP: "0",
+			WEBP_BUILD_GIF2WEBP: "0",
+			WEBP_BUILD_IMG2WEBP: "0",
+			WEBP_BUILD_VWEBP: "0",
+			WEBP_BUILD_WEBPINFO: "0",
+			WEBP_BUILD_LIBWEBPMUX: "0",
+			WEBP_BUILD_WEBPMUX: "0",
+			WEBP_BUILD_EXTRAS: "0",
+			WEBP_USE_THREAD: "0",
+			WEBP_BUILD_ANIM_UTILS: "0",
+		},
 	});
 
 	emcc("webp-enc.js", [
@@ -184,7 +193,6 @@ export function buildWebP() {
 		"vendor/libwebp/libwebp.a",
 		"vendor/libwebp/libsharpyuv.a",
 	]);
-
 	emcc("webp-dec.js", [
 		"-I vendor/libwebp",
 		"cpp/webp_dec.cpp",
@@ -197,15 +205,21 @@ export function buildJXL() {
 	gitClone("vendor/libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
 	// highway uses CJS scripts in build, our project is ESM.
 	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
-	cmake("vendor/libjxl/lib/libjxl.a", "vendor/libjxl", "vendor/libjxl", {
-		BUILD_SHARED_LIBS: "0",
-		BUILD_TESTING: "0",
-		JPEGXL_ENABLE_SJPEG: "0",
-		JPEGXL_ENABLE_JNI: "0",
-		JPEGXL_ENABLE_BENCHMARK: "0",
-		JPEGXL_ENABLE_DOXYGEN: "0",
-		JPEGXL_ENABLE_EXAMPLES: "0",
+
+	cmake({
+		outFile: "vendor/libjxl/lib/libjxl.a",
+		src: "vendor/libjxl",
+		options: {
+			BUILD_SHARED_LIBS: "0",
+			BUILD_TESTING: "0",
+			JPEGXL_ENABLE_SJPEG: "0",
+			JPEGXL_ENABLE_JNI: "0",
+			JPEGXL_ENABLE_BENCHMARK: "0",
+			JPEGXL_ENABLE_DOXYGEN: "0",
+			JPEGXL_ENABLE_EXAMPLES: "0",
+		},
 	});
+
 	const libs = [
 		"-I vendor/libjxl/third_party/highway",
 		"-I vendor/libjxl/third_party/skcms",
@@ -227,11 +241,12 @@ export function buildAVIF() {
 	gitClone("vendor/libavif/ext/aom", "v3.9.1", "https://aomedia.googlesource.com/aom");
 
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
-	cmake(
-		"vendor/libavif/ext/aom/build.libavif/libaom.a",
-		"vendor/libavif/ext/aom",
-		"vendor/libavif/ext/aom/build.libavif",
-		{
+
+	cmake({
+		outFile: "vendor/libavif/ext/aom/build.libavif/libaom.a",
+		src: "vendor/libavif/ext/aom",
+		dist: "vendor/libavif/ext/aom/build.libavif",
+		options: {
 			CMAKE_BUILD_TYPE: "Release",
 			ENABLE_CCACHE: "0",
 			AOM_TARGET_CPU: "generic",
@@ -249,14 +264,18 @@ export function buildAVIF() {
 			CONFIG_MULTITHREAD: "0",
 			CONFIG_AV1_HIGHBITDEPTH: "0",
 		},
-	);
+	});
 
-	cmake("vendor/libavif/libavif.a", "vendor/libavif", "vendor/libavif", {
-		BUILD_SHARED_LIBS: "0",
-		AVIF_CODEC_AOM: "LOCAL",
-		AVIF_LIBSHARPYUV: "LOCAL",
-		LIBYUV_LIBRARY: "../libwebp/libsharpyuv.a",
-		LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
+	cmake({
+		outFile: "vendor/libavif/libavif.a",
+		src: "vendor/libavif",
+		options: {
+			BUILD_SHARED_LIBS: "0",
+			AVIF_CODEC_AOM: "LOCAL",
+			AVIF_LIBSHARPYUV: "LOCAL",
+			LIBYUV_LIBRARY: "../libwebp/libsharpyuv.a",
+			LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
+		},
 	});
 
 	emcc("avif-enc.js", [
@@ -279,16 +298,19 @@ export function buildWebP2() {
 		"main",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	);
-	// mkdirSync("vendor/wp2_build", { recursive: true });
-
-	cmake("vendor/wp2_build/libwebp2.a", "vendor/libwebp2", "vendor/wp2_build", {
-		WP2_BUILD_TESTS: "0",
-		WP2_ENABLE_TESTS: "0",
-		WP2_BUILD_EXAMPLES: "0",
-		WP2_BUILD_EXTRAS: "0",
-		// WP2_REDUCED: "1", // TODO: fails in vdebug.cc
-		CMAKE_DISABLE_FIND_PACKAGE_Threads: "1",
-		WP2_ENABLE_SIMD: "1",
+	cmake({
+		outFile: "vendor/wp2_build/libwebp2.a",
+		src: "vendor/libwebp2",
+		dist: "vendor/wp2_build",
+		options: {
+			WP2_BUILD_TESTS: "0",
+			WP2_ENABLE_TESTS: "0",
+			WP2_BUILD_EXAMPLES: "0",
+			WP2_BUILD_EXTRAS: "0",
+			// WP2_REDUCED: "1", // TODO: fails in vdebug.cc
+			CMAKE_DISABLE_FIND_PACKAGE_Threads: "1",
+			WP2_ENABLE_SIMD: "1",
+		},
 	});
 	emcc("wp2-enc.js", [
 		"-I vendor/libwebp2",
@@ -315,37 +337,49 @@ function buildHEIC() {
 		writeFileSync("vendor/x265/source/CmakeLists.txt", lines.join("\n"));
 	}
 
-	cmake("vendor/x265/source/libx265.a", "vendor/x265/source", "vendor/x265/source", {
-		ENABLE_LIBNUMA: "0",
-		ENABLE_SHARED: "0",
-		ENABLE_CLI: "0",
-		ENABLE_ASSEMBLY: "0",
+	cmake({
+		outFile: "vendor/x265/source/libx265.a",
+		src: "vendor/x265/source",
+		options: {
+			ENABLE_LIBNUMA: "0",
+			ENABLE_SHARED: "0",
+			ENABLE_CLI: "0",
+			ENABLE_ASSEMBLY: "0",
+		},
 	});
 
-	cmake("vendor/libde265/libde265/libde265.a", "vendor/libde265", "vendor/libde265", {
-		BUILD_SHARED_LIBS: "0",
-		ENABLE_SDL: "0",
-		ENABLE_DECODER: "0",
+	cmake({
+		outFile: "vendor/libde265/libde265/libde265.a",
+		src: "vendor/libde265",
+		options: {
+			BUILD_SHARED_LIBS: "0",
+			ENABLE_SDL: "0",
+			ENABLE_DECODER: "0",
+		},
 	});
 
-	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
-		CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
-		WITH_AOM_DECODER: "0",
-		WITH_AOM_ENCODER: "0",
-		WITH_EXAMPLES: "0",
-		WITH_GDK_PIXBUF: "0",
-		ENABLE_MULTITHREADING_SUPPORT: "0",
-		BUILD_TESTING: "0",
-		BUILD_SHARED_LIBS: "0",
+	cmake({
+		outFile: "vendor/libheif/libheif/libheif.a",
+		src: "vendor/libheif",
+		options: {
+			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
+			WITH_AOM_DECODER: "0",
+			WITH_AOM_ENCODER: "0",
+			WITH_EXAMPLES: "0",
+			WITH_GDK_PIXBUF: "0",
+			ENABLE_MULTITHREADING_SUPPORT: "0",
+			BUILD_TESTING: "0",
+			BUILD_SHARED_LIBS: "0",
 
-		LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
-		LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
+			LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
+			LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
 
-		X265_INCLUDE_DIR: "vendor/x265/source",
-		X265_LIBRARY: "vendor/x265/source/libx265.a",
+			X265_INCLUDE_DIR: "vendor/x265/source",
+			X265_LIBRARY: "vendor/x265/source/libx265.a",
 
-		LIBDE265_INCLUDE_DIR: "vendor/libde265",
-		LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
+			LIBDE265_INCLUDE_DIR: "vendor/libde265",
+			LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
+		},
 	});
 
 	emcc("heic-enc.js", [
@@ -365,24 +399,42 @@ function buildVVIC() {
 	gitClone("vendor/libheif", "v1.18.1", "https://github.com/strukturag/libheif");
 	gitClone("vendor/vvenc", "v1.12.0", "https://github.com/fraunhoferhhi/vvenc");
 
-	cmake("vendor/vvenc/vvenc.a", "vendor/vvenc", "vendor/vvenc/build", {
-		BUILD_SHARED_LIBS: "0",
-		VVENC_ENABLE_INSTALL: "0",
-		VVENC_ENABLE_THIRDPARTY_JSON: "0",
+	cmake({
+		outFile: "vendor/vvenc/vvenc.a",
+		src: "vendor/vvenc",
+		dist: "vendor/vvenc/build",
+		options: {
+			BUILD_SHARED_LIBS: "0",
+			VVENC_ENABLE_INSTALL: "0",
+			VVENC_ENABLE_THIRDPARTY_JSON: "0",
+		},
+	});
+	cmake({
+		outFile: "vendor/libheif/libheif/libheif.a",
+		src: "vendor/libheif",
+		options: {
+			WITH_LIBSHARPYUV: "0",
+			WITH_EXAMPLES: "0",
+			WITH_GDK_PIXBUF: "0",
+			ENABLE_MULTITHREADING_SUPPORT: "0",
+			BUILD_TESTING: "0",
+			BUILD_SHARED_LIBS: "0",
+
+			WITH_VVENC: "1",
+			VVENC_INCLUDE_DIR: "vendor/x265/source",
+			VVENC_LIBRARY: "vendor/vvenc/vvenc.a",
+		},
 	});
 
-	cmake("vendor/libheif/libheif/libheif.a", "vendor/libheif", "vendor/libheif", {
-		WITH_LIBSHARPYUV: "0",
-		WITH_EXAMPLES: "0",
-		WITH_GDK_PIXBUF: "0",
-		ENABLE_MULTITHREADING_SUPPORT: "0",
-		BUILD_TESTING: "0",
-		BUILD_SHARED_LIBS: "0",
-
-		WITH_VVENC: "1",
-		VVENC_INCLUDE_DIR: "vendor/x265/source",
-		VVENC_LIBRARY: "vendor/x265/source/libx265.a",
-	});
+	emcc("vvic-enc.js", [
+		"-s", "ENVIRONMENT=web,worker",
+		"-I vendor/libheif",
+		"-I vendor/libheif/libheif/api",
+		"-pthread",
+		"cpp/vvic_enc.cpp",
+		"vendor/vvenc/vvenc.a",
+		"vendor/libheif/libheif/libheif.a",
+	]);
 }
 
 // Equivalent to `if __name__ == "__main__":` in Python.
