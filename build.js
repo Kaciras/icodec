@@ -56,14 +56,15 @@ const repositories = {
 
 mkdirSync(config.outDir, { recursive: true });
 
-function gitClone(directory) {
-	const [branch, url] = repositories[directory];
-	const cwd = "vendor/" + directory;
-	if (existsSync(cwd)) {
-		return true;
+function downloadVendorSources() {
+	for (const [key, [branch, url]] of Object.entries(repositories)) {
+		const cwd = "vendor/" + key;
+		if (existsSync(cwd)) {
+			continue;
+		}
+		execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, cwd]);
+		execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd });
 	}
-	execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, cwd]);
-	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd });
 }
 
 function cmake(settings) {
@@ -216,8 +217,6 @@ async function checkForUpdates() {
 // ============================== Build Scripts ==============================
 
 export function buildMozJPEG() {
-	gitClone("mozjpeg");
-
 	cmake({
 		outFile: "vendor/mozjpeg/libjpeg.a",
 		src: "vendor/mozjpeg",
@@ -262,12 +261,10 @@ export function buildPNGQuant() {
 }
 
 export function buildQOI() {
-	gitClone("qoi");
 	emcc("qoi.js", ["-I vendor/qoi", "cpp/qoi.cpp"]);
 }
 
 export function buildWebP() {
-	gitClone("libwebp");
 	cmake({
 		outFile: "vendor/libwebp/libwebp.a",
 		src: "vendor/libwebp",
@@ -303,7 +300,6 @@ export function buildWebP() {
 }
 
 export function buildJXL() {
-	gitClone("libjxl");
 	// highway uses CJS scripts in build, our project is ESM.
 	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
 
@@ -338,9 +334,6 @@ export function buildJXL() {
 
 // Must build WebP before to generate libsharpyuv.a
 export function buildAVIF() {
-	gitClone("libavif");
-	gitClone("libavif/ext/aom");
-
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
 
 	cmake({
@@ -393,7 +386,6 @@ export function buildAVIF() {
 }
 
 export function buildWebP2() {
-	gitClone(		"libwebp2"	);
 	cmake({
 		outFile: "vendor/wp2_build/libwebp2.a",
 		src: "vendor/libwebp2",
@@ -421,16 +413,15 @@ export function buildWebP2() {
 }
 
 function buildHEIC() {
-	const x265Cached = gitClone("x265" );
-	gitClone("libde265");
-	gitClone("libheif");
-
 	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
-	if (!x265Cached && !config.wasm64) {
+	if (!config.wasm64) {
 		const text = readFileSync("vendor/x265/source/CmakeLists.txt", "utf8");
 		const lines = text.split("\n");
-		lines.splice(lines.indexOf("    elseif(X86 AND NOT X64)"), 9);
-		writeFileSync("vendor/x265/source/CmakeLists.txt", lines.join("\n"));
+		const i = lines.indexOf("    elseif(X86 AND NOT X64)");
+		if (i !== -1) {
+			lines.splice(i, 9);
+			writeFileSync("vendor/x265/source/CmakeLists.txt", lines.join("\n"));
+		}
 	}
 
 	cmake({
@@ -494,9 +485,6 @@ function buildHEIC() {
 }
 
 function buildVVIC() {
-	gitClone("libheif");
-	gitClone("vvenc");
-
 	cmake({
 		outFile: "vendor/vvenc/vvenc.a",
 		src: "vendor/vvenc",
@@ -537,13 +525,15 @@ function buildVVIC() {
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
-	buildPNGQuant();
+	downloadVendorSources();
+
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
+	// buildPNGQuant();
 
 	// TODO: workers limit
 	buildHEIC();
