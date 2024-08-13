@@ -47,7 +47,10 @@ const repositories = {
 	libjxl: ["v0.8.3", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	"libavif/ext/aom": ["v3.9.1", "https://aomedia.googlesource.com/aom"],
-	libwebp2: ["main", "https://chromium.googlesource.com/codecs/libwebp2",],
+	libwebp2: [
+		"c863fc1d457bf05f1929946ab92169422a1cd9fd",
+		"https://chromium.googlesource.com/codecs/libwebp2",
+	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
 	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
@@ -62,7 +65,13 @@ function downloadVendorSources() {
 		if (existsSync(cwd)) {
 			continue;
 		}
-		execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, cwd]);
+		if (branch.length === 40) {
+			execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", url, cwd]);
+			execFileSync("git", ["fetch", "--depth", "1", "origin", branch], { cwd });
+			execFileSync("git", ["reset", "--hard", branch], { cwd });
+		} else {
+			execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, cwd]);
+		}
 		execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd });
 	}
 }
