@@ -50,6 +50,7 @@
 		"eslint": "^9.7.0",
 		"pixelmatch": "^6.0.0",
 		"sharp": "^0.33.4",
-		"typescript": "^5.5.3"
+		"typescript": "^5.5.3",
+		"version-compare": "^3.11.0"
 	}
 }

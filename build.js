@@ -2,6 +2,7 @@ import { execFile, execFileSync } from "child_process";
 import { join } from "path";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { promisify } from "util";
+import versionCompare from "version-compare";
 
 export const config = {
 	/**
@@ -119,6 +120,76 @@ function emcc(output, sourceArguments) {
 	}
 	execFileSync("emcc", args, { stdio: "inherit", shell: true });
 	console.info(`Successfully build WASM module: ${output}`);
+}
+
+const semVerRe = /v?[0-9.]+$/;
+
+async function checkUpdateGit(cwd, branch, repo) {
+	const tag = semVerRe.exec(branch);
+	if (tag) {
+		const stdout = execFileSync("git", ["ls-remote", "--tags", "origin"], { cwd, encoding: "utf8" });
+		const current = tag[0];
+		let latest = current;
+		for (const line of stdout.split("\n")) {
+			const matches = semVerRe.exec(line);
+			if (!matches) {
+				continue;
+			}
+			if (matches[0] === current) {
+				break;
+			}
+			if (versionCompare(matches[0], latest) === 1) {
+				latest = matches[0];
+			}
+		}
+		if (latest !== current) {
+			console.log(`${repo} ${branch} -> ${latest}`);
+		}
+	} else {
+		execFileSync("git", ["fetch"], { cwd });
+		const stdout = execFileSync("git", ["log", `HEAD^^..origin/${branch}`, "--pretty=%at"], {
+			cwd,
+			encoding: "utf8",
+		});
+		const commits = stdout.split("\n").filter(Boolean);
+		if (commits.length === 1) {
+			return;
+		}
+		let [first, last] = [commits[0], commits.at(-1)];
+		first = new Date(parseInt(first) * 1000).toISOString();
+		last = new Date(parseInt(last) * 1000).toISOString();
+		console.log(`${repo} ${commits.length} new commits, ${last} -> ${first}`);
+	}
+}
+
+async function checkUpdateCargo() {
+	// execFileSync does not return stderr, which is cargo will output.
+	const execFileAsync = promisify(execFile);
+	const { stderr } = await execFileAsync("cargo", ["update", "--dry-run"], {
+		cwd: "rust",
+		encoding: "utf8",
+	});
+
+	const primary = ["oxipng", "imagequant", "png", "lol_alloc"];
+	const re = /Updating (\S+) v([0-9.]+) -> v([0-9.]+)/g;
+	let primaryUpdatable = false;
+	let deepDeps = 0;
+	for (const [, name, old, latest] of stderr.matchAll(re)) {
+		if (primary.includes(name)) {
+			primaryUpdatable = true;
+			console.info(`${name} ${old} -> ${latest}`);
+		} else {
+			deepDeps += 1;
+		}
+	}
+	if (!primaryUpdatable) {
+		console.info(`Others ${deepDeps} carets update available.`);
+	}
+}
+
+async function checkForUpdates() {
+	await checkUpdateGit();
+	await checkUpdateCargo();
 }
 
 // ============================== Build Coders ==============================
@@ -255,7 +326,6 @@ export function buildAVIF() {
 		src: "vendor/libavif/ext/aom",
 		dist: "vendor/libavif/ext/aom/build.libavif",
 		options: {
-			CMAKE_BUILD_TYPE: "Release",
 			ENABLE_CCACHE: "0",
 			AOM_TARGET_CPU: "generic",
 			AOM_EXTRA_C_FLAGS: "-UNDEBUG",
@@ -462,6 +532,4 @@ if (process.argv[1] === import.meta.filename) {
 
 	// TODO: build failed.
 	// buildVVIC();
-
-	// checkForUpdate();
 }
