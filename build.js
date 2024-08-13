@@ -40,14 +40,30 @@ export const config = {
 	parallel: navigator.hardwareConcurrency,
 };
 
+const repositories = {
+	mozjpeg: ["v4.1.5", "https://github.com/mozilla/mozjpeg"],
+	qoi: ["master", "https://github.com/phoboslab/qoi"],
+	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
+	libjxl: ["v0.8.3", "https://github.com/libjxl/libjxl"],
+	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
+	"libavif/ext/aom": ["v3.9.1", "https://aomedia.googlesource.com/aom"],
+	libwebp2: ["main", "https://chromium.googlesource.com/codecs/libwebp2",],
+	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
+	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
+	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
+	vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
+};
+
 mkdirSync(config.outDir, { recursive: true });
 
-function gitClone(directory, branch, url) {
-	if (existsSync(directory)) {
+function gitClone(directory) {
+	const [branch, url] = repositories[directory];
+	const cwd = "vendor/" + directory;
+	if (existsSync(cwd)) {
 		return true;
 	}
-	execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, directory]);
-	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd: directory });
+	execFileSync("git", ["-c", "advice.detachedHead=false", "clone", "--depth", "1", "--branch", branch, url, cwd]);
+	execFileSync("git", ["submodule", "update", "--init", "--depth", "1", "--recursive"], { cwd });
 }
 
 function cmake(settings) {
@@ -124,22 +140,24 @@ function emcc(output, sourceArguments) {
 
 const semVerRe = /v?[0-9.]+$/;
 
-async function checkUpdateGit(cwd, branch, repo) {
+async function checkUpdateGit(key, branch, repo) {
+	const cwd = "vendor/" + key;
 	const tag = semVerRe.exec(branch);
+
 	if (tag) {
 		const stdout = execFileSync("git", ["ls-remote", "--tags", "origin"], { cwd, encoding: "utf8" });
 		const current = tag[0];
 		let latest = current;
 		for (const line of stdout.split("\n")) {
 			const matches = semVerRe.exec(line);
-			if (!matches) {
+			if (!matches || line.at(-matches[0].length) !== "/") {
 				continue;
 			}
-			if (matches[0] === current) {
+			if (matches[1] === current) {
 				break;
 			}
-			if (versionCompare(matches[0], latest) === 1) {
-				latest = matches[0];
+			if (versionCompare(matches[1], latest) === 1) {
+				latest = matches[1];
 			}
 		}
 		if (latest !== current) {
@@ -147,18 +165,16 @@ async function checkUpdateGit(cwd, branch, repo) {
 		}
 	} else {
 		execFileSync("git", ["fetch"], { cwd });
-		const stdout = execFileSync("git", ["log", `HEAD^^..origin/${branch}`, "--pretty=%at"], {
+		const stdout = execFileSync("git", ["log", `HEAD..origin/${branch}`, "--pretty=%at"], {
 			cwd,
 			encoding: "utf8",
 		});
 		const commits = stdout.split("\n").filter(Boolean);
-		if (commits.length === 1) {
+		if (commits.length === 0) {
 			return;
 		}
-		let [first, last] = [commits[0], commits.at(-1)];
-		first = new Date(parseInt(first) * 1000).toISOString();
-		last = new Date(parseInt(last) * 1000).toISOString();
-		console.log(`${repo} ${commits.length} new commits, ${last} -> ${first}`);
+		const date = new Date(parseInt(commits[0]) * 1000).toISOString();
+		console.log(`${repo} ${commits.length} new commits, ${date}`);
 	}
 }
 
@@ -182,20 +198,26 @@ async function checkUpdateCargo() {
 			deepDeps += 1;
 		}
 	}
-	if (!primaryUpdatable) {
+	if (primaryUpdatable) {
 		console.info(`Others ${deepDeps} carets update available.`);
 	}
 }
 
 async function checkForUpdates() {
-	await checkUpdateGit();
+	const repoEntries = Object.entries(repositories);
+	console.log(`Checking ${repoEntries.length} repos + cargo...\n`);
+
 	await checkUpdateCargo();
+	for (const [key, value] of repoEntries) {
+		await checkUpdateGit(key, ...value);
+	}
 }
 
-// ============================== Build Coders ==============================
+// ============================== Build Scripts ==============================
 
 export function buildMozJPEG() {
-	gitClone("vendor/mozjpeg", "v4.1.5", "https://github.com/mozilla/mozjpeg");
+	gitClone("mozjpeg");
+
 	cmake({
 		outFile: "vendor/mozjpeg/libjpeg.a",
 		src: "vendor/mozjpeg",
@@ -240,12 +262,12 @@ export function buildPNGQuant() {
 }
 
 export function buildQOI() {
-	gitClone("vendor/qoi", "master", "https://github.com/phoboslab/qoi");
+	gitClone("qoi");
 	emcc("qoi.js", ["-I vendor/qoi", "cpp/qoi.cpp"]);
 }
 
 export function buildWebP() {
-	gitClone("vendor/libwebp", "v1.4.0", "https://github.com/webmproject/libwebp");
+	gitClone("libwebp");
 	cmake({
 		outFile: "vendor/libwebp/libwebp.a",
 		src: "vendor/libwebp",
@@ -281,7 +303,7 @@ export function buildWebP() {
 }
 
 export function buildJXL() {
-	gitClone("vendor/libjxl", "v0.8.3", "https://github.com/libjxl/libjxl");
+	gitClone("libjxl");
 	// highway uses CJS scripts in build, our project is ESM.
 	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
 
@@ -316,8 +338,8 @@ export function buildJXL() {
 
 // Must build WebP before to generate libsharpyuv.a
 export function buildAVIF() {
-	gitClone("vendor/libavif", "v1.1.1", "https://github.com/AOMediaCodec/libavif");
-	gitClone("vendor/libavif/ext/aom", "v3.9.1", "https://aomedia.googlesource.com/aom");
+	gitClone("libavif");
+	gitClone("libavif/ext/aom");
 
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
 
@@ -371,11 +393,7 @@ export function buildAVIF() {
 }
 
 export function buildWebP2() {
-	gitClone(
-		"vendor/libwebp2",
-		"main",
-		"https://chromium.googlesource.com/codecs/libwebp2",
-	);
+	gitClone(		"libwebp2"	);
 	cmake({
 		outFile: "vendor/wp2_build/libwebp2.a",
 		src: "vendor/libwebp2",
@@ -403,9 +421,9 @@ export function buildWebP2() {
 }
 
 function buildHEIC() {
-	const x265Cached = gitClone("vendor/x265", "3.6", "https://bitbucket.org/multicoreware/x265_git");
-	gitClone("vendor/libde265", "v1.0.15", "https://github.com/strukturag/libde265");
-	gitClone("vendor/libheif", "v1.18.1", "https://github.com/strukturag/libheif");
+	const x265Cached = gitClone("x265" );
+	gitClone("libde265");
+	gitClone("libheif");
 
 	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
 	if (!x265Cached && !config.wasm64) {
@@ -476,8 +494,8 @@ function buildHEIC() {
 }
 
 function buildVVIC() {
-	gitClone("vendor/libheif", "v1.18.1", "https://github.com/strukturag/libheif");
-	gitClone("vendor/vvenc", "v1.12.0", "https://github.com/fraunhoferhhi/vvenc");
+	gitClone("libheif");
+	gitClone("vvenc");
 
 	cmake({
 		outFile: "vendor/vvenc/vvenc.a",
@@ -528,8 +546,10 @@ if (process.argv[1] === import.meta.filename) {
 	buildPNGQuant();
 
 	// TODO: workers limit
-	// buildHEIC();
+	buildHEIC();
 
 	// TODO: build failed.
 	// buildVVIC();
+
+	// await checkForUpdates();
 }
