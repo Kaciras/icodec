@@ -76,6 +76,16 @@ function downloadVendorSources() {
 	}
 }
 
+function patchFile(path, doPatch) {
+	const backup = path + ".path_backup";
+	if (existsSync(backup)) {
+		return;
+	}
+	const content = doPatch(path);
+	renameSync(path, backup);
+	writeFileSync(path, content);
+}
+
 function cmake(settings) {
 	const { outFile, src, dist = src, options } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
@@ -423,15 +433,12 @@ export function buildWebP2() {
 
 function buildHEIC() {
 	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
-	if (!config.wasm64) {
-		const text = readFileSync("vendor/x265/source/CmakeLists.txt", "utf8");
-		const lines = text.split("\n");
+	config.wasm64 || patchFile("vendor/x265/source/CmakeLists.txt", file => {
+		const lines = readFileSync(file, "utf8").split("\n");
 		const i = lines.indexOf("    elseif(X86 AND NOT X64)");
-		if (i !== -1) {
-			lines.splice(i, 9);
-			writeFileSync("vendor/x265/source/CmakeLists.txt", lines.join("\n"));
-		}
-	}
+		lines.splice(i, 9);
+		return lines.join("\n");
+	});
 
 	cmake({
 		outFile: "vendor/x265/source/libx265.a",
@@ -536,13 +543,13 @@ function buildVVIC() {
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
 
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
-	// buildPNGQuant();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
+	buildPNGQuant();
 
 	// TODO: workers limit
 	buildHEIC();
