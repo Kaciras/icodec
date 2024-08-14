@@ -2,13 +2,56 @@ import wasmFactoryEnc from "../dist/jxl-enc.js";
 import wasmFactoryDec from "../dist/jxl-dec.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
+// Tristate bool value, `Default` means encoder chooses.
+export enum Override { Default = -1, False, True}
+
+export enum Predictor {
+	Default = -1,
+	Zero,
+	Left,
+	Top,
+	Average0,
+	Select,
+	Gradient,
+	Weighted,
+	TopRight,
+	TopLeft,
+	LeftLeft,
+	Average1,
+	Average2,
+	Average3,
+	Average4,
+	// The following predictors are encoder-only.
+	Best,
+	Variable,
+}
+
 export interface Options {
 	/**
 	 * If true, encode the image without any loss.
+	 * Some options are ignored in lossless mode.
 	 *
 	 * @default false
 	 */
 	lossless?: boolean;
+
+	/**
+	 * Quality setting, higher value = higher quality.
+	 * 100 = mathematically lossless, 90 = visually lossless.
+	 *
+	 * Quality values roughly match libjpeg quality.
+	 * Recommended range: [68, 96]. Allowed range: [0, 100].
+	 *
+	 * @default 75
+	 */
+	quality?: number;
+
+	/**
+	 * Quality setting of alpha channel.
+	 *
+	 * @default 100
+	 */
+	alphaQuality?: number;
 
 	/**
 	 * Sets encoder effort/speed level without affecting decoding speed.
@@ -18,8 +61,45 @@ export interface Options {
 	 */
 	effort?: number;
 
-	quality?: number;
-	progressive?: boolean;
+	/**
+	 * Sets brotli encode effort for use in JPEG recompression and compressed metadata boxes (brob).
+	 * Can be -1 (default) or 0 (fastest) to 11 (slowest).
+	 *
+	 * Default is based on the general encode effort in case of JPEG recompression, and 4 for brob boxes.
+	 *
+	 * @default -1
+	 */
+	brotliEffort?: number;
+
+	/**
+	 * Enables or disables progressive encoding for modular mode.
+	 *
+	 * @default Override.Default
+	 */
+	responsive?: Override;
+
+	/**
+	 * Progressive-DC setting. Valid values are: -1, 0, 1, 2.
+	 *
+	 * @default -1
+	 */
+	progressiveDC?: -1;
+
+	/**
+	 * Set the progressive mode for the AC coefficients of VarDCT,
+	 * using spectral progression from the DCT coefficients.
+	 *
+	 * @default Override.Default
+	 */
+	progressiveAC?: Override;
+
+	/**
+	 * Set the progressive mode for the AC coefficients of VarDCT,
+	 * using quantization of the least significant bits.
+	 *
+	 * @default Override.Default
+	 */
+	qProgressiveAC?: Override;
 
 	/**
 	 * Edge preserving filter level, -1 to 3.
@@ -30,10 +110,11 @@ export interface Options {
 	epf?: number;
 
 	/**
-	 * Enables or disables delta palette. Use -1 for the default (encoder chooses),
-	 * 0 to disable, 1 to enable. Used in modular mode.
+	 * Enables or disables the gaborish filter.
+	 *
+	 * @default Override.Default
 	 */
-	lossyPalette?: boolean;
+	gaborish?: Override;
 
 	/**
 	 * Sets the decoding speed tier for the provided options.
@@ -43,7 +124,7 @@ export interface Options {
 	 *
 	 * @default 0
 	 */
-	decodingSpeedTier?: number;
+	decodingSpeed?: number;
 
 	/**
 	 * Adds noise to the image emulating photographic film noise, the higher the
@@ -54,19 +135,82 @@ export interface Options {
 	 */
 	photonNoiseIso?: number;
 
-	lossyModular?: boolean;
+	/**
+	 * Enables modular encoding.
+	 *
+	 * false to enforce VarDCT mode (e.g. for photographic images),
+	 * true to enforce modular mode (e.g. for lossless images).
+	 *
+	 * @default false
+	 */
+	modular?: boolean;
+
+	/**
+	 * Enables or disables delta palette, used in modular mode.
+	 *
+	 * @default false
+	 */
+	lossyPalette?: boolean;
+
+	/**
+	 * Use color palette if amount of colors is smaller than or equal to this amount,
+	 * or -1 to use the encoder default. Used for modular encoding.
+	 *
+	 * @default -1
+	 */
+	paletteColors?: number;
+
+	/**
+	 * Fraction of pixels used to learn MA trees as a percentage.
+	 * Higher values use more memory.
+	 *
+	 * -1 = default, 0 = no MA and fast decode, 50 = default value, 100 = all.
+	 *
+	 * @default -1
+	 */
+	iterations?: number;
+
+	/**
+	 * Reversible color transform for modular encoding: -1=default, 0-41=RCT
+	 * index, e.g. index 0 = none, index 6 = YCoCg.
+	 *
+	 * If this option is set to a non-default value, the RCT will be globally applied to the whole frame.
+	 *
+	 * The default behavior is to try several RCTs locally per modular group,
+	 * depending on the speed and distance setting.
+	 *
+	 * @default -1
+	 */
+	modularColorspace?: number;
+
+	/**
+	 * Predictor for modular encoding.
+	 *
+	 * @default Predictor.Default,
+	 */
+	modularPredictor?: Predictor;
 }
 
 export const defaultOptions: Required<Options> = {
 	lossless: false,
-	effort: 7,
 	quality: 75,
-	progressive: false,
+	alphaQuality: 100,
+	effort: 7,
+	brotliEffort: -1,
 	epf: -1,
-	lossyPalette: false,
-	decodingSpeedTier: 0,
+	gaborish: -1,
+	responsive: -1,
+	progressiveDC: -1,
+	progressiveAC: -1,
+	qProgressiveAC: -1,
+	decodingSpeed: 0,
 	photonNoiseIso: 0,
-	lossyModular: false,
+	modular: false,
+	lossyPalette: false,
+	paletteColors: -1,
+	iterations: -1,
+	modularColorspace: -1,
+	modularPredictor: Predictor.Default,
 };
 
 export const mimeType = "image/jxl";

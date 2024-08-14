@@ -6,35 +6,59 @@
 
 using namespace emscripten;
 
+#define SET_OPTION(key, value)                                                     \
+	if (JxlEncoderFrameSettingsSetOption(settings, key, value) != JXL_ENC_SUCCESS) \
+	{                                                                              \
+		return val(#key);                                                          \
+	}
+
+#define SET_FLOAT_OPTION(key, value)                                                    \
+	if (JxlEncoderFrameSettingsSetFloatOption(settings, key, value) != JXL_ENC_SUCCESS) \
+	{                                                                                   \
+		return val(#key);                                                               \
+	}
+
 struct JXLOptions
 {
 	bool lossless;
 	float quality;
+	float alphaQuality;
 	int effort;
+	int brotliEffort;
 	int epf;
-	size_t decodingSpeedTier;
+	int gaborish;
+	int decodingSpeed;
 	float photonNoiseIso;
-	bool progressive;
-	bool lossyModular;
+	int responsive;
+	int progressiveDC;
+	int progressiveAC;
+	int qProgressiveAC;
+	bool modular;
 	bool lossyPalette;
+	int paletteColors;
+	float iterations;
+	int modularColorspace;
+	int modularPredictor;
 };
 
 val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 {
 	static const JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+
 	const JxlEncoderPtr encoder = JxlEncoderMake(nullptr);
+	JxlEncoderAllowExpertOptions(encoder.get());
 
 	JxlBasicInfo basic_info;
 	JxlEncoderInitBasicInfo(&basic_info);
+	basic_info.uses_original_profile = options.lossless;
 	basic_info.xsize = width;
 	basic_info.ysize = height;
 	basic_info.bits_per_sample = COLOR_DEPTH;
-	// basic_info.uses_original_profile = JXL_TRUE; // mandatory for lossless
 	basic_info.num_extra_channels = 1;
-	auto status = JxlEncoderSetBasicInfo(encoder.get(), &basic_info);
+	JxlEncoderStatus status = JxlEncoderSetBasicInfo(encoder.get(), &basic_info);
 
 	JxlColorEncoding color_encoding = {};
-	JxlColorEncodingSetToSRGB(&color_encoding, /*is_gray=*/JXL_FALSE);
+	JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
 	status = JxlEncoderSetColorEncoding(encoder.get(), &color_encoding);
 
 	auto settings = JxlEncoderFrameSettingsCreate(encoder.get(), nullptr);
@@ -46,53 +70,31 @@ val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 	{
 		auto distance = JxlEncoderDistanceFromQuality(options.quality);
 		status = JxlEncoderSetFrameDistance(settings, distance);
+
+		distance = JxlEncoderDistanceFromQuality(options.alphaQuality);
+		status = JxlEncoderSetExtraChannelDistance(settings, 0, distance);
 	}
 
-	JxlEncoderAllowExpertOptions(encoder.get());
-	status = JxlEncoderFrameSettingsSetOption(settings, JXL_ENC_FRAME_SETTING_EFFORT, options.effort);
-	status = JxlEncoderFrameSettingsSetOption(settings, JXL_ENC_FRAME_SETTING_EPF, options.epf);
-	status = JxlEncoderFrameSettingsSetOption(settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeedTier);
-	status = JxlEncoderFrameSettingsSetOption(settings, JXL_ENC_FRAME_SETTING_PHOTON_NOISE, options.photonNoiseIso);
-	status = JxlEncoderFrameSettingsSetOption(settings, JXL_ENC_FRAME_SETTING_LOSSY_PALETTE, options.lossyPalette);
+	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_PHOTON_NOISE, options.photonNoiseIso);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_EFFORT, options.effort);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_BROTLI_EFFORT, options.brotliEffort);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_EPF, options.epf);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_GABORISH, options.gaborish);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeed);
 
-	// CompressParams cparams;
+	SET_OPTION(JXL_ENC_FRAME_SETTING_RESPONSIVE, options.responsive);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC, options.progressiveAC);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, options.qProgressiveAC);
 
-	// if (options.lossyPalette)
-	// {
-	// 	cparams.lossy_palette = true;
-	// 	cparams.palette_colors = 0;
-	// 	cparams.options.predictor = Predictor::Zero;
-	// 	// Near-lossless assumes -R 0
-	// 	cparams.responsive = 0;
-	// 	cparams.modular_mode = true;
-	// }
+	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR, options.modular);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_PALETTE_COLORS, options.paletteColors);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_LOSSY_PALETTE, options.lossyPalette);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_COLOR_SPACE, options.modularColorspace);
+	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR, options.modularPredictor);
+	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT, options.iterations);
 
-	// Quality settings roughly match libjpeg qualities.
-	// if (options.lossyModular || quality == 100)
-	// {
-	// 	cparams.modular_mode = true;
-	// }
-	// else
-	// {
-	// 	cparams.modular_mode = false;
-	// }
-
-	// if (options.progressive)
-	// {
-	// 	cparams.qprogressive_mode = true;
-	// 	cparams.responsive = 1;
-	// 	if (!cparams.modular_mode)
-	// 	{
-	// 		cparams.progressive_dc = 1;
-	// 	}
-	// }
-
-	// if (options.lossless)
-	// {
-	// 	cparams.SetLossless();
-	// }
-
-	status = JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length());
+	JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length());
 	JxlEncoderCloseInput(encoder.get());
 
 	std::vector<uint8_t> vec;
@@ -122,11 +124,21 @@ EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
 	value_object<JXLOptions>("JXLOptions")
 		.field("lossless", &JXLOptions::lossless)
 		.field("quality", &JXLOptions::quality)
+		.field("alphaQuality", &JXLOptions::alphaQuality)
 		.field("effort", &JXLOptions::effort)
-		.field("progressive", &JXLOptions::progressive)
+		.field("brotliEffort", &JXLOptions::brotliEffort)
 		.field("epf", &JXLOptions::epf)
-		.field("lossyPalette", &JXLOptions::lossyPalette)
-		.field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
+		.field("gaborish", &JXLOptions::gaborish)
+		.field("decodingSpeed", &JXLOptions::decodingSpeed)
 		.field("photonNoiseIso", &JXLOptions::photonNoiseIso)
-		.field("lossyModular", &JXLOptions::lossyModular);
+		.field("responsive", &JXLOptions::responsive)
+		.field("progressiveDC", &JXLOptions::progressiveDC)
+		.field("progressiveAC", &JXLOptions::progressiveAC)
+		.field("qProgressiveAC", &JXLOptions::qProgressiveAC)
+		.field("modular", &JXLOptions::modular)
+		.field("lossyPalette", &JXLOptions::lossyPalette)
+		.field("paletteColors", &JXLOptions::paletteColors)
+		.field("iterations", &JXLOptions::iterations)
+		.field("modularColorspace", &JXLOptions::modularColorspace)
+		.field("modularPredictor", &JXLOptions::modularPredictor);
 }
