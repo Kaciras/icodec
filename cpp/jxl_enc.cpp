@@ -18,6 +18,28 @@ using namespace emscripten;
 		return val(#key);                                                               \
 	}
 
+// https://github.com/libjxl/libjxl/blob/e10fb6858fe9cb506f99b5373f64d6b639fe447d/lib/extras/enc/jxl.cc#L97
+bool ReadCompressedOutput(JxlEncoder *enc, std::vector<uint8_t> *compressed)
+{
+	compressed->resize(4096);
+	uint8_t *next_out = compressed->data();
+	size_t avail_out = compressed->size() - (next_out - compressed->data());
+	JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;
+	while (result == JXL_ENC_NEED_MORE_OUTPUT)
+	{
+		result = JxlEncoderProcessOutput(enc, &next_out, &avail_out);
+		if (result == JXL_ENC_NEED_MORE_OUTPUT)
+		{
+			size_t offset = next_out - compressed->data();
+			compressed->resize(compressed->size() * 2);
+			next_out = compressed->data() + offset;
+			avail_out = compressed->size() - offset;
+		}
+	}
+	compressed->resize(next_out - compressed->data());
+	return result;
+}
+
 struct JXLOptions
 {
 	bool lossless;
@@ -97,24 +119,12 @@ val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 	JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length());
 	JxlEncoderCloseInput(encoder.get());
 
-	std::vector<uint8_t> vec;
-	vec.resize(256);
-	uint8_t *next_out = vec.data();
-	size_t avail_out = vec.size() - (next_out - vec.data());
-	do
+	std::vector<uint8_t> compressed;
+	if (!ReadCompressedOutput(encoder.get(), &compressed))
 	{
-		status = JxlEncoderProcessOutput(encoder.get(), &next_out, &avail_out);
-		if (status == JXL_ENC_NEED_MORE_OUTPUT)
-		{
-			size_t offset = next_out - vec.data();
-			vec.resize(vec.size() * 2);
-			next_out = vec.data() + offset;
-			avail_out = vec.size() - offset;
-		}
-	} while (status == JXL_ENC_NEED_MORE_OUTPUT);
-
-	vec.resize(next_out - vec.data());
-	return toUint8Array(vec.data(), vec.size());
+		return val("ReadCompressedOutput");
+	}
+	return toUint8Array(compressed.data(), compressed.size());
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
