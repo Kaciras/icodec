@@ -8,7 +8,13 @@
 
 using namespace emscripten;
 
-using AvifEncoderPtr = std::unique_ptr<avifEncoder, decltype(&avifEncoderDestroy)>;
+#define CHECK_STATUS(s) if (s != AVIF_RESULT_OK)	\
+{													\
+	return val(avifResultToString(s));				\
+}
+
+#define SET_OPTION(key, value) \
+	CHECK_STATUS(avifEncoderSetCodecSpecificOption(encoder.get(), key, value))
 
 struct AvifOptions
 {
@@ -55,17 +61,13 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	avifRGBImage srcRGB;
 	avifRGBImageSetDefaults(&srcRGB, image.get());
 	srcRGB.pixels = reinterpret_cast<uint8_t *>(pixels.data());
-	srcRGB.rowBytes = width * CHANNELS_RGB;
+	srcRGB.rowBytes = width * CHANNELS_RGBA;
 	if (options.enableSharpYUV)
 	{
 		srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
 	}
 
-	avifResult status = avifImageRGBToYUV(image.get(), &srcRGB);
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
+	CHECK_STATUS(avifImageRGBToYUV(image.get(), &srcRGB));
 
 	// Create a smart pointer for the encoder
 	auto encoder = toRAII(avifEncoderCreate(), avifEncoderDestroy);
@@ -81,39 +83,20 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	encoder->tileColsLog2 = options.tileColsLog2;
 
 	// https://github.com/AOMediaCodec/libavif/blob/47f154ae4cdefbdb7f9d86c0017acfe118db260e/src/codec_aom.c#L404
-	status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness", std::to_string(options.sharpness).c_str());
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
+	SET_OPTION("sharpness", std::to_string(options.sharpness).c_str());
+	SET_OPTION("color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
+
 	if (options.tune == 2 || (options.tune == 0 && options.quality >= 50))
 	{
-		status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
-		if (status != AVIF_RESULT_OK)
-		{
-			return val(avifResultToString(status));
-		}
+		SET_OPTION("tune", "ssim");
 	}
 	if (options.chromaDeltaQ)
 	{
-		status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
-		if (status != AVIF_RESULT_OK)
-		{
-			return val(avifResultToString(status));
-		}
-	}
-	status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
+		SET_OPTION("color:enable-chroma-deltaq", "1");
 	}
 
 	avifRWData output = AVIF_DATA_EMPTY;
-	status = avifEncoderWrite(encoder.get(), image.get(), &output);
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
+	CHECK_STATUS(avifEncoderWrite(encoder.get(), image.get(), &output));
 
 	auto _ = toRAII(&output, avifRWDataFree);
 	return toUint8Array(output.data, output.size);

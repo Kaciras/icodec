@@ -5,6 +5,11 @@
 
 using namespace emscripten;
 
+#define CHECK_STATUS(s) if (s != AVIF_RESULT_OK)	\
+{													\
+	return val(avifResultToString(s));				\
+}
+
 val decode(std::string input)
 {
 	auto decoder = toRAII(avifDecoderCreate(), avifDecoderDestroy);
@@ -15,28 +20,15 @@ val decode(std::string input)
 	}
 
 	auto bytes = reinterpret_cast<uint8_t *>(input.data());
-	auto status = avifDecoderReadMemory(decoder.get(), image.get(), bytes, input.length());
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
+	CHECK_STATUS(avifDecoderReadMemory(decoder.get(), image.get(), bytes, input.length()));
 
-	 // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+	// Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
 	avifRGBImage rgb;
 	avifRGBImageSetDefaults(&rgb, image.get());
 	rgb.depth = COLOR_DEPTH;
 
-	status = avifRGBImageAllocatePixels(&rgb);
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
-
-	status = avifImageYUVToRGB(image.get(), &rgb);
-	if (status != AVIF_RESULT_OK)
-	{
-		return val(avifResultToString(status));
-	}
+	CHECK_STATUS(avifRGBImageAllocatePixels(&rgb));
+	CHECK_STATUS(avifImageYUVToRGB(image.get(), &rgb));
 
 	auto _ = toRAII(&rgb, avifRGBImageFreePixels);
 	return toImageData(rgb.pixels, rgb.width, rgb.height);

@@ -36,7 +36,7 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
 	image.add_plane(heif_channel_interleaved, width, height, COLOR_DEPTH);
 
-	auto row_bytes = width * CHANNELS_RGB;
+	auto row_bytes = width * CHANNELS_RGBA;
 	int stride;
 	uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
 	for (auto y = 0; y < height; y++)
@@ -96,7 +96,7 @@ val decode(std::string input)
 	int stride;
 	const uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
 
-	auto row_bytes = width * CHANNELS_RGB;
+	auto row_bytes = width * CHANNELS_RGBA;
 	auto rgba = std::make_unique<uint8_t[]>(row_bytes * height);
 	for (auto y = 0; y < height; y++)
 	{

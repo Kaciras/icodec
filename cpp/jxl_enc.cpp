@@ -25,7 +25,7 @@ struct JXLOptions
 
 val encode(std::string pixels, size_t width, size_t height, JXLOptions options)
 {
-	static const JxlPixelFormat format = {CHANNELS_RGB, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+	static const JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
 	CompressParams cparams;
 	PassesEncoderState passes_enc_state;

@@ -32,7 +32,7 @@ val encode(std::string pixels, int width, int height, WebPConfig config)
 
 	WebPMemoryWriterInit(&writer);
 
-	auto stride = width * CHANNELS_RGB;
+	auto stride = width * CHANNELS_RGBA;
 	int ok = WebPPictureImportRGBA(&pic, rgba, stride) && WebPEncode(&config, &pic);
 	WebPPictureFree(&pic);
 

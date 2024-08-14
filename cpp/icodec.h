@@ -6,7 +6,7 @@ using namespace emscripten;
 #define COLOR_DEPTH 8
 
 // We want RGBA bytes in raw image data.
-#define CHANNELS_RGB 4
+#define CHANNELS_RGBA 4
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
@@ -20,7 +20,7 @@ std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
 
 val toImageData(const uint8_t *bytes, uint32_t width, uint32_t height)
 {
-	auto length = ((size_t)CHANNELS_RGB) * width * height;
+	auto length = ((size_t)CHANNELS_RGBA) * width * height;
 	auto view = typed_memory_view(length, bytes);
 	auto data = Uint8ClampedArray.new_(view);
 	return ImageData.new_(data, width, height);

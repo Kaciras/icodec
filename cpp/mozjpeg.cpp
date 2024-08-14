@@ -64,7 +64,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions o
 	/* Step 3: set parameters for compression */
 	cinfo.image_width = width;
 	cinfo.image_height = height;
-	cinfo.input_components = CHANNELS_RGB;
+	cinfo.input_components = CHANNELS_RGBA;
 	cinfo.in_color_space = JCS_EXT_RGBA;
 
 	/*
@@ -136,7 +136,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions o
 	 * To keep things simple, we pass one scanline per call; you can pass
 	 * more if you wish, though.
 	 */
-	int stride = width * CHANNELS_RGB;
+	int stride = width * CHANNELS_RGBA;
 	while (cinfo.next_scanline < cinfo.image_height)
 	{
 		/*
@@ -176,10 +176,10 @@ val decode(std::string input)
 	jpeg_start_decompress(&cinfo);
 
 	// Prepare output buffer
-	size_t output_size = cinfo.output_width * cinfo.output_height * CHANNELS_RGB;
+	size_t output_size = cinfo.output_width * cinfo.output_height * CHANNELS_RGBA;
 	std::vector<uint8_t> output(output_size);
 
-	auto stride = cinfo.output_width * CHANNELS_RGB;
+	auto stride = cinfo.output_width * CHANNELS_RGBA;
 	while (cinfo.output_scanline < cinfo.output_height)
 	{
 		uint8_t *ptr = &output[stride * cinfo.output_scanline];
