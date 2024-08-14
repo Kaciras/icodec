@@ -44,7 +44,7 @@ const repositories = {
 	mozjpeg: ["v4.1.5", "https://github.com/mozilla/mozjpeg"],
 	qoi: ["master", "https://github.com/phoboslab/qoi"],
 	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
-	libjxl: ["v0.8.3", "https://github.com/libjxl/libjxl"],
+	libjxl: ["v0.10.3", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	"libavif/ext/aom": ["v3.9.1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
@@ -328,11 +328,17 @@ export function buildJXL() {
 		options: {
 			BUILD_SHARED_LIBS: "0",
 			BUILD_TESTING: "0",
+			JPEGXL_BUNDLE_LIBPNG: "0",
+			JPEGXL_ENABLE_JPEGLI: "0",
 			JPEGXL_ENABLE_SJPEG: "0",
 			JPEGXL_ENABLE_JNI: "0",
+			JPEGXL_ENABLE_MANPAGES: "0",
+			JPEGXL_ENABLE_TOOLS: "0",
+			// JPEGXL_ENABLE_JPEGLI_LIBJPEG: "0",
 			JPEGXL_ENABLE_BENCHMARK: "0",
 			JPEGXL_ENABLE_DOXYGEN: "0",
 			JPEGXL_ENABLE_EXAMPLES: "0",
+			// JPEGXL_ENABLE_SKCMS: "0",
 		},
 	});
 
@@ -342,9 +348,10 @@ export function buildJXL() {
 		"-I vendor/libjxl",
 		"-I vendor/libjxl/lib/include",
 		"vendor/libjxl/lib/libjxl.a",
-		"vendor/libjxl/third_party/brotli/libbrotlidec-static.a",
-		"vendor/libjxl/third_party/brotli/libbrotlienc-static.a",
-		"vendor/libjxl/third_party/brotli/libbrotlicommon-static.a",
+		"vendor/libjxl/lib/libjxl_cms.a",
+		"vendor/libjxl/third_party/brotli/libbrotlidec.a",
+		"vendor/libjxl/third_party/brotli/libbrotlienc.a",
+		"vendor/libjxl/third_party/brotli/libbrotlicommon.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
 	];
 	emcc("jxl-enc.js", [...libs, "cpp/jxl_enc.cpp"]);
