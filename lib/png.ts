@@ -21,6 +21,13 @@ export interface QuantizeOptions {
 	quality?: number;
 
 	/**
+	 * Limit the number of colors in palette, range: [2, 256].
+	 *
+	 * @default 256
+	 */
+	colors?: number;
+
+	/**
 	 * Range [0, 1] float, set to 1 to get nice smooth image.
 	 *
 	 * @default 1
@@ -58,6 +65,7 @@ export interface Options extends QuantizeOptions {
 export const defaultOptions: Required<Options> = {
 	speed: 4,
 	quality: 75,
+	colors: 256,
 	dithering: 1,
 	level: 3,
 	interlace: false,

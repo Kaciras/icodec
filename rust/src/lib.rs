@@ -11,8 +11,9 @@ static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
 
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
-    pub speed: i32,
     pub quality: u8,
+    pub speed: i32,
+	pub colors: u32,
     pub dithering: f32,
 }
 
@@ -23,6 +24,7 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
     let mut quantizer = imagequant::new();
     quantizer.set_speed(options.speed).unwrap_throw();
     quantizer.set_quality(0, options.quality).unwrap_throw();
+	quantizer.set_max_colors(options.colors).unwrap_throw();
 
     let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(data.as_mut_slice());
     let mut image = quantizer
