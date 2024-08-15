@@ -132,7 +132,6 @@ function emcc(output, sourceArguments) {
 		config.debug ? "-g" : "-O3",
 		"--bind",
 		"-msimd128",
-		"-fno-exceptions",
 		"-flto",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
@@ -150,6 +149,7 @@ function emcc(output, sourceArguments) {
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
 	} else {
+		args.push("-fno-exceptions");
 		args.push("-s", "FILESYSTEM=0");
 	}
 	if (config.wasm64) {
@@ -236,6 +236,28 @@ async function checkForUpdates() {
 
 // ============================== Build Scripts ==============================
 
+function buildWebPLibrary() {
+	cmake({
+		outFile: "vendor/libwebp/libwebp.a",
+		src: "vendor/libwebp",
+		options: {
+			WEBP_ENABLE_SIMD: "1",
+
+			WEBP_BUILD_CWEBP: "0",
+			WEBP_BUILD_DWEBP: "0",
+			WEBP_BUILD_GIF2WEBP: "0",
+			WEBP_BUILD_IMG2WEBP: "0",
+			WEBP_BUILD_VWEBP: "0",
+			WEBP_BUILD_WEBPINFO: "0",
+			WEBP_BUILD_LIBWEBPMUX: "0",
+			WEBP_BUILD_WEBPMUX: "0",
+			WEBP_BUILD_EXTRAS: "0",
+			WEBP_USE_THREAD: "0",
+			WEBP_BUILD_ANIM_UTILS: "0",
+		},
+	});
+}
+
 export function buildMozJPEG() {
 	cmake({
 		outFile: "vendor/mozjpeg/libjpeg.a",
@@ -285,26 +307,7 @@ export function buildQOI() {
 }
 
 export function buildWebP() {
-	cmake({
-		outFile: "vendor/libwebp/libwebp.a",
-		src: "vendor/libwebp",
-		options: {
-			WEBP_ENABLE_SIMD: "1",
-
-			WEBP_BUILD_CWEBP: "0",
-			WEBP_BUILD_DWEBP: "0",
-			WEBP_BUILD_GIF2WEBP: "0",
-			WEBP_BUILD_IMG2WEBP: "0",
-			WEBP_BUILD_VWEBP: "0",
-			WEBP_BUILD_WEBPINFO: "0",
-			WEBP_BUILD_LIBWEBPMUX: "0",
-			WEBP_BUILD_WEBPMUX: "0",
-			WEBP_BUILD_EXTRAS: "0",
-			WEBP_USE_THREAD: "0",
-			WEBP_BUILD_ANIM_UTILS: "0",
-		},
-	});
-
+	buildWebPLibrary();
 	emcc("webp-enc.js", [
 		"-I vendor/libwebp",
 		"cpp/webp_enc.cpp",
@@ -320,9 +323,8 @@ export function buildWebP() {
 }
 
 export function buildJXL() {
-	// highway uses CJS scripts in build, our project is ESM.
+	// highway uses CJS scripts in build, but our project is ESM.
 	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
-
 	cmake({
 		outFile: "vendor/libjxl/lib/libjxl.a",
 		src: "vendor/libjxl",
@@ -335,17 +337,13 @@ export function buildJXL() {
 			JPEGXL_ENABLE_JNI: "0",
 			JPEGXL_ENABLE_MANPAGES: "0",
 			JPEGXL_ENABLE_TOOLS: "0",
-			// JPEGXL_ENABLE_JPEGLI_LIBJPEG: "0",
 			JPEGXL_ENABLE_BENCHMARK: "0",
 			JPEGXL_ENABLE_DOXYGEN: "0",
 			JPEGXL_ENABLE_EXAMPLES: "0",
-			// JPEGXL_ENABLE_SKCMS: "0",
 		},
 	});
-
-	const libs = [
+	const includes = [
 		"-I vendor/libjxl/third_party/highway",
-		"-I vendor/libjxl/third_party/skcms",
 		"-I vendor/libjxl",
 		"-I vendor/libjxl/lib/include",
 		"vendor/libjxl/lib/libjxl.a",
@@ -355,13 +353,13 @@ export function buildJXL() {
 		"vendor/libjxl/third_party/brotli/libbrotlicommon.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
 	];
-	emcc("jxl-enc.js", [...libs, "cpp/jxl_enc.cpp"]);
-	emcc("jxl-dec.js", [...libs, "cpp/jxl_dec.cpp"]);
+	emcc("jxl-enc.js", [...includes, "cpp/jxl_enc.cpp"]);
+	emcc("jxl-dec.js", [...includes, "cpp/jxl_dec.cpp"]);
 }
 
-// Must build WebP before to generate libsharpyuv.a
 export function buildAVIF() {
 	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
+	buildWebPLibrary();
 
 	cmake({
 		outFile: "vendor/libavif/ext/aom/build.libavif/libaom.a",
@@ -447,6 +445,8 @@ function buildHEIC() {
 		lines.splice(i, 9);
 		return lines.join("\n");
 	});
+
+	buildWebPLibrary();
 
 	cmake({
 		outFile: "vendor/x265/source/libx265.a",
@@ -572,7 +572,6 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
-
 	buildWebP();
 	buildAVIF();
 	buildJXL();
@@ -582,7 +581,7 @@ if (process.argv[1] === import.meta.filename) {
 	buildPNGQuant();
 
 	// TODO: workers limit
-	buildHEIC();
+	// buildHEIC();
 
 	// buildVVIC();
 
