@@ -65,10 +65,10 @@ struct JXLOptions
 	int modularPredictor;
 };
 
+static const JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+
 val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions options)
 {
-	static const JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
-
 	const JxlEncoderPtr encoder = JxlEncoderMake(nullptr);
 	JxlEncoderAllowExpertOptions(encoder.get());
 
@@ -98,7 +98,6 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 		distance = JxlEncoderDistanceFromQuality(options.alphaQuality);
 		CHECK_STATUS(JxlEncoderSetExtraChannelDistance(settings, 0, distance));
 	}
-
 	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_PHOTON_NOISE, options.photonNoiseIso);
 	SET_OPTION(JXL_ENC_FRAME_SETTING_EFFORT, options.effort);
 	SET_OPTION(JXL_ENC_FRAME_SETTING_BROTLI_EFFORT, options.brotliEffort);

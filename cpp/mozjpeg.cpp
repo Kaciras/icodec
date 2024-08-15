@@ -130,12 +130,6 @@ val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions o
 	jpeg_start_compress(&cinfo, TRUE);
 
 	/* Step 5: while (scan lines remain to be written) */
-
-	/* Here we use the library's state variable cinfo.next_scanline as the
-	 * loop counter, so that we don't have to keep track ourselves.
-	 * To keep things simple, we pass one scanline per call; you can pass
-	 * more if you wish, though.
-	 */
 	int stride = width * CHANNELS_RGBA;
 	while (cinfo.next_scanline < cinfo.image_height)
 	{
@@ -148,7 +142,6 @@ val encode(std::string pixels, uint32_t width, uint32_t height, MozJpegOptions o
 		(void)jpeg_write_scanlines(&cinfo, &p, 1);
 	}
 
-	/* Step 6: Finish compression */
 	jpeg_finish_compress(&cinfo);
 	jpeg_destroy_compress(&cinfo);
 

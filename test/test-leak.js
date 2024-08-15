@@ -3,7 +3,8 @@ import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import assert from "assert";
 import { getRawPixels, getSnapshot } from "./fixtures.js";
 
-const leakTestRuns = 20;
+// Run functions repeatedly, check if memory usage grows.
+const runs = 20;
 
 function getMemoryBuffer(wasm) {
 	return (wasm.HEAP8 ?? wasm.memory).buffer;
@@ -19,7 +20,7 @@ async function testEncodeLeak() {
 	const memory = getMemoryBuffer(wasm);
 	const before = memory.byteLength;
 
-	for (let i = 0; i < leakTestRuns; i++) {
+	for (let i = 0; i < runs; i++) {
 		encode(image);
 	}
 	const after = memory.byteLength;
@@ -36,7 +37,7 @@ async function testDecodeLeak() {
 	const memory = getMemoryBuffer(wasm);
 	const before = memory.byteLength;
 
-	for (let i = 0; i < leakTestRuns; i++) {
+	for (let i = 0; i < runs; i++) {
 		decode(input);
 	}
 	const after = memory.byteLength;

@@ -175,45 +175,13 @@ interface ICodecModule<T = any> {
 The `png` module export extra members:
 
 ```typescript
-interface QuantizeOptions {
-  /**
-   * Range: [0, 10], bigger is faster and generate images of lower quality,
-   * but may be useful for real-time generation of images.
-   *
-   * @default 4
-   */
-  speed?: number;
-  /**
-   * Range [0, 100], roughly like JPEG. the max 100 means best effort
-   * If less than 100, the library will try to use fewer colors.
-   *
-   * Images with fewer colors are not always smaller, due to increased dithering it causes.
-   *
-   * @default 75
-   */
-  quality?: number;
-  /**
-   * If the minimum quality can't be met, the quantization will be aborted with an error.
-   * Default is 0, which means never aborts the process.
-   *
-   * @default 0
-   */
-  min_quality?: number;
-  /**
-   * Range [0, 1] float, set to 1 to get nice smooth image.
-   *
-   * @default 1
-   */
-  dithering?: number;
-}
-
 /**
  * Reduces the colors used in the image at a slight loss, using a combination
  * of vector quantization algorithms.
  *
  * Can be used before other compression algorithm to boost compression ratio.
  */
-declare function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
+function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
 ```
 
 To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.

@@ -44,14 +44,14 @@ export function updateSnapshot(name, codec, data) {
  * Asserts that the two images are similar, that they have the same dimensions,
  * and that the differences in content are within specified limits.
  *
- * Set `toleration` & `threshold` to 0 to assert images are equal.
+ * Set `toleration` & `threshold` to 0 to assert pixels are equal.
  *
  * @param expected Image data of the images to compare.
  * @param actual Image data of the images to compare.
- * @param toleration If different pixels percentage greater than it, the assertion failed.
  * @param threshold From 0 to 1. Smaller values make the comparison more sensitive.
+ * @param toleration If different pixels percentage greater than it, the assertion failed.
  */
-export function assertSimilar(expected, actual, toleration, threshold) {
+export function assertSimilar(expected, actual, threshold, toleration) {
 	const { width, height, data } = expected;
 	assert.strictEqual(actual.width, width);
 	assert.strictEqual(actual.height, height);

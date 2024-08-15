@@ -11,12 +11,12 @@ export const config = {
 	outDir: "dist",
 
 	/**
-	 * Force rebuild 3rd-party libraries, it will take more time.
+	 * Force rebuild 3rd-party libraries.
 	 */
 	rebuild: false,
 
 	/**
-	 * Set to true to build in debug more, default is release.
+	 * Set to true to build in debug mode, default is release mode.
 	 */
 	debug: false,
 
@@ -570,14 +570,14 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
-	buildWebP();
-	buildAVIF();
+	// buildWebP();
+	// buildAVIF();
 	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
-	buildHEIC();
-	buildPNGQuant();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
+	// buildHEIC();
+	// buildPNGQuant();
 
 	// buildVVIC();
 

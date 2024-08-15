@@ -88,7 +88,7 @@ export const loadDecoder = loadEncoder;
 export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 	options = { ...defaultOptions, ...options };
 	const { data, width, height } = image;
-	return quantize(data as any, width, height, { ...defaultOptions, ...options });
+	return quantize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
 /**
@@ -97,7 +97,7 @@ export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
 	const { data, width, height } = image;
-	return optimize(data as any, width, height, { ...defaultOptions, ...options });
+	return optimize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
 export function decode(input: Uint8Array) {

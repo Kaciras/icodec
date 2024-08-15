@@ -6,12 +6,10 @@ const image = getRawPixels("alpha");
 
 async function testLossless(options) {
 	const { loadEncoder, encode, loadDecoder, decode } = this;
-
 	await loadEncoder();
 	await loadDecoder();
 
-	const encoded = encode(image, options);
-	const back = decode(encoded);
+	const back = decode(encode(image, options));
 
 	assertSimilar(image, back, 0, 0);
 }

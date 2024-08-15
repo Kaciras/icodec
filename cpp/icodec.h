@@ -12,6 +12,11 @@ thread_local const val Uint8Array = val::global("Uint8Array");
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 thread_local const val ImageData = val::global("_ICodec_ImageData");
 
+/*
+ * Use RAII to avoid forgetting to release and make the code cleaner.
+
+ * https://stackoverflow.com/a/39176806/7065321
+ */
 template <typename T, typename Deletion>
 std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
 {

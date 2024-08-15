@@ -30,7 +30,7 @@ async function testDecode() {
 	await loadDecoder();
 	const output = decode(input);
 
-	assertSimilar(getRawPixels("image"), output, 0.01, 0.2);
+	assertSimilar(getRawPixels("image"), output, 0.2, 0.01);
 }
 
 describe("decode", () => {
