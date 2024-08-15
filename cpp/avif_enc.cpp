@@ -20,6 +20,7 @@ struct AvifOptions
 {
 	int quality;
 	int qualityAlpha;
+	bool autoTiling;
 	int tileRowsLog2;
 	int tileColsLog2;
 	int speed;
@@ -79,10 +80,12 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	encoder->quality = options.quality;
 	encoder->qualityAlpha = options.qualityAlpha;
 	encoder->speed = options.speed;
+	encoder->autoTiling = options.autoTiling;
 	encoder->tileRowsLog2 = options.tileRowsLog2;
 	encoder->tileColsLog2 = options.tileColsLog2;
 
 	// https://github.com/AOMediaCodec/libavif/blob/47f154ae4cdefbdb7f9d86c0017acfe118db260e/src/codec_aom.c#L404
+	// aq-mode has no effect, cq-level overrides quality.
 	SET_OPTION("sharpness", std::to_string(options.sharpness).c_str());
 	SET_OPTION("color:denoise-noise-level", std::to_string(options.denoiseLevel).c_str());
 
@@ -111,6 +114,7 @@ EMSCRIPTEN_BINDINGS(icodec_module_AVIF)
 		.field("qualityAlpha", &AvifOptions::qualityAlpha)
 		.field("tileRowsLog2", &AvifOptions::tileRowsLog2)
 		.field("tileColsLog2", &AvifOptions::tileColsLog2)
+		.field("autoTiling", &AvifOptions::autoTiling)
 		.field("speed", &AvifOptions::speed)
 		.field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
 		.field("sharpness", &AvifOptions::sharpness)

@@ -31,7 +31,8 @@ export interface Options {
 	qualityAlpha?: number;
 
 	/**
-	 * [0 - 10], 0 = slowest, 10 = fastest.
+	 * Range: [-1, 10], 0 = slowest, 10 = fastest, slower should make for a better quality image in less bytes.
+	 * A combination of settings are tweaked to simulate this speed range.
 	 *
 	 * @default 6
 	 */
@@ -43,6 +44,13 @@ export interface Options {
 	 * @default YUV420
 	 */
 	subsample?: Subsampling;
+
+	/**
+	 * If true, ignores `tileRowsLog2` and `tileColsLog2` and automatically chooses suitable tiling values.
+	 *
+	 * @default false
+	 */
+	autoTiling?: boolean;
 
 	/**
 	 * [0 - 6], Creates 2^n tiles in that dimension
@@ -60,8 +68,7 @@ export interface Options {
 	chromaDeltaQ?: boolean;
 
 	/**
-	 * Bias towards block sharpness in rate-distortion
-	 * optimization of transform coefficients [0, 7]
+	 * Bias towards block sharpness in rate-distortion optimization of transform coefficients [0, 7]
 	 *
 	 * @default 0
 	 */
@@ -94,6 +101,7 @@ export const defaultOptions: Required<Options> = {
 	qualityAlpha: -1,
 	speed: 6,
 	subsample: Subsampling.YUV420,
+	autoTiling: false,
 	tileColsLog2: 0,
 	tileRowsLog2: 0,
 	chromaDeltaQ: false,
