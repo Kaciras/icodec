@@ -55,7 +55,7 @@ const repositories = {
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
 	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
 	vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
-	vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"]
+	vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 };
 
 mkdirSync(config.outDir, { recursive: true });
@@ -88,7 +88,7 @@ function patchFile(path, doPatch) {
 }
 
 function cmake(settings) {
-	const { outFile, src, dist = src, options= {} } = settings;
+	const { outFile, src, dist = src, options = {} } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
 		return;
 	}
@@ -129,6 +129,8 @@ function cmake(settings) {
 function emcc(output, sourceArguments) {
 	output = join(config.outDir, output);
 	const args = [
+		"-o", output,
+		"-I", "cpp",
 		config.debug ? "-g" : "-O3",
 		"--bind",
 		"-msimd128",
@@ -139,9 +141,6 @@ function emcc(output, sourceArguments) {
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
-		"-I", "cpp",
-		"-o", output,
-		...sourceArguments,
 	];
 	if (!sourceArguments.some(arg => arg.endsWith(".c"))) {
 		args.push("-std=c++23");
@@ -155,6 +154,7 @@ function emcc(output, sourceArguments) {
 	if (config.wasm64) {
 		args.push("-s", "MEMORY64=1");
 	}
+	args.push(...sourceArguments);
 	execFileSync("emcc", args, { stdio: "inherit", shell: true });
 	console.info(`Successfully build WASM module: ${output}`);
 }
@@ -186,7 +186,7 @@ async function checkUpdateGit(key, branch, repo) {
 		}
 	} else {
 		execFileSync("git", ["fetch"], { cwd });
-		const stdout = execFileSync("git", ["log", `HEAD..origin/${branch}`, "--pretty=%at"], {
+		const stdout = execFileSync("git", ["log", "HEAD..origin", "--pretty=%at"], {
 			cwd,
 			encoding: "utf8",
 		});
@@ -195,7 +195,7 @@ async function checkUpdateGit(key, branch, repo) {
 			return;
 		}
 		const date = new Date(parseInt(commits[0]) * 1000).toISOString();
-		console.log(`${repo} ${commits.length} new commits, ${date}`);
+		console.log(`${repo} has new commits, latest date: ${date}`);
 	}
 }
 
@@ -448,6 +448,7 @@ function buildHEIC() {
 
 	buildWebPLibrary();
 
+	// TODO: thread count limit
 	cmake({
 		outFile: "vendor/x265/source/libx265.a",
 		src: "vendor/x265/source",
@@ -569,18 +570,16 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
-	// buildPNGQuant();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
+	buildHEIC();
+	buildPNGQuant();
 
-	// TODO: workers limit
-	// buildHEIC();
-
-	buildVVIC();
+	// buildVVIC();
 
 	// await checkForUpdates();
 }
