@@ -51,7 +51,7 @@ Image encoders & decoders built with WebAssembly.
 </table>
 
 > [!WARNING]
-> Since libheif does not support specify thread count for x265 encoder, call `encode` of the heic module must in webworker, and it does not support Node.
+> Since libheif does not support specify thread count for x265 encoder, The `encode` of the heic module only work on webworker, and has performance issue.
 
 # Usage
 
@@ -91,24 +91,106 @@ const encoded = jxl.encode(image, /*{ options }*/);
 
 Each codec module exports:
 
-- `loadEncoder(input?)`: Load the encoder WASM file, must be called once before `encode`, it accepts an optional argument:
-  - If pass a string, it's the URL of WASM file to fetch.
-  - If pass a `ArrayBuffer` or `ArrayBufferView`, it will be treated as the WASM bytes.
+```typescript
+/**
+ * Provides a uniform type for codec modules that support encoding.
+ *
+ * @example
+ * import { wp2, ICodecModule } from "icodec";
+ *
+ * const encoder: ICodecModule<wp2.Options> = wp2;
+ */
+interface ICodecModule<T = any> {
+  /**
+   * The default options of `encode` function.
+   */
+  defaultOptions: Required<T>;
 
-  This function returns the underlying WASM module, which is not part of the public API and can be changed at any time.
+  /**
+   * The MIME type string of the format.
+   */
+  mimeType: string;
 
-- `encode(imageData, options?)`: Encode an image with RGBA pixels data.
-- `loadDecoder(input?)`: Like `loadEncoder`, but for `decode`.
-- `decode(uint8Array)`: Convert the image to RGBA data, the return value is an `ImageData` type.
-- `mimeType`: The MIME type string of the codec.
-- `extension`: File extension of the format.
-- `defaultOptions`: The default options for `encode` function.
-- `type Options`: Type definition of the encode options.
+  /**
+   * File extension (without the dot) of this format.
+   */
+  extension: string;
+
+  /**
+   * Load the decoder WASM file, must be called once before decode.
+   *
+   * @param source If pass a string, it's the URL of WASM file to fetch,
+   *               else it will be treated as the WASM bytes.
+   * @return the underlying WASM module, which is not part of
+   *               the public API and can be changed at any time.
+   */
+  loadDecoder(source?: WasmSource): Promise<any>;
+
+  /**
+   * Convert the image to raw RGBA data.
+   */
+  decode(input: Uint8Array): ImageData;
+
+  /**
+   * Load the encoder WASM file, must be called once before encode.
+   *
+   * @param source If pass a string, it's the URL of WASM file to fetch,
+   *               else it will be treated as the WASM bytes.
+   * @return the underlying WASM module, which is not part of
+   *               the public API and can be changed at any time.
+   */
+  loadEncoder(source?: WasmSource): Promise<any>;
+
+  /**
+   * Encode an image with RGBA pixels data.
+   */
+  encode(image: ImageDataLike, options?: T): Uint8Array;
+}
+```
 
 The `png` module export extra members:
 
-- `reduceColors(imageData, options?)`: Reduces the colors used in the image at a slight loss, returns `Uint8Array`.
-- `type QuantizeOptions`: Type definition of the options in `reduceColors`.
+```typescript
+interface QuantizeOptions {
+  /**
+   * Range: [0, 10], bigger is faster and generate images of lower quality,
+   * but may be useful for real-time generation of images.
+   *
+   * @default 4
+   */
+  speed?: number;
+  /**
+   * Range [0, 100], roughly like JPEG. the max 100 means best effort
+   * If less than 100, the library will try to use fewer colors.
+   *
+   * Images with fewer colors are not always smaller, due to increased dithering it causes.
+   *
+   * @default 75
+   */
+  quality?: number;
+  /**
+   * If the minimum quality can't be met, the quantization will be aborted with an error.
+   * Default is 0, which means never aborts the process.
+   *
+   * @default 0
+   */
+  min_quality?: number;
+  /**
+   * Range [0, 1] float, set to 1 to get nice smooth image.
+   *
+   * @default 1
+   */
+  dithering?: number;
+}
+
+/**
+ * Reduces the colors used in the image at a slight loss, using a combination
+ * of vector quantization algorithms.
+ *
+ * Can be used before other compression algorithm to boost compression ratio.
+ */
+declare function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
+```
 
 To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
 
@@ -148,8 +230,8 @@ node build.js
 
 TODOs:
 
-* Could it be possible to remove HEIC encoder dependency on pthread, or limit the number of threads?
-* vvenc cannot be compiled with Emscripten.
+* Could it be possible to remove HEIC & VVIC encoder dependency on pthread, or limit the number of threads?
+* Cannot specify vvenc & vvdec paths for libheif build.
 
 Rnn tests:
 
