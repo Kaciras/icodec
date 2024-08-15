@@ -88,7 +88,7 @@ function patchFile(path, doPatch) {
 }
 
 function cmake(settings) {
-	const { outFile, src, dist = src, options } = settings;
+	const { outFile, src, dist = src, options= {} } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
 		return;
 	}
@@ -509,6 +509,12 @@ function buildHEIC() {
 }
 
 function buildVVIC() {
+	// If build failed, try to delete "use ccache" section in CMakeLists.txt
+	cmake({
+		outFile: "vendor/vvdec/lib/release-static/libvvdec.a",
+		src: "vendor/vvdec",
+		exceptions: true,
+	});
 	cmake({
 		outFile: "vendor/vvenc/lib/release-static/libvvenc.a",
 		src: "vendor/vvenc",
@@ -520,18 +526,9 @@ function buildVVIC() {
 			BUILD_SHARED_LIBS: "0",
 			VVENC_ENABLE_INSTALL: "0",
 			VVENC_ENABLE_THIRDPARTY_JSON: "0",
+		},
+	});
 
-			ccache: "CCACHE-NOTFOUND",
-		},
-	});
-	cmake({
-		outFile: "vendor/vvdec/lib/release-static/libvvdec.a",
-		src: "vendor/vvdec",
-		exceptions: true,
-		options: {
-			ccache: "CCACHE-NOTFOUND",
-		},
-	});
 	cmake({
 		outFile: "vendor/libheif-vvic/libheif/libheif.a",
 		src: "vendor/libheif",
@@ -572,18 +569,18 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
-	buildPNGQuant();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
+	// buildPNGQuant();
 
 	// TODO: workers limit
 	// buildHEIC();
 
-	// buildVVIC();
+	buildVVIC();
 
 	// await checkForUpdates();
 }

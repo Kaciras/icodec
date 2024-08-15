@@ -18,7 +18,7 @@ using namespace emscripten;
 		return val(#key);                                                               \
 	}
 
-#define CHECK(s) if (s != JXL_ENC_SUCCESS) { return val::null(); }
+#define CHECK_STATUS(s) if (s != JXL_ENC_SUCCESS) { return val::null(); }
 
 // https://github.com/libjxl/libjxl/blob/e10fb6858fe9cb506f99b5373f64d6b639fe447d/lib/extras/enc/jxl.cc#L97
 bool ReadCompressedOutput(JxlEncoder *enc, std::vector<uint8_t> *compressed)
@@ -79,24 +79,24 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	basic_info.ysize = height;
 	basic_info.bits_per_sample = COLOR_DEPTH;
 	basic_info.num_extra_channels = 1;
-	CHECK(JxlEncoderSetBasicInfo(encoder.get(), &basic_info));
+	CHECK_STATUS(JxlEncoderSetBasicInfo(encoder.get(), &basic_info));
 
 	JxlColorEncoding color_encoding = {};
 	JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);
-	CHECK(JxlEncoderSetColorEncoding(encoder.get(), &color_encoding));
+	CHECK_STATUS(JxlEncoderSetColorEncoding(encoder.get(), &color_encoding));
 
 	auto settings = JxlEncoderFrameSettingsCreate(encoder.get(), nullptr);
 	if (options.lossless)
 	{
-		CHECK(JxlEncoderSetFrameLossless(settings, JXL_TRUE));
+		CHECK_STATUS(JxlEncoderSetFrameLossless(settings, JXL_TRUE));
 	}
 	else
 	{
 		auto distance = JxlEncoderDistanceFromQuality(options.quality);
-		CHECK(JxlEncoderSetFrameDistance(settings, distance));
+		CHECK_STATUS(JxlEncoderSetFrameDistance(settings, distance));
 
 		distance = JxlEncoderDistanceFromQuality(options.alphaQuality);
-		CHECK(JxlEncoderSetExtraChannelDistance(settings, 0, distance));
+		CHECK_STATUS(JxlEncoderSetExtraChannelDistance(settings, 0, distance));
 	}
 
 	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_PHOTON_NOISE, options.photonNoiseIso);
@@ -118,7 +118,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR, options.modularPredictor);
 	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT, options.iterations);
 
-	CHECK(JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length()));
+	CHECK_STATUS(JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length()));
 	JxlEncoderCloseInput(encoder.get());
 
 	std::vector<uint8_t> compressed;
@@ -129,7 +129,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	return toUint8Array(compressed.data(), compressed.size());
 }
 
-EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
+EMSCRIPTEN_BINDINGS(icodec_module_JXL)
 {
 	function("encode", &encode);
 

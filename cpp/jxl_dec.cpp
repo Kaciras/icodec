@@ -8,12 +8,7 @@
 
 using namespace emscripten;
 
-#define EXPECT_TRUE(a) if (!(a))    \
-{                      				\
-	return val::null();				\
-}
-
-#define EXPECT_EQ(a, b) EXPECT_TRUE((a) == (b));
+#define EXPECT_EQ(a, b) if (a != b) { return val::null(); }
 
 val decode(std::string input)
 {
@@ -30,16 +25,11 @@ val decode(std::string input)
 
 	JxlBasicInfo info;
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
-
-	// EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get()));
-
 	EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get()));
 
 	size_t length = info.xsize * info.ysize * CHANNELS_RGBA;
-
 	size_t buffer_size;
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size));
-	// EXPECT_EQ(buffer_size, length * sizeof(uint8_t));
 
 	auto output = std::make_unique<uint8_t[]>(length);
 	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(
@@ -53,7 +43,7 @@ val decode(std::string input)
 	return toImageData(output.get(), info.xsize, info.ysize);
 }
 
-EMSCRIPTEN_BINDINGS(icodec_module_JPEGXL)
+EMSCRIPTEN_BINDINGS(icodec_module_JXL)
 {
 	function("decode", &decode);
 }
