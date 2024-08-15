@@ -13,7 +13,6 @@ static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
 pub struct QuantizeOptions {
     pub speed: i32,
     pub quality: u8,
-    pub min_quality: u8,
     pub dithering: f32,
 }
 
@@ -23,9 +22,7 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 
     let mut quantizer = imagequant::new();
     quantizer.set_speed(options.speed).unwrap_throw();
-    quantizer
-        .set_quality(options.min_quality, options.quality)
-        .unwrap_throw();
+    quantizer.set_quality(0, options.quality).unwrap_throw();
 
     let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(data.as_mut_slice());
     let mut image = quantizer

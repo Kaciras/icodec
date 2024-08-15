@@ -21,14 +21,6 @@ export interface QuantizeOptions {
 	quality?: number;
 
 	/**
-	 * If the minimum quality can't be met, the quantization will be aborted with an error.
-	 * Default is 0, which means never aborts the process.
-	 *
-	 * @default 0
-	 */
-	min_quality?: number;
-
-	/**
 	 * Range [0, 1] float, set to 1 to get nice smooth image.
 	 *
 	 * @default 1
@@ -66,7 +58,6 @@ export interface Options extends QuantizeOptions {
 export const defaultOptions: Required<Options> = {
 	speed: 4,
 	quality: 75,
-	min_quality: 0,
 	dithering: 1,
 	level: 3,
 	interlace: false,
