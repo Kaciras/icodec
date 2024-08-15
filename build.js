@@ -55,6 +55,7 @@ const repositories = {
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
 	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
 	vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
+	vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"]
 };
 
 mkdirSync(config.outDir, { recursive: true });
@@ -509,29 +510,50 @@ function buildHEIC() {
 
 function buildVVIC() {
 	cmake({
-		outFile: "vendor/vvenc/vvenc.a",
+		outFile: "vendor/vvenc/lib/release-static/libvvenc.a",
 		src: "vendor/vvenc",
-		dist: "vendor/vvenc/build",
+		exceptions: true,
 		options: {
+			// Some instructions are not supported in WASM.
+			VVENC_ENABLE_X86_SIMD: "0",
+
 			BUILD_SHARED_LIBS: "0",
 			VVENC_ENABLE_INSTALL: "0",
 			VVENC_ENABLE_THIRDPARTY_JSON: "0",
+
+			ccache: "CCACHE-NOTFOUND",
 		},
 	});
 	cmake({
-		outFile: "vendor/libheif/libheif/libheif.a",
-		src: "vendor/libheif",
+		outFile: "vendor/vvdec/lib/release-static/libvvdec.a",
+		src: "vendor/vvdec",
+		exceptions: true,
 		options: {
-			WITH_LIBSHARPYUV: "0",
+			ccache: "CCACHE-NOTFOUND",
+		},
+	});
+	cmake({
+		outFile: "vendor/libheif-vvic/libheif/libheif.a",
+		src: "vendor/libheif",
+		dist: "vendor/libheif-vvic",
+		options: {
+			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: "1",
+			WITH_AOM_DECODER: "0",
+			WITH_AOM_ENCODER: "0",
+			WITH_X265: "0",
+			WITH_LIBDE265: "0",
 			WITH_EXAMPLES: "0",
 			WITH_GDK_PIXBUF: "0",
 			ENABLE_MULTITHREADING_SUPPORT: "0",
 			BUILD_TESTING: "0",
 			BUILD_SHARED_LIBS: "0",
 
+			LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
+			LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
+
+			// TODO: cannot find modules
 			WITH_VVENC: "1",
-			VVENC_INCLUDE_DIR: "vendor/x265/source",
-			VVENC_LIBRARY: "vendor/vvenc/vvenc.a",
+			WITH_VVDEC: "1",
 		},
 	});
 
@@ -540,9 +562,10 @@ function buildVVIC() {
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
-		"cpp/vvic_enc.cpp",
-		"vendor/vvenc/vvenc.a",
+		"cpp/vvic.cpp",
 		"vendor/libheif/libheif/libheif.a",
+		"vendor/vvenc/lib/release-static/libvvenc.a",
+		"vendor/vvdec/lib/release-static/libvvdec.a",
 	]);
 }
 
@@ -561,7 +584,6 @@ if (process.argv[1] === import.meta.filename) {
 	// TODO: workers limit
 	buildHEIC();
 
-	// TODO: build failed.
 	// buildVVIC();
 
 	// await checkForUpdates();
