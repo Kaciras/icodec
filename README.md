@@ -6,46 +6,70 @@ Image encoders & decoders built with WebAssembly.
 
 <table>
     <thead>
-        <tr>
-            <th>Module</th>
-            <th>Encoder</th>
-            <th>Decoder</th>
-        </tr>
+        <tr><th>Module</th><th>Encoder</th><th>Decoder</th></tr>
     </thead>
     <tbody>
         <tr>
             <td>jpeg</td>
-            <td colspan='2'>MozJPEG</td>
+            <td colspan='2'>
+                <a href='https://github.com/mozilla/mozjpeg'>MozJPEG</a>
+            </td>
         </tr>
         <tr>
             <td>png</td>
-            <td>OxiPNG + imagequant</td>
-            <td>image-png</td>
+            <td>
+                <a href='https://github.com/shssoichiro/oxipng'>OxiPNG</a> 
+                + 
+                <a href='https://github.com/ImageOptim/libimagequant'>imagequant</a>
+            </td>
+            <td>
+                <a href='https://github.com/image-rs/image-png'>image-png</a>
+            </td>
         </tr>
         <tr>
             <td>qoi</td>
-            <td colspan='2'>qoi</td>
+            <td colspan='2'>
+                <a href='https://github.com/phoboslab/qoi'>qoi</a>
+            </td>
         </tr>
         <tr>
             <td>webp</td>
-            <td colspan='2'>libwebp</td>
+            <td colspan='2'>
+                <a href='https://chromium.googlesource.com/webm/libwebp'>libwebp</a>
+            </td>  
         </tr>
         <tr>
             <td>heic</td>
-            <td>libheif + x265</td>
-            <td>libheif + libde265</td>
+            <td>
+                <a href='https://github.com/strukturag/libheif'>libheif</a>
+                +
+                <a href='https://bitbucket.org/multicoreware/x265_git/src'>x265</a>
+            </td>
+            <td>
+                <a href='https://github.com/strukturag/libheif'>libheif</a>
+                +
+                <a href='https://github.com/strukturag/libde265'>libde265</a>
+            </td>
         </tr>
         <tr>
             <td>avif</td>
-            <td colspan='2'>libavif + aom</td>
+            <td colspan='2'>
+                <a href='https://github.com/AOMediaCodec/libavif'>libavif</a>
+                +
+                <a href='https://aomedia.googlesource.com/aom'>aom</a>
+            </td>
         </tr>
         <tr>
             <td>jxl</td>
-            <td colspan='2'>libjxl</td>
+            <td colspan='2'>
+                <a href='https://github.com/libjxl/libjxl'>libjxl</a>
+            </td>
         </tr>
         <tr>
             <td>wp2</td>
-            <td colspan='2'>libwebp2</td>
+            <td colspan='2'>
+                <a href='https://chromium.googlesource.com/codecs/libwebp2'>libwebp2</a>
+            </td>
         </tr>
     </tbody>
 </table>
