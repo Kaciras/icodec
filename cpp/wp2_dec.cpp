@@ -1,10 +1,7 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include <cstdio>
 #include "icodec.h"
 #include "src/wp2/decode.h"
-
-using namespace emscripten;
 
 val decode(std::string input)
 {

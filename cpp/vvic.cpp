@@ -1,11 +1,8 @@
 #include <memory>
 #include <string>
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include "icodec.h"
 #include "libheif/heif_cxx.h"
-
-using namespace emscripten;
 
 struct VvicOptions
 {

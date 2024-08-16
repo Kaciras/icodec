@@ -1,5 +1,4 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include <inttypes.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -13,8 +12,6 @@ extern "C"
 {
 #include "cdjpeg.h"
 }
-
-using namespace emscripten;
 
 struct MozJpegOptions
 {

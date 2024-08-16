@@ -1,12 +1,8 @@
 #include <memory>
 #include <string>
 #include <emscripten/bind.h>
-#include <emscripten/threading.h>
-#include <emscripten/val.h>
 #include "icodec.h"
 #include "avif/avif.h"
-
-using namespace emscripten;
 
 #define CHECK_STATUS(s) if (s != AVIF_RESULT_OK)	\
 {													\

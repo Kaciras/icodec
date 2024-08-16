@@ -1,12 +1,9 @@
 #include <string>
 #include <memory>
 #include "emscripten/bind.h"
-#include "emscripten/val.h"
 
 #include "icodec.h"
 #include "src/webp/decode.h"
-
-using namespace emscripten;
 
 val decode(std::string input)
 {

@@ -1,11 +1,7 @@
 #include <emscripten/bind.h>
-#include <emscripten/threading.h>
-#include <emscripten/val.h>
 #include <cstdio>
 #include "icodec.h"
 #include "src/wp2/encode.h"
-
-using namespace emscripten;
 
 struct WP2Options
 {
@@ -37,7 +33,6 @@ val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options optio
 	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
 	WP2::ArgbBuffer src = WP2::ArgbBuffer();
 
-	// Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
 	WP2Status status = src.Import(WP2_RGBA_32, width, height, rgba, CHANNELS_RGBA * width);
 	if (status != WP2_STATUS_OK)
 	{

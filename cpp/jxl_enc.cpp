@@ -1,10 +1,7 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 
 #include "icodec.h"
 #include "lib/include/jxl/encode_cxx.h"
-
-using namespace emscripten;
 
 #define SET_OPTION(key, value)                                                     \
 	if (JxlEncoderFrameSettingsSetOption(settings, key, value) != JXL_ENC_SUCCESS) \

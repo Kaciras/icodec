@@ -1,12 +1,9 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdexcept>
 #include "src/webp/encode.h"
 #include "icodec.h"
-
-using namespace emscripten;
 
 val encode(std::string pixels, int width, int height, WebPConfig config)
 {
