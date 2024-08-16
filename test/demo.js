@@ -15,22 +15,36 @@ let sharedImageData;
 
 fileChooser.oninput = async event => {
 	const [file] = event.currentTarget.files;
-	const codec = getCodec(file);
-	await decode(file, codec);
+	const buffer = await file.arrayBuffer();
+
+	const image = file.name.endsWith(".bin")
+		? decodeBin(buffer)
+		: await decode(buffer, getCodec(file));
+
 	encodeButton.removeAttribute("disabled");
+
+	const { data, width, height } = image;
+	canvas.width = width;
+	canvas.height = height;
+	ctx2D.putImageData(image, 0, 0);
+
+	const shared = new SharedArrayBuffer(data.byteLength);
+	const bytes = new Uint8ClampedArray(shared);
+	bytes.set(data);
+	sharedImageData = { data: bytes, width, height };
 };
 
-function getCodec(blob) {
-	if (blob.name.endsWith(".heic")) {
+function getCodec(file) {
+	if (file.name.endsWith(".heic")) {
 		return codecs.heic;
 	}
-	if (blob.name.endsWith(".wp2")) {
+	if (file.name.endsWith(".wp2")) {
 		return codecs.wp2;
 	}
-	if (blob.name.endsWith(".qoi")) {
+	if (file.name.endsWith(".qoi")) {
 		return codecs.qoi;
 	}
-	switch (blob.type) {
+	switch (file.type) {
 		case "image/JXL":
 			return codecs.jxl;
 		case "image/avif":
@@ -47,19 +61,17 @@ function getCodec(blob) {
 	throw new DOMException(message);
 }
 
-async function decode(file, decoder) {
+async function decode(buffer, decoder) {
 	await decoder.loadDecoder();
-	const image = decoder.decode(await file.bytes());
+	return decoder.decode(new Uint8Array(buffer));
+}
 
-	const { data, width, height } = image;
-	canvas.width = width;
-	canvas.height = height;
-	ctx2D.putImageData(image, 0, 0);
-
-	const shared = new SharedArrayBuffer(data.byteLength);
-	const bytes = new Uint8ClampedArray(shared);
-	bytes.set(data);
-	sharedImageData = { data: bytes, width, height };
+function decodeBin(buffer) {
+	const data = new Uint8ClampedArray(buffer, 8);
+	const view = new DataView(buffer);
+	const width = view.getUint32(0);
+	const height = view.getUint32(4);
+	return new ImageData(data, width, height);
 }
 
 /**
