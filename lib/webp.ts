@@ -33,7 +33,7 @@ export interface Options {
 	 *
 	 * @default 100
 	 */
-	near_lossless?: number;
+	nearLossless?: number;
 
 	/**
 	 * Specify the compression factor for RGB channels between 0 and 100.
@@ -55,7 +55,7 @@ export interface Options {
 	 *
 	 * @default 100
 	 */
-	alpha_quality?: number;
+	alphaQuality?: number;
 
 	/**
 	 * Specify the compression method to use. This parameter controls the trade off between
@@ -79,7 +79,7 @@ export interface Options {
 	 *
 	 * @default 50
 	 */
-	sns_strength?: number;
+	snsStrength?: number;
 
 	/**
 	 * Specify the strength of the deblocking filter, between 0 (no filtering) and 100 (maximum filtering).
@@ -88,21 +88,21 @@ export interface Options {
 	 *
 	 * @default 60
 	 */
-	filter_strength?: number;
+	filterStrength?: number;
 
 	/**
 	 * Specify the sharpness of the filtering (if used). Range is 0 (sharpest) to 7 (least sharp).
 	 *
 	 * @default 0
 	 */
-	filter_sharpness?: number;
+	filterSharpness?: number;
 
 	/**
 	 * Use strong filtering (if filtering is being used thanks to the `filter_strength`).
 	 *
 	 * @default true
 	 */
-	filter_type?: boolean;
+	filterType?: boolean;
 
 	/**
 	 * Change the number of partitions to use during the segmentation of the sns algorithm.
@@ -152,7 +152,7 @@ export interface Options {
 	 *
 	 * @default 0
 	 */
-	partition_limit?: number;
+	partitionLimit?: number;
 
 	/**
 	 * Specify the algorithm used for alpha compression: 0 or 1.
@@ -160,7 +160,7 @@ export interface Options {
 	 *
 	 * @default 1
 	 */
-	alpha_compression?: number;
+	alphaCompression?: number;
 
 	/**
 	 * Specify the predictive filtering method for the alpha plane. One of none,
@@ -173,7 +173,7 @@ export interface Options {
 	 *
 	 * @default AlphaFiltering.Fast
 	 */
-	alpha_filtering?: AlphaFiltering;
+	alphaFiltering?: AlphaFiltering;
 
 	/**
 	 * Use more accurate and sharper RGB->YUV conversion if needed.
@@ -181,7 +181,7 @@ export interface Options {
 	 *
 	 * @default false
 	 */
-	use_sharp_yuv?: boolean;
+	useSharpYUV?: boolean;
 
 	/**
 	 * Preserve RGB values in transparent area. The default is off, to help compressibility.
@@ -193,14 +193,14 @@ export interface Options {
 	 * The compressor will make several passes of partial encoding in order to get as close as possible to this target.
 	 * If both `target_size` and `target_PSNR` are used, `target_size` value will prevail.
 	 */
-	target_size?: number;
+	targetSize?: number;
 
 	/**
 	 * Specify a target PSNR (in dB) to try and reach for the compressed output.
 	 * The compressor will make several passes of partial encoding in order to get as close as possible to this target.
 	 * If both `target_size` and `target_PSNR` are used, `target_size` value will prevail.
 	 */
-	target_PSNR?: number;
+	targetPSNR?: number;
 
 	/**
 	 * Set a maximum number of passes to use during the dichotomy used by `target_size` or `target_PSNR`.
@@ -224,7 +224,7 @@ export interface Options {
 	 *
 	 * @default false
 	 */
-	low_memory?: boolean;
+	lowMemory?: boolean;
 
 	/**
 	 * Change the internal parameter mapping to better match the expected size of JPEG compression.
@@ -234,39 +234,39 @@ export interface Options {
 	 *
 	 * @default false
 	 */
-	emulate_jpeg_size?: boolean;
+	emulateJpegSize?: boolean;
 }
 
 export const defaultOptions: Required<Options> & Record<string, any> = {
 	lossless: false,
-	near_lossless: 100,
+	nearLossless: 100,
 	quality: 75,
-	target_size: 0,
-	target_PSNR: 0,
+	targetSize: 0,
+	targetPSNR: 0,
 	method: 4,
-	sns_strength: 50,
-	filter_strength: 60,
-	filter_sharpness: 0,
-	filter_type: true,
+	snsStrength: 50,
+	filterStrength: 60,
+	filterSharpness: 0,
+	filterType: true,
 	segments: 4,
 	pass: 1,
-	use_sharp_yuv: false,
+	useSharpYUV: false,
 	preprocessing: Preprocess.None,
 	autofilter: false,
-	partition_limit: 0,
-	alpha_compression: 1,
-	alpha_filtering: AlphaFiltering.Fast,
-	alpha_quality: 100,
+	partitionLimit: 0,
+	alphaCompression: 1,
+	alphaFiltering: AlphaFiltering.Fast,
+	alphaQuality: 100,
 	exact: false,
-	emulate_jpeg_size: false,
-	low_memory: false,
+	emulateJpegSize: false,
+	lowMemory: false,
 
 	// Undocumented options, only for compatibility.
 	partitions: 0,
-	show_compressed: 0,
-	image_hint: 0,
-	thread_level: 0,
-	use_delta_palette: 0,
+	showCompressed: 0,
+	imageHint: 0,
+	threadLevel: 0,
+	useDeltaPalette: 0,
 };
 
 export const mimeType = "image/webp";

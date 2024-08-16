@@ -54,7 +54,7 @@ export interface Options {
 	 *
 	 * @default true
 	 */
-	optimize_coding?: boolean;
+	optimizeCoding?: boolean;
 
 	/**
 	 * Smooth dithered input (N=1..100 is strength)
@@ -66,23 +66,23 @@ export interface Options {
 	/**
 	 * @default ColorSpace.YCbCr
 	 */
-	color_space?: ColorSpace;
+	colorSpace?: ColorSpace;
 
 	/**
 	 * Select the predefined quantization table to use.
 	 *
 	 * @default Quantization.ImageMagick
 	 */
-	quant_table?: Quantization;
+	quantTable?: Quantization;
 
-	trellis_multipass?: boolean;
-	trellis_opt_zero?: boolean;
-	trellis_opt_table?: boolean;
-	trellis_loops?: number;
-	auto_subsample?: boolean;
-	chroma_subsample?: number;
-	separate_chroma_quality?: boolean;
-	chroma_quality?: number;
+	trellisMultipass?: boolean;
+	trellisOptZero?: boolean;
+	trellisOptTable?: boolean;
+	trellisLoops?: number;
+	autoSubsample?: boolean;
+	chromaSubsample?: number;
+	separateChromaQuality?: boolean;
+	chromaQuality?: number;
 }
 
 export const defaultOptions: Required<Options> = {
@@ -90,18 +90,18 @@ export const defaultOptions: Required<Options> = {
 	baseline: false,
 	arithmetic: false,
 	progressive: true,
-	optimize_coding: true,
+	optimizeCoding: true,
 	smoothing: 0,
-	color_space: ColorSpace.YCbCr,
-	quant_table: Quantization.ImageMagick,
-	trellis_multipass: false,
-	trellis_opt_zero: false,
-	trellis_opt_table: false,
-	trellis_loops: 1,
-	auto_subsample: true,
-	chroma_subsample: 2,
-	separate_chroma_quality: false,
-	chroma_quality: 75,
+	colorSpace: ColorSpace.YCbCr,
+	quantTable: Quantization.ImageMagick,
+	trellisMultipass: false,
+	trellisOptZero: false,
+	trellisOptTable: false,
+	trellisLoops: 1,
+	autoSubsample: true,
+	chromaSubsample: 2,
+	separateChromaQuality: false,
+	chromaQuality: 75,
 };
 
 export const mimeType = "image/jpeg";

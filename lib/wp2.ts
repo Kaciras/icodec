@@ -32,7 +32,7 @@ export interface Options {
 	 *
 	 * @default 100.0
 	 */
-	alpha_quality?: number;
+	alphaQuality?: number;
 
 	/**
 	 * Compression rate/speed trade-off. [0=faster-bigger .. 9=slower-better]
@@ -61,30 +61,30 @@ export interface Options {
 	 */
 	sns?: number;
 
-	uv_mode?: UVMode;
-	csp_type?: Csp;
+	uvMode?: UVMode;
+	cspType?: Csp;
 
 	/**
 	 * error diffusion strength [0=off, 100=max]
 	 *
 	 * @default 0
 	 */
-	error_diffusion?: number;
+	errorDiffusion?: number;
 
 	// Experimental features
-	use_random_matrix?: boolean;
+	useRandomMatrix?: boolean;
 }
 
 export const defaultOptions: Required<Options> = {
 	quality: 75,
-	alpha_quality: 100,
+	alphaQuality: 100,
 	effort: 5,
 	pass: 1,
 	sns: 50,
-	uv_mode: UVMode.UVAuto,
-	csp_type: Csp.YCoCg,
-	error_diffusion: 0,
-	use_random_matrix: false,
+	uvMode: UVMode.UVAuto,
+	cspType: Csp.YCoCg,
+	errorDiffusion: 0,
+	useRandomMatrix: false,
 };
 
 export const mimeType = "image/webp2";

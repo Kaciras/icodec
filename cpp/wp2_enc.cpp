@@ -59,12 +59,12 @@ EMSCRIPTEN_BINDINGS(icodec_module_WebP2)
 
 	value_object<WP2Options>("WP2Options")
 		.field("quality", &WP2Options::quality)
-		.field("alpha_quality", &WP2Options::alpha_quality)
+		.field("alphaQuality", &WP2Options::alpha_quality)
 		.field("effort", &WP2Options::effort)
 		.field("pass", &WP2Options::pass)
-		.field("uv_mode", &WP2Options::uv_mode)
-		.field("csp_type", &WP2Options::csp_type)
-		.field("error_diffusion", &WP2Options::error_diffusion)
-		.field("use_random_matrix", &WP2Options::use_random_matrix)
-		.field("sns", &WP2Options::sns);
+		.field("uvMode", &WP2Options::uv_mode)
+		.field("sns", &WP2Options::sns)
+		.field("cspType", &WP2Options::csp_type)
+		.field("errorDiffusion", &WP2Options::error_diffusion)
+		.field("useRandomMatrix", &WP2Options::use_random_matrix);
 }
