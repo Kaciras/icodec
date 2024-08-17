@@ -570,14 +570,14 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	downloadVendorSources();
-	// buildWebP();
-	// buildAVIF();
+	buildWebP();
+	buildAVIF();
 	buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
-	// buildHEIC();
-	// buildPNGQuant();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
+	buildHEIC();
+	buildPNGQuant();
 
 	// buildVVIC();
 
