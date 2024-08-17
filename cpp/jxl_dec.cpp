@@ -1,9 +1,8 @@
 #include <emscripten/bind.h>
-
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
-#include "lib/jxl/color_encoding_internal.h"
 #include "icodec.h"
+#include "lib/jxl/color_encoding_internal.h"
 
 #define EXPECT_EQ(a, b) if (a != b) { return val::null(); }
 

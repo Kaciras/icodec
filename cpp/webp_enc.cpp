@@ -1,7 +1,4 @@
 #include <emscripten/bind.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdexcept>
 #include "src/webp/encode.h"
 #include "icodec.h"
 

@@ -9,7 +9,7 @@ import { extname } from "node:path";
 
 const moduleMime = {
 	wasm: "application/wasm",
-	heml: "text/html",
+	html: "text/html",
 	css: "text/css",
 	js: "text/javascript",
 	json: "application/json",

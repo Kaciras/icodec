@@ -1,5 +1,4 @@
 #include <emscripten/bind.h>
-#include <cstdio>
 #include "icodec.h"
 #include "src/wp2/encode.h"
 

@@ -75,7 +75,7 @@ Image encoders & decoders built with WebAssembly.
 </table>
 
 > [!WARNING]
-> Since libheif does not support specify thread count for x265 encoder, The `encode` of the heic module only work on webworker, and has performance issue.
+> Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work on webworker, and has performance issue.
 
 # Usage
 
@@ -113,7 +113,7 @@ await jxl.loadEncoder();
 const encoded = jxl.encode(image, /*{ options }*/);
 ```
 
-Each codec module exports:
+Type of each codec module:
 
 ```typescript
 /**

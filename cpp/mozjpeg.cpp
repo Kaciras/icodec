@@ -1,9 +1,4 @@
 #include <emscripten/bind.h>
-#include <inttypes.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "icodec.h"
 #include "jconfig.h"
 #include "jpeglib.h"

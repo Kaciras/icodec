@@ -1,7 +1,4 @@
-#include <string>
-#include <memory>
-#include "emscripten/bind.h"
-
+#include <emscripten/bind.h>
 #include "icodec.h"
 #include "src/webp/decode.h"
 

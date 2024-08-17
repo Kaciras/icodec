@@ -1,5 +1,4 @@
 #include <emscripten/bind.h>
-
 #include "icodec.h"
 #include "lib/include/jxl/encode_cxx.h"
 
@@ -22,7 +21,7 @@ bool ReadCompressedOutput(JxlEncoder *enc, std::vector<uint8_t> *compressed)
 {
 	compressed->resize(4096);
 	uint8_t *next_out = compressed->data();
-	size_t avail_out = compressed->size() - (next_out - compressed->data());
+	size_t avail_out = compressed->size();
 	JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;
 	while (result == JXL_ENC_NEED_MORE_OUTPUT)
 	{

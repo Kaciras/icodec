@@ -1,5 +1,4 @@
 #include <emscripten/bind.h>
-#include <stdint.h>
 
 #define QOI_IMPLEMENTATION
 #include "qoi.h"

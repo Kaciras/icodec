@@ -1,5 +1,3 @@
-#include <memory>
-#include <string>
 #include <emscripten/bind.h>
 #include "icodec.h"
 #include "avif/avif.h"
