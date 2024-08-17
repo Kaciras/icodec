@@ -103,4 +103,6 @@ textarea {
 canvas {
 	grid-area: image;
 	aspect-ratio: unset;
+	max-width: 100%;
+	max-height: 100%;
 }

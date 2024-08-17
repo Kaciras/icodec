@@ -13,8 +13,9 @@ const ctx2D = canvas.getContext("2d");
 
 let sharedImageData;
 
-fileChooser.oninput = async event => {
-	const [file] = event.currentTarget.files;
+fileChooser.oninput = async event => setFile(event.currentTarget.files[0]);
+
+async function setFile(file) {
 	const buffer = await file.arrayBuffer();
 
 	const image = file.name.endsWith(".bin")
@@ -32,7 +33,7 @@ fileChooser.oninput = async event => {
 	const bytes = new Uint8ClampedArray(shared);
 	bytes.set(data);
 	sharedImageData = { data: bytes, width, height };
-};
+}
 
 function getCodec(file) {
 	if (file.name.endsWith(".heic")) {
@@ -121,6 +122,26 @@ function refreshOptions() {
 	textarea.value = defaultOptions
 		? JSON.stringify(defaultOptions, null, "\t") : "";
 }
+
+document.ondrop = event => {
+	if (event.target === textarea) {
+		return; // Allow drop text into options editor.
+	}
+	event.preventDefault();
+	const [file, ...rest] = event.dataTransfer.items;
+	if (rest.length !== 0) {
+		return window.alert("Cannot drop multiple items");
+	}
+	if (file.kind === "file") {
+		return setFile(file.getAsFile());
+	}
+};
+
+/*
+ * To change that behavior so that an element becomes a drop zone or is droppable,
+ * the element must listen to both dragover and drop events.
+ */
+document.ondragover = event => event.preventDefault();
 
 // Set event handler, and call it immediately.
 (select.oninput = refreshOptions)();
