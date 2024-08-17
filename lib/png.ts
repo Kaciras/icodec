@@ -3,7 +3,7 @@ import { ImageDataLike, WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
 	/**
-	 * Range: [0, 10], bigger is faster and generate images of lower quality,
+	 * Range: [1, 10], bigger is faster and generate images of lower quality,
 	 * but may be useful for real-time generation of images.
 	 *
 	 * @default 4
