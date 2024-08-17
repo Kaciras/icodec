@@ -44,8 +44,8 @@ function getCodec(file) {
 	if (file.name.endsWith(".qoi")) {
 		return codecs.qoi;
 	}
-	switch (file.type) {
-		case "image/JXL":
+	switch (file.type.toLowerCase()) {
+		case "image/jxl":
 			return codecs.jxl;
 		case "image/avif":
 			return codecs.avif;
@@ -82,10 +82,10 @@ function decodeBin(buffer) {
  * @param transfer {Transferable[]} An optional array of transferable objects to transfer ownership of.
  */
 function invokeInWorker(args, transfer) {
-	worker.postMessage(args, transfer);
 	return new Promise((resolve, reject) => {
 		worker.onerror = reject;
 		worker.onmessage = e => resolve(e.data);
+		worker.postMessage(args, transfer);
 	});
 }
 
@@ -96,7 +96,8 @@ async function encode(codec = select.value) {
 	const output = await invokeInWorker([codec, sharedImageData, options]);
 	encodeButton.classList.remove("busy");
 
-	if (output.error) {
+	if (output.stack) {
+		console.error(output);
 		return window.alert("Failed, see console for reason");
 	}
 

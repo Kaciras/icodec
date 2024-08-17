@@ -1,14 +1,20 @@
 import * as codecs from "../lib/index.js";
 
-self.addEventListener("message", async event => {
-	const [codec, image, options] = event.data;
+async function encode(args) {
+	const [codec, image, options] = args;
 	const encoder = codecs[codec];
-	try {
-		await encoder.loadEncoder();
-		const output = encoder.encode(image, options);
-		postMessage(output, [output.buffer]);
-	} catch (e) {
-		console.error(e);
-		postMessage({ error: e.message, stack: e.stack });
-	}
+
+	await encoder.loadEncoder();
+	const output = encoder.encode(image, options);
+	postMessage(output, [output.buffer]);
+}
+
+/**
+ * Must post the error to main thread to print,
+ * as `console` behaves strangely in workers.
+ *
+ * https://stackoverflow.com/a/24284796/7065321
+ */
+self.addEventListener("message", event => {
+	encode(event.data).catch(postMessage);
 });
