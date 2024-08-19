@@ -42,14 +42,14 @@
 		"./*.wasm": "./dist/*.wasm"
 	},
 	"devDependencies": {
-		"@kaciras/eslint-config-core": "^3.1.0",
-		"@kaciras/eslint-config-typescript": "^3.1.0",
+		"@kaciras/eslint-config-core": "^3.2.0",
+		"@kaciras/eslint-config-typescript": "^3.2.0",
 		"@types/emscripten": "^1.39.13",
-		"@types/node": "^22.1.0",
+		"@types/node": "^22.4.0",
 		"esbench": "^0.6.2",
-		"eslint": "^9.7.0",
+		"eslint": "^9.9.0",
 		"pixelmatch": "^6.0.0",
-		"sharp": "^0.33.4",
+		"sharp": "^0.33.5",
 		"typescript": "^5.5.3",
 		"version-compare": "^3.11.0"
 	}
