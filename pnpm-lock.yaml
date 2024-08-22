@@ -21,8 +21,8 @@ importers:
         specifier: ^22.4.0
         version: 22.4.0
       esbench:
-        specifier: ^0.6.2
-        version: 0.6.2(typescript@5.5.4)
+        specifier: ^0.6.3
+        version: 0.6.3(typescript@5.5.4)
       eslint:
         specifier: ^9.9.0
         version: 9.9.0
@@ -412,8 +412,8 @@ packages:
   es-module-lexer@1.5.4:
     resolution: {integrity: sha512-MVNK56NiMrOwitFB7cqDwq0CQutbw+0BvLshJSse0MUNU+y1FC3bUS/AQg7oUng+/wKrrki7JfmwtVHkVfPLlw==}
 
-  esbench@0.6.2:
-    resolution: {integrity: sha512-sIdCFFoydpDhCWULBqOgb1bLOr9NXziPY0wJARIt9eF+ofvM/cSgCxFGKtNlXrbKzYnPm7eY+Dsz2ScfN6OVRQ==}
+  esbench@0.6.3:
+    resolution: {integrity: sha512-6jwgAT3ui024tDuKKaYNPF6BlX8q18nXGk/xLAB5E9UlZ3F5Sx/Ef+8qB6Jy6IrMvF4EywgzJIhvYnPtf+vnPw==}
     hasBin: true
     peerDependencies:
       rollup: ^4.17.2
@@ -1226,7 +1226,7 @@ snapshots:
 
   es-module-lexer@1.5.4: {}
 
-  esbench@0.6.2(typescript@5.5.4):
+  esbench@0.6.3(typescript@5.5.4):
     dependencies:
       '@kaciras/utilities': 1.0.3
       chalk: 5.3.0
