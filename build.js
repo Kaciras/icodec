@@ -46,7 +46,7 @@ const repositories = {
 	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
 	libjxl: ["v0.10.3", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
-	"libavif/ext/aom": ["v3.9.1", "https://aomedia.googlesource.com/aom"],
+	aom: ["v3.9.1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
 		"c863fc1d457bf05f1929946ab92169422a1cd9fd",
 		"https://chromium.googlesource.com/codecs/libwebp2",
@@ -361,13 +361,12 @@ export function buildJXL() {
 }
 
 export function buildAVIF() {
-	mkdirSync("vendor/libavif/ext/aom/build.libavif", { recursive: true });
 	buildWebPLibrary();
 
 	cmake({
-		outFile: "vendor/libavif/ext/aom/build.libavif/libaom.a",
-		src: "vendor/libavif/ext/aom",
-		dist: "vendor/libavif/ext/aom/build.libavif",
+		outFile: "vendor/aom/encoder-build/libaom.a",
+		src: "vendor/aom",
+		dist: "vendor/aom/encoder-build",
 		options: {
 			ENABLE_CCACHE: "0",
 			AOM_TARGET_CPU: "generic",
@@ -392,10 +391,15 @@ export function buildAVIF() {
 		src: "vendor/libavif",
 		options: {
 			BUILD_SHARED_LIBS: "0",
-			AVIF_CODEC_AOM: "LOCAL",
-			AVIF_LIBSHARPYUV: "LOCAL",
-			LIBYUV_LIBRARY: "../libwebp/libsharpyuv.a",
-			LIBYUV_INCLUDE_DIR: "../libwebp/sharpyuv",
+			AVIF_CODEC_AOM: "SYSTEM",
+			AOM_LIBRARY: "vendor/aom/encoder-build/libaom.a",
+			AOM_INCLUDE_DIR: "vendor/aom",
+
+			AVIF_LIBYUV: "LOCAL",
+
+			AVIF_LIBSHARPYUV: "SYSTEM",
+			LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
+			LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
 		},
 	});
 
@@ -403,13 +407,15 @@ export function buildAVIF() {
 		"-I vendor/libavif/include",
 		"cpp/avif_enc.cpp",
 		"vendor/libavif/libavif.a",
-		"vendor/libavif/ext/aom/build.libavif/libaom.a",
+		"vendor/aom/encoder-build/libaom.a",
+		"vendor/libwebp/libsharpyuv.a",
 	]);
 	emcc("avif-dec.js", [
 		"-I vendor/libavif/include",
 		"cpp/avif_dec.cpp",
 		"vendor/libavif/libavif.a",
-		"vendor/libavif/ext/aom/build.libavif/libaom.a",
+		"vendor/aom/encoder-build/libaom.a",
+		"vendor/libwebp/libsharpyuv.a",
 	]);
 }
 
