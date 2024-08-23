@@ -381,7 +381,7 @@ function buildAVIFPartial(isEncode) {
 			CONFIG_WEBM_IO: "0",
 
 			CONFIG_MULTITHREAD: "0",
-			CONFIG_AV1_HIGHBITDEPTH: "0",
+			CONFIG_AV1_HIGHBITDEPTH: 1 - isEncode,
 
 			CONFIG_AV1_ENCODER: isEncode,
 			CONFIG_AV1_DECODER: 1 - isEncode,
