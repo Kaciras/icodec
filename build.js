@@ -360,13 +360,12 @@ export function buildJXL() {
 	emcc("jxl-dec.js", [...includes, "cpp/jxl_dec.cpp"]);
 }
 
-export function buildAVIF() {
-	buildWebPLibrary();
-
+function buildAVIFPartial(isEncode) {
+	const typeName = isEncode ? "enc" : "dec";
 	cmake({
-		outFile: "vendor/aom/encoder-build/libaom.a",
+		outFile: `vendor/aom/${typeName}-build/libaom.a`,
 		src: "vendor/aom",
-		dist: "vendor/aom/encoder-build",
+		dist: `vendor/aom/${typeName}-build`,
 		options: {
 			ENABLE_CCACHE: "0",
 			AOM_TARGET_CPU: "generic",
@@ -383,16 +382,19 @@ export function buildAVIF() {
 
 			CONFIG_MULTITHREAD: "0",
 			CONFIG_AV1_HIGHBITDEPTH: "0",
+
+			CONFIG_AV1_ENCODER: isEncode,
+			CONFIG_AV1_DECODER: 1 - isEncode,
 		},
 	});
-
 	cmake({
-		outFile: "vendor/libavif/libavif.a",
+		outFile: `vendor/libavif/${typeName}-build/libavif.a`,
 		src: "vendor/libavif",
+		dist: `vendor/libavif/${typeName}-build`,
 		options: {
 			BUILD_SHARED_LIBS: "0",
 			AVIF_CODEC_AOM: "SYSTEM",
-			AOM_LIBRARY: "vendor/aom/encoder-build/libaom.a",
+			AOM_LIBRARY: `vendor/aom/${typeName}-build/libaom.a`,
 			AOM_INCLUDE_DIR: "vendor/aom",
 
 			AVIF_LIBYUV: "LOCAL",
@@ -400,23 +402,24 @@ export function buildAVIF() {
 			AVIF_LIBSHARPYUV: "SYSTEM",
 			LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
 			LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
+
+			AVIF_CODEC_AOM_ENCODE: isEncode,
+			AVIF_CODEC_AOM_DECODE: 1 - isEncode,
 		},
 	});
+	emcc(`avif-${typeName}.js`, [
+		"-I vendor/libavif/include",
+		`cpp/avif_${typeName}.cpp`,
+		"vendor/libwebp/libsharpyuv.a",
+		`vendor/aom/${typeName}-build/libaom.a`,
+		`vendor/libavif/${typeName}-build/libavif.a`,
+	]);
+}
 
-	emcc("avif-enc.js", [
-		"-I vendor/libavif/include",
-		"cpp/avif_enc.cpp",
-		"vendor/libavif/libavif.a",
-		"vendor/aom/encoder-build/libaom.a",
-		"vendor/libwebp/libsharpyuv.a",
-	]);
-	emcc("avif-dec.js", [
-		"-I vendor/libavif/include",
-		"cpp/avif_dec.cpp",
-		"vendor/libavif/libavif.a",
-		"vendor/aom/encoder-build/libaom.a",
-		"vendor/libwebp/libsharpyuv.a",
-	]);
+export function buildAVIF() {
+	buildWebPLibrary();
+	buildAVIFPartial(1);
+	buildAVIFPartial(0);
 }
 
 export function buildWebP2() {
