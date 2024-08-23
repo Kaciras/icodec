@@ -30,7 +30,7 @@ val decode(std::string input)
 		decoder,
 		&format,
 		output.get(),
-		length * sizeof(uint8_t)
+		length
 	));
 	EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(decoder));
 
