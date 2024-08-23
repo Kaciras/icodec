@@ -75,7 +75,7 @@ export const defaultOptions: Required<Options> = {
 export const mimeType = "image/png";
 export const extension = "png";
 
-export const loadEncoder = wasmFactory as (input?: WasmSource) => Promise<any>;
+export const loadEncoder = (module_or_path?: WasmSource) => wasmFactory({ module_or_path });
 export const loadDecoder = loadEncoder;
 
 /**
