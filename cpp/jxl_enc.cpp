@@ -1,6 +1,6 @@
 #include <emscripten/bind.h>
 #include "icodec.h"
-#include "lib/include/jxl/encode_cxx.h"
+#include "jxl/encode_cxx.h"
 
 #define SET_OPTION(key, value)                                                     \
 	if (JxlEncoderFrameSettingsSetOption(settings, key, value) != JXL_ENC_SUCCESS) \
@@ -19,7 +19,7 @@
 // https://github.com/libjxl/libjxl/blob/e10fb6858fe9cb506f99b5373f64d6b639fe447d/lib/extras/enc/jxl.cc#L97
 bool ReadCompressedOutput(JxlEncoder *enc, std::vector<uint8_t> *compressed)
 {
-	compressed->resize(4096);
+	compressed->resize(16384);
 	uint8_t *next_out = compressed->data();
 	size_t avail_out = compressed->size();
 	JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;
