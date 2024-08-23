@@ -93,7 +93,7 @@ export interface Options {
 	 *
 	 * @default false
 	 */
-	enableSharpYUV?: boolean;
+	sharpYUV?: boolean;
 }
 
 export const defaultOptions: Required<Options> = {
@@ -108,7 +108,7 @@ export const defaultOptions: Required<Options> = {
 	sharpness: 0,
 	denoiseLevel: 0,
 	tune: AVIFTune.Auto,
-	enableSharpYUV: false,
+	sharpYUV: false,
 };
 
 export const mimeType = "image/avif";

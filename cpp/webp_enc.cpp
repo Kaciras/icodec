@@ -70,5 +70,5 @@ EMSCRIPTEN_BINDINGS(icodec_module_WebP)
 		.field("nearLossless", &WebPConfig::near_lossless)
 		.field("exact", &WebPConfig::exact)
 		.field("useDeltaPalette", &WebPConfig::use_delta_palette)
-		.field("useSharpYUV", &WebPConfig::use_sharp_yuv);
+		.field("sharpYUV", &WebPConfig::use_sharp_yuv);
 }

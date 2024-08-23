@@ -181,7 +181,7 @@ export interface Options {
 	 *
 	 * @default false
 	 */
-	useSharpYUV?: boolean;
+	sharpYUV?: boolean;
 
 	/**
 	 * Preserve RGB values in transparent area. The default is off, to help compressibility.
@@ -250,7 +250,7 @@ export const defaultOptions: Required<Options> & Record<string, any> = {
 	filterType: true,
 	segments: 4,
 	pass: 1,
-	useSharpYUV: false,
+	sharpYUV: false,
 	preprocessing: Preprocess.None,
 	autofilter: false,
 	partitionLimit: 0,

@@ -23,7 +23,7 @@ struct AvifOptions
 	int sharpness;
 	int tune;
 	int denoiseLevel;
-	bool enableSharpYUV;
+	bool sharpYUV;
 };
 
 val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions options)
@@ -57,7 +57,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	avifRGBImageSetDefaults(&srcRGB, image.get());
 	srcRGB.pixels = reinterpret_cast<uint8_t *>(pixels.data());
 	srcRGB.rowBytes = width * CHANNELS_RGBA;
-	if (options.enableSharpYUV)
+	if (options.sharpYUV)
 	{
 		srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
 	}
@@ -115,5 +115,5 @@ EMSCRIPTEN_BINDINGS(icodec_module_AVIF)
 		.field("tune", &AvifOptions::tune)
 		.field("denoiseLevel", &AvifOptions::denoiseLevel)
 		.field("subsample", &AvifOptions::subsample)
-		.field("enableSharpYUV", &AvifOptions::enableSharpYUV);
+		.field("sharpYUV", &AvifOptions::sharpYUV);
 }
