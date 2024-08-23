@@ -17,7 +17,8 @@ struct WP2Options
 
 val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options options)
 {
-	WP2::EncoderConfig config = {};
+	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
+	WP2::EncoderConfig config;
 
 	config.quality = options.quality;
 	config.alpha_quality = options.alpha_quality;
@@ -29,9 +30,12 @@ val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options optio
 	config.error_diffusion = options.error_diffusion;
 	config.use_random_matrix = options.use_random_matrix;
 
-	auto rgba = reinterpret_cast<uint8_t *>(pixels.data());
-	WP2::ArgbBuffer src = WP2::ArgbBuffer();
+	if (options.quality == 100 && options.alpha_quality == 100)
+	{
+		config.keep_unmultiplied = true;
+	}
 
+	auto src = WP2::ArgbBuffer(config.keep_unmultiplied ? WP2_ARGB_32 : WP2_Argb_32);
 	WP2Status status = src.Import(WP2_RGBA_32, width, height, rgba, CHANNELS_RGBA * width);
 	if (status != WP2_STATUS_OK)
 	{

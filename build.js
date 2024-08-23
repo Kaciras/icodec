@@ -48,7 +48,7 @@ const repositories = {
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.9.1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"c863fc1d457bf05f1929946ab92169422a1cd9fd",
+		"b65d168d3b2b8f8ec849134da2c3a5f034f1eb42",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
@@ -423,6 +423,13 @@ export function buildAVIF() {
 }
 
 export function buildWebP2() {
+	// libwebp2 does not provide switch for imageio library.
+	patchFile("vendor/libwebp2/CMakeLists.txt", file => {
+		const content = readFileSync(file, "utf8");
+		const i = content.indexOf("# build the imageio library");
+		const j = content.indexOf("\n# #######", i);
+		return content.slice(0, i) + content.slice(j);
+	});
 	cmake({
 		outFile: "vendor/wp2_build/libwebp2.a",
 		src: "vendor/libwebp2",
