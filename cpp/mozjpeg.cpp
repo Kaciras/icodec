@@ -162,7 +162,7 @@ val decode(std::string input)
 
 	// Prepare output buffer
 	size_t output_size = cinfo.output_width * cinfo.output_height * CHANNELS_RGBA;
-	std::vector<uint8_t> output(output_size);
+	auto output = std::make_unique_for_overwrite<uint8_t[]>(output_size);
 
 	auto stride = cinfo.output_width * CHANNELS_RGBA;
 	while (cinfo.output_scanline < cinfo.output_height)
@@ -174,7 +174,7 @@ val decode(std::string input)
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
 
-	return toImageData(output.data(), cinfo.output_width, cinfo.output_height);
+	return toImageData(output.get(), cinfo.output_width, cinfo.output_height);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)

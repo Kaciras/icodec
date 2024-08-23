@@ -135,6 +135,7 @@ function emcc(output, sourceArguments) {
 		"--bind",
 		"-msimd128",
 		"-flto",
+		"-std=c++23",
 		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
@@ -142,9 +143,6 @@ function emcc(output, sourceArguments) {
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
 	];
-	if (!sourceArguments.some(arg => arg.endsWith(".c"))) {
-		args.push("-std=c++23");
-	}
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
 	} else {
@@ -269,11 +267,16 @@ export function buildMozJPEG() {
 			PNG_SUPPORTED: "0",
 		},
 	});
+	execFileSync("emcc", ["rdswitch.c", "-O3", "-c"], {
+		stdio: "inherit",
+		shell: true,
+		cwd: "vendor/mozjpeg",
+	});
 	emcc("mozjpeg.js", [
 		"-I vendor/mozjpeg",
 		"cpp/mozjpeg.cpp",
 		"vendor/mozjpeg/libjpeg.a",
-		"vendor/mozjpeg/rdswitch.c",
+		"vendor/mozjpeg/rdswitch.o",
 	]);
 }
 
