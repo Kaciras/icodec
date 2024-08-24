@@ -1,6 +1,9 @@
 import { createServer } from "node:http";
 import { createReadStream } from "node:fs";
-import { extname } from "node:path";
+import { dirname, extname } from "node:path";
+
+// Ensure we're on the project root directory.
+process.chdir(dirname(import.meta.dirname));
 
 /*
  * To unlock SharedArrayBuffer we have to create a custom server and add 2 headers.

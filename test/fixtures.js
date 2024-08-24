@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from "fs";
-import assert from "assert";
+import { readFileSync, writeFileSync } from "node:fs";
+import assert from "node:assert";
 import sharp from "sharp";
 import pixelMatch from "pixelmatch";
 

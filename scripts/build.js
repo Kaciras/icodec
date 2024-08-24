@@ -1,8 +1,11 @@
-import { execFile, execFileSync } from "child_process";
-import { join } from "path";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
-import { promisify } from "util";
+import { execFile, execFileSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { promisify } from "node:util";
 import versionCompare from "version-compare";
+
+// Ensure we're on the project root directory.
+process.chdir(dirname(import.meta.dirname));
 
 export const config = {
 	/**

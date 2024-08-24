@@ -1,5 +1,5 @@
 import { describe, test } from "node:test";
-import * as assert from "assert";
+import * as assert from "node:assert";
 import sharp from "sharp";
 import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
 import { assertSimilar, getRawPixels, getSnapshot, updateSnapshot } from "./fixtures.js";

@@ -1,6 +1,6 @@
 import { describe, test } from "node:test";
+import assert from "node:assert";
 import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
-import assert from "assert";
 import { getRawPixels, getSnapshot } from "./fixtures.js";
 
 // Run functions repeatedly, check if memory usage grows.
