@@ -13,12 +13,12 @@ const sharpImage = sharp(input.data, {
 	},
 });
 
+// Npm build of Sharp does not have JXL module.
 const sharpEncodes: Record<string, () => Sharp> = {
-	avif: () => sharpImage.avif(),
+	avif: () => sharpImage.avif({ chromaSubsampling: "420" }),
 	jpeg: () => sharpImage.jpeg(),
 	png: () => sharpImage.png({ quality: 75, palette: true }),
-	// jxl: () => sharpImage.jxl(),14,656,268 bytes
-	webp: () => sharpImage.webp(),
+	webp: () => sharpImage.webp({ quality: 75 }),
 };
 
 const encoders = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].encode);
