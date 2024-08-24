@@ -4,7 +4,7 @@ import assert from "assert";
 import { getRawPixels, getSnapshot } from "./fixtures.js";
 
 // Run functions repeatedly, check if memory usage grows.
-const runs = 20;
+const runs = 60;
 
 function getMemoryBuffer(wasm) {
 	return (wasm.HEAP8 ?? wasm.memory).buffer;
