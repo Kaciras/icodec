@@ -2,7 +2,17 @@
 #include <jxl/decode.h>
 #include "icodec.h"
 
-#define EXPECT_EQ(a, b) if (a != b) { return val::null(); }
+#define PROCESS_NEXT_STEP(event)                  \
+	if (JxlDecoderProcessInput(decoder) != event) \
+	{                                             \
+		return val(#event);                       \
+	}
+
+#define CHECK_STATUS(s)       \
+	if (s != JXL_DEC_SUCCESS) \
+	{                         \
+		return val::null();   \
+	}
 
 val decode(std::string input)
 {
@@ -10,29 +20,23 @@ val decode(std::string input)
 	static const int EVENTS = JXL_DEC_BASIC_INFO | JXL_DEC_FULL_IMAGE;
 
 	auto decoder = JxlDecoderCreate(nullptr);
-
-	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(decoder, EVENTS));
+	CHECK_STATUS(JxlDecoderSubscribeEvents(decoder, EVENTS));
 
 	auto bytes = reinterpret_cast<uint8_t *>(input.data());
 	JxlDecoderSetInput(decoder, bytes, input.size());
-	EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(decoder));
+	PROCESS_NEXT_STEP(JXL_DEC_BASIC_INFO);
 
 	JxlBasicInfo info;
-	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(decoder, &info));
-	EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(decoder));
+	CHECK_STATUS(JxlDecoderGetBasicInfo(decoder, &info));
+	PROCESS_NEXT_STEP(JXL_DEC_NEED_IMAGE_OUT_BUFFER);
 
 	size_t length = info.xsize * info.ysize * CHANNELS_RGBA;
 	size_t buffer_size;
-	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(decoder, &format, &buffer_size));
+	CHECK_STATUS(JxlDecoderImageOutBufferSize(decoder, &format, &buffer_size));
 
 	auto output = std::make_unique_for_overwrite<uint8_t[]>(length);
-	EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(
-		decoder,
-		&format,
-		output.get(),
-		length
-	));
-	EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(decoder));
+	CHECK_STATUS(JxlDecoderSetImageOutBuffer(decoder, &format, output.get(), length));
+	PROCESS_NEXT_STEP(JXL_DEC_FULL_IMAGE);
 
 	JxlDecoderDestroy(decoder);
 	return toImageData(output.get(), info.xsize, info.ysize);

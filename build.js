@@ -457,13 +457,15 @@ export function buildWebP2() {
 }
 
 function buildHEIC() {
-	// Need delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
-	config.wasm64 || patchFile("vendor/x265/source/CmakeLists.txt", file => {
-		const lines = readFileSync(file, "utf8").split("\n");
-		const i = lines.indexOf("    elseif(X86 AND NOT X64)");
-		lines.splice(i, 9);
-		return lines.join("\n");
-	});
+	// Must delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
+	if (!config.wasm64) {
+		patchFile("vendor/x265/source/CmakeLists.txt", file => {
+			const content = readFileSync(file, "utf8");
+			const i = content.indexOf("\n    elseif(X86 AND NOT X64)");
+			const j = content.indexOf("\n    endif()", i);
+			return content.slice(0, i) + content.slice(j);
+		});
+	}
 
 	buildWebPLibrary();
 

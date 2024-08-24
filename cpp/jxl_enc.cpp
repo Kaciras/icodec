@@ -68,14 +68,14 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	const JxlEncoderPtr encoder = JxlEncoderMake(nullptr);
 	JxlEncoderAllowExpertOptions(encoder.get());
 
-	JxlBasicInfo basic_info;
-	JxlEncoderInitBasicInfo(&basic_info);
-	basic_info.uses_original_profile = options.lossless;
-	basic_info.xsize = width;
-	basic_info.ysize = height;
-	basic_info.bits_per_sample = COLOR_DEPTH;
-	basic_info.num_extra_channels = 1;
-	CHECK_STATUS(JxlEncoderSetBasicInfo(encoder.get(), &basic_info));
+	JxlBasicInfo info;
+	JxlEncoderInitBasicInfo(&info);
+	info.uses_original_profile = options.lossless;
+	info.xsize = width;
+	info.ysize = height;
+	info.bits_per_sample = COLOR_DEPTH;
+	info.num_extra_channels = 1;
+	CHECK_STATUS(JxlEncoderSetBasicInfo(encoder.get(), &info));
 
 	JxlColorEncoding color_encoding = {};
 	JxlColorEncodingSetToSRGB(&color_encoding, JXL_FALSE);

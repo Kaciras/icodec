@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
 
+// Save ~5KB WASM size and has the same performance as std.
 #[global_allocator]
 static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
 	unsafe { AssumeSingleThreaded::new(FreeListAllocator::new()) };
@@ -73,10 +74,7 @@ pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions
 		oxipng::BitDepth::Eight,
 		data,
 	);
-	return raw
-		.unwrap_throw()
-		.create_optimized_png(&optimization)
-		.unwrap_throw();
+	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
 }
 
 // Data needs to be copied between the managed JS heap and the WASM memory,
@@ -98,6 +96,8 @@ fn cast_pixels(buf: &mut [u8]) {
 	}
 }
 
+/// Decode PNG image into 8-bit RGBA data, return only the buffer and width,
+/// but height can be calculated by `data.byteLength / width / 4`
 #[wasm_bindgen]
 pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
 	let mut decoder = png::Decoder::new(&mut data);

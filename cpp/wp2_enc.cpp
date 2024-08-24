@@ -2,6 +2,8 @@
 #include "icodec.h"
 #include "src/wp2/encode.h"
 
+#define CHECK_STATUS(s) if (s != WP2_STATUS_OK) { return val(WP2GetStatusText(s)); }
+
 struct WP2Options
 {
 	float quality;
@@ -30,24 +32,19 @@ val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options optio
 	config.error_diffusion = options.error_diffusion;
 	config.use_random_matrix = options.use_random_matrix;
 
+	// Must enable `keep_unmultiplied` and modify the format for exact lossless.
+	WP2SampleFormat format = WP2_Argb_32;
 	if (options.quality == 100 && options.alpha_quality == 100)
 	{
+		format = WP2_ARGB_32;
 		config.keep_unmultiplied = true;
 	}
 
-	auto src = WP2::ArgbBuffer(config.keep_unmultiplied ? WP2_ARGB_32 : WP2_Argb_32);
-	WP2Status status = src.Import(WP2_RGBA_32, width, height, rgba, CHANNELS_RGBA * width);
-	if (status != WP2_STATUS_OK)
-	{
-		return val(WP2GetStatusText(status));
-	}
+	auto src = WP2::ArgbBuffer(format);
+	CHECK_STATUS(src.Import(WP2_RGBA_32, width, height, rgba, CHANNELS_RGBA * width));
 
 	WP2::MemoryWriter memory_writer;
-	status = WP2::Encode(src, &memory_writer, config);
-	if (status != WP2_STATUS_OK)
-	{
-		return val(WP2GetStatusText(status));
-	}
+	CHECK_STATUS(WP2::Encode(src, &memory_writer, config));
 	return toUint8Array(memory_writer.mem_, memory_writer.size_);
 }
 

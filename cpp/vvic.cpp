@@ -20,7 +20,7 @@ struct JSWriter : public heif::Context::Writer
 	}
 };
 
-val encode(std::string input, int width, int height, HeicOptions options)
+val encode(std::string input, int width, int height, VvicOptions options)
 {
 	auto image = heif::Image();
 	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);

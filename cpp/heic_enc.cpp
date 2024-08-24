@@ -90,7 +90,7 @@ val decode(std::string input)
 	auto width = handle.get_width();
 	auto height = handle.get_height();
 	int stride;
-	const uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
+	auto *p = image.get_plane(heif_channel_interleaved, &stride);
 
 	auto row_bytes = width * CHANNELS_RGBA;
 	auto rgba = std::make_unique<uint8_t[]>(row_bytes * height);
