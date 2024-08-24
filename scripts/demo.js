@@ -147,3 +147,8 @@ document.ondragover = event => event.preventDefault();
 (select.oninput = refreshOptions)();
 
 encodeButton.onclick = () => encodeButton.classList.contains("busy") || encode();
+
+if (!window.SharedArrayBuffer) {
+	window.alert("SharedArrayBuffer is not available, " +
+		"you may need to serve the page with scripts/start-demo.js");
+}
