@@ -1,7 +1,7 @@
 {
 	"name": "icodec",
 	"version": "0.4.0",
-	"description": "WebAssembly image encoders & decoders",
+	"description": "Image encoders & decoders built with WebAssembly",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
 	"repository": {
@@ -10,13 +10,13 @@
 	},
 	"type": "module",
 	"keywords": [
-		"WebAssembly",
+		"wasm",
 		"image",
-		"optimize",
-		"converter",
 		"webp",
 		"avif",
 		"qoi",
+		"jpg",
+		"png",
 		"jxl",
 		"wp2",
 		"heic",

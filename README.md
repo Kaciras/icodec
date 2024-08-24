@@ -77,6 +77,11 @@ Image encoders & decoders built with WebAssembly.
 > [!WARNING]
 > Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work on webworker, and has performance issue.
 
+icodec is aimed at the web platform and has some limitations:
+
+* Decode output & Encode input only support RGBA format.
+* No animated image support, you should use video instead of it.
+
 # Usage
 
 Requirement: The target environment must support [WebAssembly SIMD](https://caniuse.com/wasm-simd).
@@ -99,18 +104,32 @@ await avif.loadDecoder();
 // Decode AVIF to ImageData.
 const image = avif.decode(await response.arrayBuffer());
 
-// Encode the image to JPEG XL, also need to load the encoder WASM first.
+// This should be called once before you invoke `encode()`
 await jxl.loadEncoder();
 
-/*
- * The image parameter must have properties:
- * {
- *     width: number;
- *     height: number;
- *     data: Uint8Array | Uint8ClampedArray;
- * }
- */
+// Encode the image to JPEG XL.
 const encoded = jxl.encode(image, /*{ options }*/);
+```
+
+To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
+
+```javascript
+import { avif, jxl } from "icodec/node";
+```
+
+If your bundler requires special handing of WebAssembly, you can pass the URL of WASM files to `load*` function. WASM files are exported in the format `icodec/<codec>-<enc|dec>.wasm`.
+
+icodec is tree-shakable, with a bundler the unused code and wasm file can be eliminated from loading.
+
+```javascript
+import { avif, jxl } from "icodec";
+
+// Example for Vite
+import AVIFEncWASM from "icodec/avif-enc.wasm?url";
+import JxlDecWASM from "icodec/jxl-dec.wasm?url";
+
+await avif.loadDecoder(AVIFEncWASM);
+await jxl.loadEncoder(JxlDecWASM);
 ```
 
 Type of each codec module:
@@ -172,7 +191,7 @@ interface ICodecModule<T = any> {
 }
 ```
 
-The `png` module export extra members:
+The `png` module exports extra members:
 
 ```typescript
 /**
@@ -181,33 +200,14 @@ The `png` module export extra members:
  *
  * Can be used before other compression algorithm to boost compression ratio.
  */
-function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
-```
-
-To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
-
-```javascript
-import { avif, jxl } from "icodec/node";
-```
-
-If your bundler requires special handing of WebAssembly, you can pass the URL of WASM files to `load*` function. WASM files are exported in the format `icodec/<codec>-<enc|dec>.wasm`.
-
-```javascript
-import { avif, jxl } from "icodec";
-
-// Example for Vite
-import AVIFEncWASM from "icodec/avif-enc.wasm?url";
-import JxlDecWASM from "icodec/jxl-dec.wasm?url";
-
-await avif.loadDecoder(AVIFEncWASM);
-await jxl.loadEncoder(JxlDecWASM);
+declare function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
 ```
 
 # Performance
 
 Decode & Encode `test/snapshot/image.*` files, `time.SD` is Standard Deviation of the time.
 
-This benchmark ignores extra code size, which in practice needs to be taken into account.
+This benchmark ignores extra code size introduced by icodec, which in practice needs to be taken into account.
 
 Decode on Edge browser.
 
