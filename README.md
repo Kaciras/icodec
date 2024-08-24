@@ -203,6 +203,28 @@ await avif.loadDecoder(AVIFEncWASM);
 await jxl.loadEncoder(JxlDecWASM);
 ```
 
+# Performance
+
+| No. |  Name | codec |        time |   time.SD | time.ratio | time.diff |
+|----:|------:|------:|------------:|----------:|-----------:|----------:|
+|   0 |  WASM |  avif |    47.49 ms |  65.17 us |   baseline |           |
+|   1 | Sharp |  avif |    72.80 ms | 227.13 us |    +53.28% |           |
+|     |       |       |             |           |            |           |
+|   2 |  WASM |  jpeg | 7,731.74 us |  71.83 us |   baseline |           |
+|   3 | Sharp |  jpeg |   797.59 us |   2.44 us |    -89.68% |           |
+|     |       |       |             |           |            |           |
+|   4 |  WASM |   jxl |    32.18 ms |  16.32 us |   baseline |           |
+|     |       |       |             |           |            |           |
+|   5 |  WASM |   png |    69.98 ms |  51.08 us |   baseline |           |
+|   6 | Sharp |   png |    10.84 ms |  37.58 us |    -84.50% |           |
+|     |       |       |             |           |            |           |
+|   7 |  WASM |   qoi |   371.49 us |   1.10 us |   baseline |           |
+|     |       |       |             |           |            |           |
+|   8 |  WASM |  webp |     4.42 ms |   1.32 us |   baseline |    +0.38% |
+|   9 | Sharp |  webp |     4.18 ms |  13.10 us |     -5.43% |           |
+|     |       |       |             |           |            |           |
+|  10 |  WASM |   wp2 |    89.79 ms | 133.27 us |   baseline |           |
+
 # Contribute
 
 To build WASM modules, you will need to install:
