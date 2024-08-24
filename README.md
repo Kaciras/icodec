@@ -276,7 +276,7 @@ To build WASM modules, you will need to install:
 Run the build script:
 
 ```shell
-node build.js
+node scripts/build.js
 ```
 
 TODOs:
@@ -294,5 +294,5 @@ node --test test/test-*.js
 Start web demo:
 
 ```shell
-node start-demo.js
+node scripts/start-demo.js
 ```

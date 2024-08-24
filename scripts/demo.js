@@ -1,6 +1,6 @@
 import * as codecs from "../lib/index.js";
 
-const worker = new Worker("./test/worker.js", { type: "module" });
+const worker = new Worker("/scripts/worker.js", { type: "module" });
 
 const fileChooser = document.getElementById("file");
 const select = document.querySelector("select");
