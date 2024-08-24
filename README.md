@@ -205,25 +205,62 @@ await jxl.loadEncoder(JxlDecWASM);
 
 # Performance
 
-| No. |  Name | codec |        time |   time.SD | time.ratio | time.diff |
-|----:|------:|------:|------------:|----------:|-----------:|----------:|
-|   0 |  WASM |  avif |    47.49 ms |  65.17 us |   baseline |           |
-|   1 | Sharp |  avif |    72.80 ms | 227.13 us |    +53.28% |           |
-|     |       |       |             |           |            |           |
-|   2 |  WASM |  jpeg | 7,731.74 us |  71.83 us |   baseline |           |
-|   3 | Sharp |  jpeg |   797.59 us |   2.44 us |    -89.68% |           |
-|     |       |       |             |           |            |           |
-|   4 |  WASM |   jxl |    32.18 ms |  16.32 us |   baseline |           |
-|     |       |       |             |           |            |           |
-|   5 |  WASM |   png |    69.98 ms |  51.08 us |   baseline |           |
-|   6 | Sharp |   png |    10.84 ms |  37.58 us |    -84.50% |           |
-|     |       |       |             |           |            |           |
-|   7 |  WASM |   qoi |   371.49 us |   1.10 us |   baseline |           |
-|     |       |       |             |           |            |           |
-|   8 |  WASM |  webp |     4.42 ms |   1.32 us |   baseline |    +0.38% |
-|   9 | Sharp |  webp |     4.18 ms |  13.10 us |     -5.43% |           |
-|     |       |       |             |           |            |           |
-|  10 |  WASM |   wp2 |    89.79 ms | 133.27 us |   baseline |           |
+Decode & Encode `test/snapshot/image.*` files, `time.SD` is Standard Deviation of the time.
+
+This benchmark ignores extra code size, which in practice needs to be taken into account.
+
+Decode on Edge browser.
+
+| No. |   Name | codec |        time |      time.SD |
+|----:|-------:|------:|------------:|-------------:|
+|   0 | icodec |  avif |     3.22 ms |      8.24 us |
+|   1 |     2d |  avif |     1.50 ms |      3.13 us |
+|   2 |  WebGL |  avif |     3.08 ms |     26.33 us |
+|   3 | icodec |  heic |     3.06 ms |     16.84 us |
+|   4 | icodec |  jpeg |   727.85 us |      1.65 us |
+|   5 |     2d |  jpeg |   601.21 us |      3.51 us |
+|   6 |  WebGL |  jpeg | 1,876.96 us |      8.85 us |
+|   7 | icodec |   jxl |     3.57 ms |     17.73 us |
+|   8 | icodec |   png |   419.48 us |  2,901.49 ns |
+|   9 |     2d |   png |   573.07 us |    801.34 ns |
+|  10 |  WebGL |   png | 1,835.78 us | 16,278.04 ns |
+|  11 | icodec |   qoi |   444.00 us |      1.08 us |
+|  12 | icodec |  webp |   792.57 us |      1.58 us |
+|  13 |     2d |  webp |   805.07 us |      4.04 us |
+|  14 |  WebGL |  webp | 2,156.43 us |     36.42 us |
+|  15 | icodec |   wp2 |     2.59 ms |     12.10 us |
+
+Decode on Node, vs [Sharp](https://github.com/lovell/sharp).
+
+| No. |   Name | codec |        time |  time.SD |
+|----:|-------:|------:|------------:|---------:|
+|   0 | icodec |  avif |     2.95 ms |  6.46 us |
+|   1 |  Sharp |  avif |     2.54 ms |  7.16 us |
+|   2 | icodec |  jpeg |   471.99 us |  2.99 us |
+|   3 |  Sharp |  jpeg |   842.17 us |  1.50 us |
+|   4 | icodec |   jxl |     3.03 ms |  7.62 us |
+|   5 | icodec |   png |   186.18 us |  1.94 us |
+|   6 |  Sharp |   png |   645.95 us |  1.78 us |
+|   7 | icodec |   qoi |   200.62 us |  1.41 us |
+|   8 | icodec |  webp |   557.32 us |  2.92 us |
+|   9 |  Sharp |  webp | 1,708.96 us | 12.14 us |
+|  10 | icodec |   wp2 |     2.27 ms |  1.99 us |
+
+Encode on Node, vs [Sharp](https://github.com/lovell/sharp). Note that icodec and Sharp do not use the same code, so the output images are not exactly equal.
+
+| No. |   Name | codec |        time |   time.SD |
+|----:|-------:|------:|------------:|----------:|
+|   0 | icodec |  avif |     2.97 ms |   9.51 us |
+|   1 |  Sharp |  avif |     2.61 ms |   8.28 us |
+|   2 | icodec |  jpeg |   479.30 us |   2.10 us |
+|   3 |  Sharp |  jpeg |   894.27 us |   2.11 us |
+|   4 | icodec |   jxl |     3.18 ms | 114.32 us |
+|   5 | icodec |   png |   189.39 us |   1.36 us |
+|   6 |  Sharp |   png |   689.49 us |   2.36 us |
+|   7 | icodec |   qoi |   204.42 us |   1.26 us |
+|   8 | icodec |  webp |   555.51 us |   1.59 us |
+|   9 |  Sharp |  webp | 1,773.42 us |  10.45 us |
+|  10 | icodec |   wp2 |     2.34 ms |  50.14 us |
 
 # Contribute
 
