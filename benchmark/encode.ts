@@ -21,27 +21,30 @@ const sharpEncodes: Record<string, () => Sharp> = {
 	webp: () => sharpImage.webp({ quality: 75 }),
 };
 
-const encoders = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].encode);
+const codecNames = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].encode);
 
-encoders.splice(encoders.indexOf("heic"), 1);
+// TODO: it spawn too many workers.
+codecNames.splice(codecNames.indexOf("heic"), 1);
 
-// pnpm exec esbench --file encode.ts
+/*
+ * Run benchmark: pnpm exec esbench --file encode.ts
+ */
 export default defineSuite({
 	params: {
-		codec: encoders,
+		codec: codecNames,
 	},
 	baseline: {
 		type: "Name",
-		value: "Sharp",
+		value: "icodec",
 	},
 	async setup(scene) {
 		const name = scene.params.codec as keyof typeof codecs;
-		const sharpEncode = sharpEncodes[name];
 		const { loadEncoder, encode } = codecs[name];
+		const sharpEncode = sharpEncodes[name as string];
 
 		await loadEncoder();
 
-		scene.bench("WASM", () => encode(input));
+		scene.bench("icodec", () => encode(input));
 		if (sharpEncode) {
 			scene.benchAsync("Sharp", () => sharpEncode().toBuffer());
 		}

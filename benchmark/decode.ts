@@ -4,27 +4,22 @@ const codecs = typeof window === "undefined"
 	? await import("../lib/node.js")
 	: await import("../lib/index.js");
 
-const decoders = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].decode);
-
-function browserDecode(blob: Blob, extract: any) {
-	return createImageBitmap(blob, { premultiplyAlpha: "none" }).then(extract);
-}
+const codecNames = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].decode);
 
 // Node: retrieve pixels with 2d context is lossy due to alpha premultiply.
-async function extract2D(bitmap: ImageBitmap) {
+async function extract2D(this: HTMLCanvasElement, bitmap: ImageBitmap) {
 	const { width, height } = bitmap;
-	const canvas = document.createElement("canvas");
-	canvas.width = width;
-	canvas.height = height;
+	this.width = width;
+	this.height = height;
 
-	const ctx = canvas.getContext("2d")!;
+	const ctx = this.getContext("2d")!;
 	ctx.drawImage(bitmap, 0, 0);
 	return ctx.getImageData(0, 0, width, height);
 }
 
-async function extractWebGL(bitmap: ImageBitmap) {
-	const canvas = document.createElement("canvas");
-	const gl = canvas.getContext("webgl2")!;
+// https://stackoverflow.com/a/60564905/7065321
+async function extractWebGL(this: HTMLCanvasElement, bitmap: ImageBitmap) {
+	const gl = this.getContext("webgl2")!;
 	const { width, height } = bitmap;
 
 	gl.activeTexture(gl.TEXTURE0);
@@ -41,13 +36,26 @@ async function extractWebGL(bitmap: ImageBitmap) {
 	return new ImageData(data, width, height);
 }
 
+function browserDecode(blob: Blob, extract: typeof extract2D) {
+	return createImageBitmap(blob, { premultiplyAlpha: "none" }).then(extract);
+}
+
+/*
+ * Run benchmark on Node:
+ *     `pnpm exec esbench --file decode.ts --executor in-process`
+ *
+ * Run benchmark on browser:
+ *     `set NODE_OPTIONS=--experimental-import-meta-resolve`
+ *     `pnpm exec esbench --file decode.ts --executor web`
+ *     Then open the URL displayed in console with your browser.
+ */
 export default defineSuite({
 	params: {
-		codec: decoders,
+		codec: codecNames,
 	},
 	baseline: {
 		type: "Name",
-		value: "WASM",
+		value: "icodec",
 	},
 	async setup(scene) {
 		const name = scene.params.codec as keyof typeof codecs;
@@ -61,9 +69,7 @@ export default defineSuite({
 			const input = readFileSync(`test/snapshot/image.${extension}`);
 			const instance = sharp(input);
 
-			if (name !== "heic") {
-				scene.bench("WASM", () => decode(input));
-			}
+			scene.bench("icodec", () => decode(input));
 
 			if (name in instance && name !== "jxl") {
 				scene.benchAsync("Sharp", () => instance.raw().toBuffer());
@@ -71,12 +77,15 @@ export default defineSuite({
 		} else {
 			const response = await fetch(`test/snapshot/image.${extension}`);
 			const blob = await response.blob();
-			scene.benchAsync("WASM", async () => decode(new Uint8Array(await blob.arrayBuffer())));
+			scene.benchAsync("icodec", async () => decode(new Uint8Array(await blob.arrayBuffer())));
+
+			const _2d = extract2D.bind(document.createElement("canvas"));
+			const gl2 = extractWebGL.bind(document.createElement("canvas"));
 
 			try {
-				await browserDecode(blob, extract2D);
-				scene.benchAsync("2d", () => browserDecode(blob, extract2D));
-				scene.benchAsync("WebGL", () => browserDecode(blob, extractWebGL));
+				await browserDecode(blob, _2d);
+				scene.benchAsync("2d", () => browserDecode(blob, _2d));
+				scene.benchAsync("WebGL", () => browserDecode(blob, gl2));
 			} catch {
 				// Browser does not support decode that format, skip.
 			}
