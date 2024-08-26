@@ -75,10 +75,32 @@ export interface Options {
 	 */
 	quantTable?: Quantization;
 
+	/**
+	 * use scans in trellis optimization.
+	 *
+	 * @default false
+	 */
 	trellisMultipass?: boolean;
+
+	/**
+	 * optimize for sequences of EOB
+	 */
 	trellisOptZero?: boolean;
+
+	/**
+	 * optimize quant table in trellis loop.
+	 *
+	 * @default false
+	 */
 	trellisOptTable?: boolean;
+
+	/**
+	 * number of trellis loops.
+	 *
+	 * @default 1
+	 */
 	trellisLoops?: number;
+
 	autoSubsample?: boolean;
 	chromaSubsample?: number;
 	separateChromaQuality?: boolean;

@@ -14,6 +14,13 @@ function decodeBin(bytes) {
 	return { width, height, data: bytes.subarray(8) };
 }
 
+/**
+ * Read a *.bin file in snapshot directory.
+ * These files are original image and used as encode input.
+ *
+ * @param name File name without extension.
+ * @return {ImageDataLike} The image data.
+ */
 export function getRawPixels(name) {
 	const path = `${directory}/${name}.bin`;
 	let image = cache.get(path);
@@ -34,6 +41,10 @@ export function getSnapshot(name, codec) {
 	return cache.set(name, item) && item;
 }
 
+/**
+ * Since the results of lossy conversions may change as the encoder is updated,
+ * we do not compare snapshots; they are only used to judge quality.
+ */
 export function updateSnapshot(name, codec, data) {
 	name = `${name}.${codec.extension}`;
 	cache.set(name, data);

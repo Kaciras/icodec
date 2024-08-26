@@ -116,7 +116,6 @@ export function buildJXL() {
 	});
 	const includes = [
 		"-I vendor/libjxl/third_party/highway",
-		"-I vendor/libjxl",
 		"-I vendor/libjxl/lib/include",
 		"vendor/libjxl/lib/libjxl.a",
 		"vendor/libjxl/lib/libjxl_cms.a",
