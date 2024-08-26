@@ -9,7 +9,7 @@ const textarea = document.querySelector("textarea");
 const dlButton = document.getElementById("download");
 const canvas = document.querySelector("canvas");
 
-const ctx2D = canvas.getContext("2d");
+const ctx2d = canvas.getContext("2d");
 
 let sharedImageData;
 
@@ -27,8 +27,14 @@ async function setFile(file) {
 	const { data, width, height } = image;
 	canvas.width = width;
 	canvas.height = height;
-	ctx2D.putImageData(image, 0, 0);
+	ctx2d.putImageData(image, 0, 0);
 
+	/*
+	 * Avoid copying of buffer for multiple conversions.
+	 *
+	 * Another way is to have the worker pass back the image,
+	 * but this is more complex.
+	 */
 	const shared = new SharedArrayBuffer(data.byteLength);
 	const bytes = new Uint8ClampedArray(shared);
 	bytes.set(data);
@@ -36,15 +42,6 @@ async function setFile(file) {
 }
 
 function getCodec(file) {
-	if (file.name.endsWith(".heic")) {
-		return codecs.heic;
-	}
-	if (file.name.endsWith(".wp2")) {
-		return codecs.wp2;
-	}
-	if (file.name.endsWith(".qoi")) {
-		return codecs.qoi;
-	}
 	switch (file.type.toLowerCase()) {
 		case "image/jxl":
 			return codecs.jxl;
@@ -56,6 +53,15 @@ function getCodec(file) {
 			return codecs.png;
 		case "image/webp":
 			return codecs.webp;
+	}
+	if (file.name.endsWith(".heic")) {
+		return codecs.heic;
+	}
+	if (file.name.endsWith(".wp2")) {
+		return codecs.wp2;
+	}
+	if (file.name.endsWith(".qoi")) {
+		return codecs.qoi;
 	}
 	const message = "Unsupported image type";
 	window.alert(message);

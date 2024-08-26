@@ -80,7 +80,7 @@ Image encoders & decoders built with WebAssembly.
 icodec is aimed at the web platform and has some limitations:
 
 * Decode output & Encode input only support RGBA format.
-* No animated image support, you should use video instead of it.
+* No animated image support, you should use video instead.
 
 # Usage
 

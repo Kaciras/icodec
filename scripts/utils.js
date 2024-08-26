@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { execFile, execFileSync } from "node:child_process";
 import { join } from "node:path";
 import versionCompare from "version-compare";
@@ -65,6 +65,15 @@ export function patchFile(path, doPatch) {
 	const content = doPatch(path);
 	renameSync(path, backup);
 	writeFileSync(path, content);
+}
+
+export function removeRange(file, start, end) {
+	patchFile(file, file => {
+		const content = readFileSync(file, "utf8");
+		const i = content.indexOf(start);
+		const j = content.indexOf(end);
+		return content.slice(0, i) + content.slice(j);
+	});
 }
 
 const semVerRe = /v?[0-9.]+$/;

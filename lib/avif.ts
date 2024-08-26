@@ -84,12 +84,12 @@ export interface Options {
 	/**
 	 * Distortion metric tuned with.
 	 *
-	 * @default  AVIFTune.Auto
+	 * @default AVIFTune.Auto
 	 */
 	tune?: AVIFTune;
 
 	/**
-	 * toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
+	 * Use libsharpyuv for RGB->YUV conversion if needed.
 	 *
 	 * @default false
 	 */
