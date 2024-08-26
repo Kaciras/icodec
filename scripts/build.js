@@ -62,9 +62,8 @@ export function buildMozJPEG() {
 		shell: true,
 		cwd: "vendor/mozjpeg",
 	});
-	emcc("mozjpeg.js", [
+	emcc("cpp/mozjpeg.cpp", [
 		"-I vendor/mozjpeg",
-		"cpp/mozjpeg.cpp",
 		"vendor/mozjpeg/libjpeg.a",
 		"vendor/mozjpeg/rdswitch.o",
 	]);
@@ -78,20 +77,18 @@ export function buildPNGQuant() {
 }
 
 export function buildQOI() {
-	emcc("qoi.js", ["-I vendor/qoi", "cpp/qoi.cpp"]);
+	emcc("cpp/qoi.cpp", ["-I vendor/qoi"]);
 }
 
 export function buildWebP() {
 	buildWebPLibrary();
-	emcc("webp-enc.js", [
+	emcc("cpp/webp_enc.cpp", [
 		"-I vendor/libwebp",
-		"cpp/webp_enc.cpp",
 		"vendor/libwebp/libwebp.a",
 		"vendor/libwebp/libsharpyuv.a",
 	]);
-	emcc("webp-dec.js", [
+	emcc("cpp/webp_dec.cpp", [
 		"-I vendor/libwebp",
-		"cpp/webp_dec.cpp",
 		"vendor/libwebp/libwebp.a",
 		"vendor/libwebp/libsharpyuv.a",
 	]);
@@ -128,8 +125,8 @@ export function buildJXL() {
 		"vendor/libjxl/third_party/brotli/libbrotlicommon.a",
 		"vendor/libjxl/third_party/highway/libhwy.a",
 	];
-	emcc("jxl-enc.js", [...includes, "cpp/jxl_enc.cpp"]);
-	emcc("jxl-dec.js", [...includes, "cpp/jxl_dec.cpp"]);
+	emcc("cpp/jxl_enc.cpp", includes);
+	emcc("cpp/jxl_dec.cpp", includes);
 }
 
 function buildAVIFPartial(isEncode) {
@@ -179,9 +176,8 @@ function buildAVIFPartial(isEncode) {
 			AVIF_CODEC_AOM_DECODE: 1 - isEncode,
 		},
 	});
-	emcc(`avif-${typeName}.js`, [
+	emcc(`cpp/avif_${typeName}.cpp`, [
 		"-I vendor/libavif/include",
-		`cpp/avif_${typeName}.cpp`,
 		"vendor/libwebp/libsharpyuv.a",
 		`vendor/aom/${typeName}-build/libaom.a`,
 		`vendor/libavif/${typeName}-build/libavif.a`,
@@ -214,14 +210,12 @@ export function buildWebP2() {
 			// WP2_REDUCED: 1,
 		},
 	});
-	emcc("wp2-enc.js", [
+	emcc("cpp/wp2_enc.cpp", [
 		"-I vendor/libwebp2",
-		"cpp/wp2_enc.cpp",
 		"vendor/wp2_build/libwebp2.a",
 	]);
-	emcc("wp2-dec.js", [
+	emcc("cpp/wp2_dec.cpp", [
 		"-I vendor/libwebp2",
-		"cpp/wp2_dec.cpp",
 		"vendor/wp2_build/libwebp2.a",
 	]);
 }
@@ -281,13 +275,12 @@ function buildHEIC() {
 		},
 	});
 
-	emcc("heic-enc.js", [
+	emcc("cpp/heic_enc.cpp", [
 		"-s", "ENVIRONMENT=web,worker",
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
 		"-fexceptions",
-		"cpp/heic_enc.cpp",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
 		"vendor/libde265/libde265/libde265.a",
@@ -349,12 +342,11 @@ function buildVVIC() {
 		},
 	});
 
-	emcc("vvic-enc.js", [
+	emcc("cpp/vvic.cpp", [
 		"-s", "ENVIRONMENT=web,worker",
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
-		"cpp/vvic.cpp",
 		"vendor/libheif/libheif/libheif.a",
 		"vendor/vvenc/lib/release-static/libvvenc.a",
 		"vendor/vvdec/lib/release-static/libvvdec.a",

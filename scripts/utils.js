@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { basename, extname, join } from "node:path";
 import { execFile, execFileSync } from "node:child_process";
-import { join } from "node:path";
-import versionCompare from "version-compare";
 import { promisify } from "node:util";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import versionCompare from "version-compare";
 
 export const config = {
 	/**
@@ -13,7 +13,7 @@ export const config = {
 	/**
 	 * Force rebuild 3rd-party libraries.
 	 */
-	rebuild: true,
+	rebuild: false,
 
 	/**
 	 * Set to true to build in debug mode, default is release mode.
@@ -201,11 +201,14 @@ export function cmake(settings) {
 	execFileSync("cmake", buildArgs, { cwd: dist, stdio: "inherit" });
 }
 
-export function emcc(output, sourceArguments) {
+export function emcc(input, sourceArguments) {
+	let output = basename(input, extname(input)).replaceAll("_", "-") + ".js";
 	output = join(config.outDir, output);
+
 	const args = [
 		"-o", output,
 		"-I", "cpp",
+		input,
 		config.debug ? "-g" : "-O3",
 		"--bind",
 		"-msimd128",
