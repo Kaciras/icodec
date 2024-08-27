@@ -7,27 +7,35 @@
 	return val(avifResultToString(s));				\
 }
 
+/**
+ * AVIF decode from memory. Implementation reference:
+ * https://github.com/AOMediaCodec/libavif/blob/main/examples/avif_example_decode_memory.c
+ */
 val decode(std::string input)
 {
-	auto decoder = toRAII(avifDecoderCreate(), avifDecoderDestroy);
-	auto image = toRAII(avifImageCreateEmpty(), avifImageDestroy);
+	auto bytes = reinterpret_cast<uint8_t *>(input.data());
+	auto decoder = avifDecoderCreate();
 	if (!decoder)
 	{
 		return val("Memory allocation failure");
 	}
 
-	auto bytes = reinterpret_cast<uint8_t *>(input.data());
-	CHECK_STATUS(avifDecoderReadMemory(decoder.get(), image.get(), bytes, input.length()));
+	// Do not use `avifDecoderReadMemory`, it will do a redundant copy.
+	CHECK_STATUS(avifDecoderSetIOMemory(decoder, bytes, input.length()));
+	CHECK_STATUS(avifDecoderParse(decoder));
+	CHECK_STATUS(avifDecoderNextImage(decoder));
 
 	// Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
 	avifRGBImage rgb;
-	avifRGBImageSetDefaults(&rgb, image.get());
+	avifRGBImageSetDefaults(&rgb, decoder->image);
 	rgb.depth = COLOR_DEPTH;
 
 	CHECK_STATUS(avifRGBImageAllocatePixels(&rgb));
-	CHECK_STATUS(avifImageYUVToRGB(image.get(), &rgb));
+	CHECK_STATUS(avifImageYUVToRGB(decoder->image, &rgb));
 
 	auto _ = toRAII(&rgb, avifRGBImageFreePixels);
+	avifDecoderDestroy(decoder);
+
 	return toImageData(rgb.pixels, rgb.width, rgb.height);
 }
 
