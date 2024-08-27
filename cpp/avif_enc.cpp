@@ -26,6 +26,11 @@ struct AvifOptions
 	bool sharpYUV;
 };
 
+/**
+ * AVIF encode. Implementation reference:
+ * https://github.com/AOMediaCodec/libavif/blob/main/examples/avif_example_encode.c
+ * https://github.com/AOMediaCodec/libavif/blob/main/apps/avifenc.c
+ */
 val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions options)
 {
 	auto format = (avifPixelFormat)options.subsample;
@@ -41,10 +46,11 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	{
 		options.qualityAlpha = options.quality;
 	}
-	auto lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
-					options.qualityAlpha == AVIF_QUALITY_LOSSLESS &&
-					format == AVIF_PIXEL_FORMAT_YUV444;
-	if (lossless)
+
+	// `matrixCoefficients` must set to identity for lossless.
+	if (options.quality == AVIF_QUALITY_LOSSLESS &&
+		options.qualityAlpha == AVIF_QUALITY_LOSSLESS &&
+		format == AVIF_PIXEL_FORMAT_YUV444)
 	{
 		image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
 	}
@@ -70,7 +76,6 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	{
 		return val("Out of memory");
 	}
-	encoder->maxThreads = 1;
 	encoder->quality = options.quality;
 	encoder->qualityAlpha = options.qualityAlpha;
 	encoder->speed = options.speed;

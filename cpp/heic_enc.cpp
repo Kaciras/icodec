@@ -24,14 +24,27 @@ struct JSWriter : public heif::Context::Writer
 		uint8Array = toUint8Array((uint8_t *)data, size);
 		return heif_error_success;
 	}
+
+	static writeImageToUint8Array(heif::Context ctx)
+	{
+		auto writer = JSWriter();
+		ctx.write(writer);
+		return writer.uint8Array;
+	}
 };
 
+/**
+ * HEIC encode. Implementation reference:
+ * https://github.com/strukturag/libheif/blob/master/examples/decoder_png.cc
+ * https://github.com/strukturag/libheif/blob/master/examples/heif_enc.cc
+ */
 val encode(std::string pixels, int width, int height, HeicOptions options)
 {
 	auto image = heif::Image();
 	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
 	image.add_plane(heif_channel_interleaved, width, height, COLOR_DEPTH);
 
+	// Planes can have padding, so we need copy the data by row.
 	auto row_bytes = width * CHANNELS_RGBA;
 	int stride;
 	uint8_t *p = image.get_plane(heif_channel_interleaved, &stride);
@@ -49,13 +62,13 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 	encoder.set_integer_parameter("complexity", options.complexity);
 	encoder.set_string_parameter("chroma", options.chroma);
 
-	auto ctx = heif::Context();
-	auto outputOpts = heif::Context::EncodingOptions();
+	auto context = heif::Context();
+	auto config = heif::Context::EncodingOptions();
 
 	if (options.sharpYUV)
 	{
-		outputOpts.color_conversion_options.only_use_preferred_chroma_algorithm = true;
-		outputOpts.color_conversion_options.preferred_chroma_downsampling_algorithm = heif_chroma_downsampling_sharp_yuv;
+		config.color_conversion_options.only_use_preferred_chroma_algorithm = true;
+		config.color_conversion_options.preferred_chroma_downsampling_algorithm = heif_chroma_downsampling_sharp_yuv;
 	}
 
 	// Must set `matrix_coefficients=0` for exact lossless.
@@ -64,21 +77,23 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 	{
 		auto nclx = heif_nclx_color_profile_alloc();
 		nclx->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
-		outputOpts.output_nclx_profile = nclx;
+		config.output_nclx_profile = nclx;
 
-		ctx.encode_image(image, encoder, outputOpts);
+		context.encode_image(image, encoder, config);
 		heif_nclx_color_profile_free(nclx);
 	}
 	else
 	{
-		ctx.encode_image(image, encoder, outputOpts);
+		context.encode_image(image, encoder, config);
 	}
 
-	auto writer = JSWriter();
-	ctx.write(writer);
-	return writer.uint8Array;
+	return JSWriter::writeImageToUint8Array(context);
 }
 
+/**
+ * HEIC decode from memory. Implementation reference:
+ * https://github.com/saschazar21/webassembly/blob/main/packages/heif/main.cpp
+ */
 val decode(std::string input)
 {
 	auto ctx = heif::Context();

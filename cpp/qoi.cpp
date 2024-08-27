@@ -4,6 +4,10 @@
 #include "qoi.h"
 #include "icodec.h"
 
+/*
+ * Although QOI has no encode options, we still add the 4th parameter to
+ * keep the function signture, because Enscripten does not allow extra arguments.
+ */
 val encode(std::string pixels, uint32_t width, uint32_t height, val _)
 {
 	qoi_desc desc{ width, height, CHANNELS_RGBA, QOI_SRGB };

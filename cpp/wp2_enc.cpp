@@ -2,7 +2,10 @@
 #include "icodec.h"
 #include "src/wp2/encode.h"
 
-#define CHECK_STATUS(s) if (s != WP2_STATUS_OK) { return val(WP2GetStatusText(s)); }
+#define CHECK_STATUS(s) if (s != WP2_STATUS_OK)		\
+{                                   				\
+	return val(WP2GetStatusText(s));				\
+}
 
 struct WP2Options
 {
@@ -45,6 +48,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options optio
 
 	WP2::MemoryWriter memory_writer;
 	CHECK_STATUS(WP2::Encode(src, &memory_writer, config));
+
 	return toUint8Array(memory_writer.mem_, memory_writer.size_);
 }
 
