@@ -44,6 +44,7 @@ export interface ICodecModule<T = any> {
 
 	/**
 	 * Load the decoder WASM file, must be called once before decode.
+	 * Multiple calls are ignored, and return the first result.
 	 *
 	 * @param source If pass a string, it's the URL of WASM file to fetch,
 	 *               else it will be treated as the WASM bytes.
@@ -59,6 +60,7 @@ export interface ICodecModule<T = any> {
 
 	/**
 	 * Load the encoder WASM file, must be called once before encode.
+	 * Multiple calls are ignored, and return the first result.
 	 *
 	 * @param source If pass a string, it's the URL of WASM file to fetch,
 	 *               else it will be treated as the WASM bytes.

@@ -96,19 +96,20 @@ Use in browser:
 // All codec modules (see the table above) are named export.
 import { avif, jxl } from "icodec";
 
-const response = await fetch("https://raw.githubusercontent.com/Kaciras/icodec/master/test/snapshot/image.avif")
+const response = await fetch("https://raw.githubusercontent.com/Kaciras/icodec/master/test/snapshot/image.avif");
+const data = new Uint8Array(await response.arrayBuffer());
 
 // This should be called once before you invoke `decode()`
 await avif.loadDecoder();
 
 // Decode AVIF to ImageData.
-const image = avif.decode(await response.arrayBuffer());
+const image = avif.decode(data);
 
 // This should be called once before you invoke `encode()`
 await jxl.loadEncoder();
 
 // Encode the image to JPEG XL.
-const encoded = jxl.encode(image, /*{ options }*/);
+const jxlData = jxl.encode(image, /*{ options }*/);
 ```
 
 To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
@@ -161,6 +162,7 @@ interface ICodecModule<T = any> {
 
   /**
    * Load the decoder WASM file, must be called once before decode.
+   * Multiple calls are ignored, and return the first result.
    *
    * @param source If pass a string, it's the URL of WASM file to fetch,
    *               else it will be treated as the WASM bytes.
@@ -176,6 +178,7 @@ interface ICodecModule<T = any> {
 
   /**
    * Load the encoder WASM file, must be called once before encode.
+   * Multiple calls are ignored, and return the first result.
    *
    * @param source If pass a string, it's the URL of WASM file to fetch,
    *               else it will be treated as the WASM bytes.
