@@ -26,8 +26,10 @@ val decode(std::string input)
 	qoi_desc desc; // Resultant width and height stored in descriptor.
 
 	auto buffer = qoi_decode(input.c_str(), input.length(), &desc, CHANNELS_RGBA);
+	if (buffer == NULL) {
+		return val::null();
+	}
 	auto result = toRAII((uint8_t *)buffer, free);
-
 	return toImageData(result.get(), desc.width, desc.height);
 }
 

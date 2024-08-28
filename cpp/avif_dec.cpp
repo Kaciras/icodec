@@ -14,16 +14,16 @@
 val decode(std::string input)
 {
 	auto bytes = reinterpret_cast<uint8_t *>(input.data());
-	auto decoder = avifDecoderCreate();
+	auto decoder = toRAII(avifDecoderCreate(), avifDecoderDestroy);
 	if (!decoder)
 	{
 		return val("Memory allocation failure");
 	}
 
 	// Do not use `avifDecoderReadMemory`, it will do a redundant copy.
-	CHECK_STATUS(avifDecoderSetIOMemory(decoder, bytes, input.length()));
-	CHECK_STATUS(avifDecoderParse(decoder));
-	CHECK_STATUS(avifDecoderNextImage(decoder));
+	CHECK_STATUS(avifDecoderSetIOMemory(decoder.get(), bytes, input.length()));
+	CHECK_STATUS(avifDecoderParse(decoder.get()));
+	CHECK_STATUS(avifDecoderNextImage(decoder.get()));
 
 	// Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
 	avifRGBImage rgb;
@@ -34,8 +34,6 @@ val decode(std::string input)
 	CHECK_STATUS(avifImageYUVToRGB(decoder->image, &rgb));
 
 	auto _ = toRAII(&rgb, avifRGBImageFreePixels);
-	avifDecoderDestroy(decoder);
-
 	return toImageData(rgb.pixels, rgb.width, rgb.height);
 }
 
