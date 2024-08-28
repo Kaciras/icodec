@@ -58,6 +58,10 @@ body {
 	}
 }
 
+time {
+	color: #1c851c;
+}
+
 #file-label {
 	border: 1px solid #aaa;
 	padding: 6px;

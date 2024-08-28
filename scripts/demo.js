@@ -98,9 +98,13 @@ function invokeInWorker(args, transfer) {
 
 async function encode(codec = select.value) {
 	encodeButton.classList.add("busy");
-
 	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
+
+	const start = performance.now();
 	const output = await invokeInWorker([codec, sharedImageData, options]);
+	const time = (performance.now() - start) / 1000;
+
+	document.querySelector("time").textContent = `${time.toFixed(2)}s`;
 	encodeButton.classList.remove("busy");
 
 	if (output.stack) {
