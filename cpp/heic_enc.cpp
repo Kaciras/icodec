@@ -25,7 +25,7 @@ struct JSWriter : public heif::Context::Writer
 		return heif_error_success;
 	}
 
-	static writeImageToUint8Array(heif::Context ctx)
+	static val writeImageToUint8Array(heif::Context ctx)
 	{
 		auto writer = JSWriter();
 		ctx.write(writer);

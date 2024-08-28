@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
 import { renameSync, writeFileSync } from "node:fs";
-import { cmake, config, emcc, removeRange, RepositoryManager, wasmPack } from "./utils.js";
+import { cmake, config, emcc, removeRange, RepositoryManager, setHardwareConcurrency, wasmPack } from "./utils.js";
 
 // Ensure we're on the project root directory.
 process.chdir(dirname(import.meta.dirname));
@@ -279,12 +279,15 @@ function buildHEIC() {
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
+		"-s", "PTHREAD_POOL_SIZE=2",
 		"-fexceptions",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
 		"vendor/libde265/libde265/libde265.a",
 		"vendor/libheif/libheif/libheif.a",
 	]);
+
+	setHardwareConcurrency("dist/heic-enc.js", 1);
 }
 
 function buildVVIC() {

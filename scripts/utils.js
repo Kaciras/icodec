@@ -162,6 +162,15 @@ export class RepositoryManager {
 	}
 }
 
+export function setHardwareConcurrency(name, value) {
+	const old = readFileSync(name, "utf8");
+	const new_ = old.replace('navigator["hardwareConcurrency"]', value);
+	writeFileSync(name, new_);
+	if (old === new_) {
+		throw new Error(name + ": Cannot find the pattern to replace");
+	}
+}
+
 export function cmake(settings) {
 	const { outFile, src, dist = src, options = {} } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
