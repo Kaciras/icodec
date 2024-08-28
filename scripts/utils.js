@@ -102,7 +102,7 @@ async function checkUpdateGit(key, branch, repo) {
 			console.log(`${repo} ${branch} -> ${latest}`);
 		}
 	} else {
-		execFileSync("git", ["fetch"], { cwd });
+		execFileSync("git", ["fetch", "--quiet"], { cwd });
 		const stdout = execFileSync("git", ["log", "HEAD..origin", "--pretty=%at"], {
 			cwd,
 			encoding: "utf8",
