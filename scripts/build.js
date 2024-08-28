@@ -149,6 +149,8 @@ function buildAVIFPartial(isEncode) {
 			CONFIG_WEBM_IO: 0,
 
 			CONFIG_MULTITHREAD: 0,
+
+			// TODO: memory access out of bounds when decoding 12bit image
 			CONFIG_AV1_HIGHBITDEPTH: 1 - isEncode,
 
 			CONFIG_AV1_ENCODER: isEncode,
@@ -219,6 +221,37 @@ export function buildWebP2() {
 	]);
 }
 
+function buildHEICPartial(isEncode) {
+	const typeName  = isEncode ? "heic_enc" : "heic_dec";
+	cmake({
+		outFile: `vendor/${typeName}/libheif/libheif.a`,
+		src: "vendor/libheif",
+		dist: "vendor/" + typeName,
+		exceptions: true,
+		options: {
+			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: 1,
+			WITH_AOM_DECODER: 0,
+			WITH_AOM_ENCODER: 0,
+			WITH_EXAMPLES: 0,
+			WITH_GDK_PIXBUF: 0,
+			ENABLE_MULTITHREADING_SUPPORT: 0,
+			BUILD_TESTING: 0,
+			BUILD_SHARED_LIBS: 0,
+
+			...(isEncode ? {
+				LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
+				LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
+
+				X265_INCLUDE_DIR: "vendor/x265/source",
+				X265_LIBRARY: "vendor/x265/source/libx265.a",
+			}: {
+				LIBDE265_INCLUDE_DIR: "vendor/libde265",
+				LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
+			}),
+		},
+	});
+}
+
 function buildHEIC() {
 	// Must delete x265/source/CmakeLists.txt lines 240-248 for 32-bit build.
 	if (!config.wasm64) {
@@ -249,30 +282,8 @@ function buildHEIC() {
 		},
 	});
 
-	cmake({
-		outFile: "vendor/libheif/libheif/libheif.a",
-		src: "vendor/libheif",
-		exceptions: true,
-		options: {
-			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: 1,
-			WITH_AOM_DECODER: 0,
-			WITH_AOM_ENCODER: 0,
-			WITH_EXAMPLES: 0,
-			WITH_GDK_PIXBUF: 0,
-			ENABLE_MULTITHREADING_SUPPORT: 0,
-			BUILD_TESTING: 0,
-			BUILD_SHARED_LIBS: 0,
-
-			LIBSHARPYUV_INCLUDE_DIR: "vendor/libwebp",
-			LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
-
-			X265_INCLUDE_DIR: "vendor/x265/source",
-			X265_LIBRARY: "vendor/x265/source/libx265.a",
-
-			LIBDE265_INCLUDE_DIR: "vendor/libde265",
-			LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
-		},
-	});
+	buildHEICPartial(true);
+	buildHEICPartial(false);
 
 	emcc("cpp/heic_enc.cpp", [
 		"-s", "ENVIRONMENT=web,worker",
@@ -283,8 +294,16 @@ function buildHEIC() {
 		"-fexceptions",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
+		"vendor/heic_enc/libheif/libheif.a",
+	]);
+
+	emcc("cpp/heic_dec.cpp", [
+		"-s", "ENVIRONMENT=web",
+		"-I vendor/libheif",
+		"-I vendor/libheif/libheif/api",
+		"-fexceptions",
 		"vendor/libde265/libde265/libde265.a",
-		"vendor/libheif/libheif/libheif.a",
+		"vendor/heic_dec/libheif/libheif.a",
 	]);
 
 	setHardwareConcurrency("dist/heic-enc.js", 1);
@@ -356,6 +375,7 @@ function buildVVIC() {
 }
 
 // config.rebuild = true;
+// config.debug = true;
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
