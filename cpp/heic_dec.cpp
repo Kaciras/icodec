@@ -21,7 +21,7 @@ val decode(std::string input)
 	auto *p = image.get_plane(heif_channel_interleaved, &stride);
 
 	auto row_bytes = width * CHANNELS_RGBA;
-	auto rgba = std::make_unique<uint8_t[]>(row_bytes * height);
+	auto rgba = std::make_unique_for_overwrite<uint8_t[]>(row_bytes * height);
 	for (auto y = 0; y < height; y++)
 	{
 		memcpy(&rgba[row_bytes * y], p + stride * y, row_bytes);

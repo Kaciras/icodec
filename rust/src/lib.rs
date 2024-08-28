@@ -99,8 +99,8 @@ fn cast_pixels(buf: &mut [u8]) {
 /// Decode PNG image into 8-bit RGBA data, return only the buffer and width,
 /// but height can be calculated by `data.byteLength / width / 4`
 #[wasm_bindgen]
-pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
-	let mut decoder = png::Decoder::new(&mut data);
+pub fn png_to_rgba(data: &[u8]) -> js_sys::Array {
+	let mut decoder = png::Decoder::new(data);
 	decoder.set_transformations(png::Transformations::ALPHA | png::Transformations::STRIP_16);
 	let mut reader = decoder.read_info().unwrap_throw();
 
@@ -123,5 +123,5 @@ pub fn png_to_rgba(mut data: &[u8]) -> js_sys::Array {
 	}
 
 	let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
-	return js_sys::Array::of2(&JsValue::from(data), &JsValue::from(width));
+	return js_sys::Array::of2(&data.into(), &width.into());
 }
