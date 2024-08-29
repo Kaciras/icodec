@@ -15,7 +15,7 @@ const sharpImage = sharp(input.data, {
 
 // Npm build of Sharp does not have JXL module.
 const sharpEncodes: Record<string, () => Sharp> = {
-	avif: () => sharpImage.avif({ chromaSubsampling: "420" }),
+	avif: () => sharpImage.avif({ chromaSubsampling: "4:2:0" }),
 	jpeg: () => sharpImage.jpeg(),
 	png: () => sharpImage.png({ quality: 75, palette: true }),
 	webp: () => sharpImage.webp({ quality: 75 }),
