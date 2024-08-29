@@ -3,7 +3,10 @@ import wasmFactoryDec from "../dist/heic-dec.js";
 import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export const Presets = ["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo"] as const;
+
 export const Subsampling = ["420", "422", "444"] as const;
+
+export const Tune = ["psnr", "ssim", "grain", "fastdecode"] as const;
 
 export interface Options {
 	/**
@@ -38,7 +41,7 @@ export interface Options {
 	 *
 	 * @default "ssim"
 	 */
-	tune?: "psnr" | "ssim" | "grain" | "fastdecode";
+	tune?: typeof Tune[number];
 
 	/**
 	 * Max TU recursive depth for intra CUs。

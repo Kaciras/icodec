@@ -53,6 +53,12 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 		memcpy(p + stride * y, &pixels[row_bytes * y], stride);
 	}
 
+	// libheif does not automitic adjust chroma for lossless.
+	if (options.lossless)
+	{
+		options.chroma = "444";
+	}
+
 	auto encoder = heif::Encoder(heif_compression_HEVC);
 	encoder.set_lossy_quality(options.quality);
 	encoder.set_lossless(options.lossless);
@@ -73,7 +79,7 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 
 	// Must set `matrix_coefficients=0` for exact lossless.
 	// https://github.com/strukturag/libheif/pull/1039#issuecomment-1866023028
-	if (options.lossless && options.chroma == "444")
+	if (options.lossless)
 	{
 		auto nclx = heif_nclx_color_profile_alloc();
 		nclx->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
