@@ -6,6 +6,8 @@ import pixelMatch from "pixelmatch";
 const directory = `${import.meta.dirname}/snapshot`;
 const cache = new Map();
 
+Error.stackTraceLimit = Infinity;
+
 // A simple format, 4-bytes width + 4-bytes height + RGBA data.
 function decodeBin(bytes) {
 	const view = new DataView(bytes.buffer, bytes.byteOffset);
