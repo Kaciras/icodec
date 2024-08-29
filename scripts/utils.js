@@ -217,10 +217,10 @@ export function emcc(input, sourceArguments) {
 	output = join(config.outDir, output);
 
 	const args = [
+		config.debug ? "-g" : "-O3",
 		"-o", output,
 		"-I", "cpp",
 		input,
-		config.debug ? "-g" : "-O3",
 		"--bind",
 		"-msimd128",
 		"-flto",
@@ -231,6 +231,9 @@ export function emcc(input, sourceArguments) {
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
+
+		// "-s", "MINIMAL_RUNTIME=1",
+		// "-s","MINIMAL_RUNTIME_STREAMING_WASM_COMPILATION=1",
 	];
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");

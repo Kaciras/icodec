@@ -3,16 +3,21 @@
 #include "icodec.h"
 #include "libheif/heif_cxx.h"
 
-struct HeicOptions
+struct VvicOptions
 {
 	int quality;
 	bool lossless;
-	std::string preset;
-	std::string tune;
-	int tuIntraDepth;
-	int complexity;
-	std::string chroma;
-	bool sharpYUV;
+};
+
+struct JSWriter : public heif::Context::Writer
+{
+	val uint8Array;
+
+	heif_error write(const void *data, size_t size)
+	{
+		uint8Array = toUint8Array((uint8_t *)data, size);
+		return heif_error_success;
+	}
 };
 
 struct JSWriter : public heif::Context::Writer
@@ -33,11 +38,6 @@ struct JSWriter : public heif::Context::Writer
 	}
 };
 
-/**
- * HEIC encode. Implementation reference:
- * https://github.com/strukturag/libheif/blob/master/examples/decoder_png.cc
- * https://github.com/strukturag/libheif/blob/master/examples/heif_enc.cc
- */
 val encode(std::string pixels, int width, int height, HeicOptions options)
 {
 	auto image = heif::Image();
@@ -53,14 +53,9 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 		memcpy(p + stride * y, &pixels[row_bytes * y], stride);
 	}
 
-	auto encoder = heif::Encoder(heif_compression_HEVC);
+	auto encoder = heif::Encoder(heif_compression_VVC);
 	encoder.set_lossy_quality(options.quality);
 	encoder.set_lossless(options.lossless);
-	encoder.set_string_parameter("preset", options.preset);
-	encoder.set_string_parameter("tune", options.tune);
-	encoder.set_integer_parameter("tu-intra-depth", options.tuIntraDepth);
-	encoder.set_integer_parameter("complexity", options.complexity);
-	encoder.set_string_parameter("chroma", options.chroma);
 
 	auto context = heif::Context();
 	auto config = heif::Context::EncodingOptions();
@@ -90,17 +85,11 @@ val encode(std::string pixels, int width, int height, HeicOptions options)
 	return JSWriter::writeImageToUint8Array(context);
 }
 
-EMSCRIPTEN_BINDINGS(icodec_module_HEIC)
+EMSCRIPTEN_BINDINGS(icodec_module_VVIC)
 {
 	function("encode", &encode);
 
-	value_object<HeicOptions>("HeicOptions")
-		.field("lossless", &HeicOptions::lossless)
-		.field("quality", &HeicOptions::quality)
-		.field("preset", &HeicOptions::preset)
-		.field("tune", &HeicOptions::tune)
-		.field("tuIntraDepth", &HeicOptions::tuIntraDepth)
-		.field("complexity", &HeicOptions::complexity)
-		.field("chroma", &HeicOptions::chroma)
-		.field("sharpYUV", &HeicOptions::sharpYUV);
+	value_object<VvicOptions>("VvicOptions")
+		.field("lossless", &VvicOptions::lossless)
+		.field("quality", &VvicOptions::quality);
 }

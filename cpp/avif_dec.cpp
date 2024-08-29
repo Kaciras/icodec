@@ -22,7 +22,11 @@ val decode(std::string input)
 
 	// Do not use `avifDecoderReadMemory`, it will do a redundant copy.
 	CHECK_STATUS(avifDecoderSetIOMemory(decoder.get(), bytes, input.length()));
+
+	// Read metadata from header.
 	CHECK_STATUS(avifDecoderParse(decoder.get()));
+
+	// Read the first image frame data.
 	CHECK_STATUS(avifDecoderNextImage(decoder.get()));
 
 	// Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.

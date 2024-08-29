@@ -36,6 +36,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, WP2Options optio
 	config.use_random_matrix = options.use_random_matrix;
 
 	// Must enable `keep_unmultiplied` and modify the format for exact lossless.
+	// https://chromium.googlesource.com/codecs/libwebp2/+/b65d168d3b2b8f8ec849134da2c3a5f034f1eb42/examples/cwp2.cc#868
 	WP2SampleFormat format = WP2_Argb_32;
 	if (options.quality == 100 && options.alpha_quality == 100)
 	{

@@ -7,6 +7,9 @@
 /*
  * Although QOI has no encode options, we still add the 4th parameter to
  * keep the function signture, because Enscripten does not allow extra arguments.
+ * 
+ * It's interesting that QOI can benefit from general compression algorithms.
+ * https://github.com/phoboslab/qoi/issues/166
  */
 val encode(std::string pixels, uint32_t width, uint32_t height, val _)
 {
