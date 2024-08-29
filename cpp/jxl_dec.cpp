@@ -32,14 +32,12 @@ val decode(std::string input)
 	JxlBasicInfo info;
 	CHECK_STATUS(JxlDecoderGetBasicInfo(decoder.get(), &info));
 
-	// 4. Alloc the output buffer.
-	PROCESS_NEXT_STEP(JXL_DEC_NEED_IMAGE_OUT_BUFFER);
+	// It seems no need to check JXL_DEC_NEED_IMAGE_OUT_BUFFER
+	// 4. Alloc the output buffer. 
 	size_t length = info.xsize * info.ysize * CHANNELS_RGBA;
-	size_t buffer_size;
-	CHECK_STATUS(JxlDecoderImageOutBufferSize(decoder.get(), &format, &buffer_size));
+	auto output = std::make_unique_for_overwrite<uint8_t[]>(length);
 
 	// 5. Read pixels data.
-	auto output = std::make_unique_for_overwrite<uint8_t[]>(length);
 	CHECK_STATUS(JxlDecoderSetImageOutBuffer(decoder.get(), &format, output.get(), length));
 	PROCESS_NEXT_STEP(JXL_DEC_FULL_IMAGE);
 
