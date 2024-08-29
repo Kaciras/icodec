@@ -2,6 +2,7 @@ import { basename, extname, join } from "node:path";
 import { execFile, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import * as TOML from "smol-toml";
 import versionCompare from "version-compare";
 
 export const config = {
@@ -116,20 +117,21 @@ async function checkUpdateGit(key, branch, repo) {
 	}
 }
 
-async function checkUpdateCargo() {
+async function checkUpdateCargo(cwd) {
 	// execFileSync does not return stderr, which is cargo will output.
 	const execFileAsync = promisify(execFile);
 	const { stderr } = await execFileAsync("cargo", ["update", "--dry-run"], {
-		cwd: "rust",
+		cwd,
 		encoding: "utf8",
 	});
 
-	const primary = ["oxipng", "imagequant", "png", "lol_alloc"];
+	const cargo = TOML.parse(readFileSync(`${cwd}/cargo.toml`, "utf8"));
 	const re = /Updating (\S+) v([0-9.]+) -> v([0-9.]+)/g;
+
 	let primaryUpdatable = false;
 	let deepDeps = 0;
 	for (const [, name, old, latest] of stderr.matchAll(re)) {
-		if (primary.includes(name)) {
+		if (Object.hasOwn(cargo.dependencies, name)) {
 			primaryUpdatable = true;
 			console.info(`${name} ${old} -> ${latest}`);
 		} else {
@@ -155,7 +157,7 @@ export class RepositoryManager {
 
 	async checkUpdate() {
 		console.log(`Checking ${this.repos.length} repos + cargo...\n`);
-		await checkUpdateCargo();
+		await checkUpdateCargo("rust");
 		for (const [key, value] of this.repos) {
 			await checkUpdateGit(key, ...value);
 		}
