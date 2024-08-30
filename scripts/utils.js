@@ -179,7 +179,7 @@ export function cmake(settings) {
 		return;
 	}
 
-	let cxxFlags = "-pthread -msimd128 -DWASM_SIMD_COMPAT_SLOW";
+	let cxxFlags = "-mnontrapping-fptoint -pthread -msimd128";
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}
@@ -227,6 +227,7 @@ export function emcc(input, sourceArguments) {
 		"-I", "cpp",
 		input,
 		"--bind",
+		"-mnontrapping-fptoint",
 		"-msimd128",
 		"-flto",
 		"-std=c++23",
@@ -237,8 +238,8 @@ export function emcc(input, sourceArguments) {
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
 
+		// Save ~10KB, but it needs some work on our part.
 		// "-s", "MINIMAL_RUNTIME=1",
-		// "-s","MINIMAL_RUNTIME_STREAMING_WASM_COMPILATION=1",
 	];
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
@@ -255,7 +256,17 @@ export function emcc(input, sourceArguments) {
 }
 
 export function wasmPack(directory) {
-	const env = { ...process.env };
+	const flags = [
+		"-Ctarget-feature=+simd128,+atomics,+bulk-memory,+nontrapping-fptoint",
+		"-Cembed-bitcode=yes",
+		"-Cllvm-args=-wasm-enable-sjlj",
+		"-Cllvm-args=-enable-emscripten-cxx-exceptions=0",
+	];
+
+	const env = {
+		RUSTFLAGS: flags.join(" "),
+		...process.env,
+	};
 	if (env.EMSDK) {
 		env.CC = join(env.EMSDK, "upstream/bin/clang");
 	}

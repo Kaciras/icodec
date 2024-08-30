@@ -296,6 +296,7 @@ function buildHEIC() {
 		"-pthread",
 		"-s", "PTHREAD_POOL_SIZE=2",
 		"-fexceptions",
+		"-fwasm-exceptions",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
 		"vendor/heic_enc/libheif/libheif.a",
@@ -306,6 +307,7 @@ function buildHEIC() {
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-fexceptions",
+		"-fwasm-exceptions",
 		"vendor/libde265/libde265/libde265.a",
 		"vendor/heic_dec/libheif/libheif.a",
 	]);
@@ -378,19 +380,19 @@ function buildVVIC() {
 	]);
 }
 
-// config.rebuild = true;
-// config.debug = true;
+config.rebuild = true;
+// config.debug = true; 15.4 MB (16,230,036 bytes)
 
-// Equivalent to `if __name__ == "__main__":` in Python. 574 KB (587,796 bytes)
+// Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
-	buildHEIC();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
+	// buildHEIC();
 	buildPNGQuant();
 
 	// buildVVIC();
