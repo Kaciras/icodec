@@ -23,7 +23,7 @@ const sharpEncodes: Record<string, () => Sharp> = {
 
 const codecNames = Object.keys(codecs).filter(k => codecs[k as keyof typeof codecs].encode);
 
-// TODO: it spawn too many workers.
+// Does not work in Node.
 codecNames.splice(codecNames.indexOf("heic"), 1);
 
 /*

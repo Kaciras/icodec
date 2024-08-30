@@ -75,7 +75,7 @@ Image encoders & decoders built with WebAssembly.
 </table>
 
 > [!WARNING]
-> Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work on webworker, and has performance issue.
+> Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work in webworker.
 
 icodec is aimed at the web platform and has some limitations:
 
@@ -109,7 +109,7 @@ const image = avif.decode(data);
 await jxl.loadEncoder();
 
 // Encode the image to JPEG XL.
-const jxlData = jxl.encode(image, /*{ options }*/);
+const jxlData = jxl.encode(image/*, { options }*/);
 ```
 
 To use icodec in Node, just change the import specifier to `icodec/node`, and `loadEncoder`/`loadDecoder` will use `readFileSync` instead of `fetch`.
@@ -120,7 +120,7 @@ import { avif, jxl } from "icodec/node";
 
 If your bundler requires special handing of WebAssembly, you can pass the URL of WASM files to `load*` function. WASM files are exported in the format `icodec/<codec>-<enc|dec>.wasm`.
 
-icodec is tree-shakable, with a bundler the unused code and wasm file can be eliminated from loading.
+icodec is tree-shakable, with a bundler the unused code and wasm files can be eliminated.
 
 ```javascript
 import { avif, jxl } from "icodec";
@@ -208,62 +208,63 @@ declare function reduceColors(image: ImageDataLike, options?: QuantizeOptions): 
 
 # Performance
 
-Decode & Encode `test/snapshot/image.*` files, `time.SD` is Standard Deviation of the time.
+Decode & Encode `test/snapshot/image.*` files, 417px x 114px, `time.SD` is Standard Deviation of the time.
 
 This benchmark ignores extra code size introduced by icodec, which in practice needs to be taken into account.
 
 Decode on Edge browser.
 
-| No. |   Name | codec |        time |      time.SD |
-|----:|-------:|------:|------------:|-------------:|
-|   0 | icodec |  avif |     3.22 ms |      8.24 us |
-|   1 |     2d |  avif |     1.50 ms |      3.13 us |
-|   2 |  WebGL |  avif |     3.08 ms |     26.33 us |
-|   3 | icodec |  heic |     3.06 ms |     16.84 us |
-|   4 | icodec |  jpeg |   727.85 us |      1.65 us |
-|   5 |     2d |  jpeg |   601.21 us |      3.51 us |
-|   6 |  WebGL |  jpeg | 1,876.96 us |      8.85 us |
-|   7 | icodec |   jxl |     3.57 ms |     17.73 us |
-|   8 | icodec |   png |   419.48 us |  2,901.49 ns |
-|   9 |     2d |   png |   573.07 us |    801.34 ns |
-|  10 |  WebGL |   png | 1,835.78 us | 16,278.04 ns |
-|  11 | icodec |   qoi |   444.00 us |      1.08 us |
-|  12 | icodec |  webp |   792.57 us |      1.58 us |
-|  13 |     2d |  webp |   805.07 us |      4.04 us |
-|  14 |  WebGL |  webp | 2,156.43 us |     36.42 us |
-|  15 | icodec |   wp2 |     2.59 ms |     12.10 us |
+| No. |   Name | codec |        time |  time.SD |
+|----:|-------:|------:|------------:|---------:|
+|   0 | icodec |  avif |     2.30 ms | 19.02 us |
+|   1 |     2d |  avif |     1.46 ms |  6.34 us |
+|   2 |  WebGL |  avif |     2.78 ms | 12.80 us |
+|   3 | icodec |  heic |     2.55 ms |  9.82 us |
+|   4 | icodec |  jpeg |   719.84 us |  3.00 us |
+|   5 |     2d |  jpeg |   584.23 us |  2.52 us |
+|   6 |  WebGL |  jpeg | 1,674.88 us |  5.84 us |
+|   7 | icodec |   jxl |     3.51 ms | 30.08 us |
+|   8 | icodec |   png |   336.74 us |  1.21 us |
+|   9 |     2d |   png |   561.65 us |  2.14 us |
+|  10 |  WebGL |   png | 1,654.59 us | 18.81 us |
+|  11 | icodec |   qoi |   432.43 us |  1.44 us |
+|  12 | icodec |  webp |   779.77 us |  2.38 us |
+|  13 |     2d |  webp |   799.01 us |  1.48 us |
+|  14 |  WebGL |  webp | 1,952.10 us |  2.55 us |
+|  15 | icodec |   wp2 |     2.55 ms | 12.66 us |
 
 Decode on Node, vs [Sharp](https://github.com/lovell/sharp).
 
-| No. |   Name | codec |        time |  time.SD |
-|----:|-------:|------:|------------:|---------:|
-|   0 | icodec |  avif |     2.95 ms |  6.46 us |
-|   1 |  Sharp |  avif |     2.54 ms |  7.16 us |
-|   2 | icodec |  jpeg |   471.99 us |  2.99 us |
-|   3 |  Sharp |  jpeg |   842.17 us |  1.50 us |
-|   4 | icodec |   jxl |     3.03 ms |  7.62 us |
-|   5 | icodec |   png |   186.18 us |  1.94 us |
-|   6 |  Sharp |   png |   645.95 us |  1.78 us |
-|   7 | icodec |   qoi |   200.62 us |  1.41 us |
-|   8 | icodec |  webp |   557.32 us |  2.92 us |
-|   9 |  Sharp |  webp | 1,708.96 us | 12.14 us |
-|  10 | icodec |   wp2 |     2.27 ms |  1.99 us |
+| No. |   Name | codec |        time |     time.SD |
+|----:|-------:|------:|------------:|------------:|
+|   0 | icodec |  avif |     2.01 ms |     3.24 us |
+|   1 |  Sharp |  avif |     2.54 ms |    10.39 us |
+|   2 | icodec |  heic |     2.28 ms |     4.41 us |
+|   3 | icodec |  jpeg |   470.25 us |     2.96 us |
+|   4 |  Sharp |  jpeg |   836.00 us |     1.24 us |
+|   5 | icodec |   jxl |     3.22 ms |   290.77 us |
+|   6 | icodec |   png |   109.22 us |   883.82 ns |
+|   7 |  Sharp |   png |   637.05 us | 1,947.88 ns |
+|   8 | icodec |   qoi |   191.46 us |     1.18 us |
+|   9 | icodec |  webp |   548.78 us |   600.09 ns |
+|  10 |  Sharp |  webp | 1,700.14 us | 7,637.86 ns |
+|  11 | icodec |   wp2 |     2.28 ms |     2.86 us |
 
 Encode on Node, vs [Sharp](https://github.com/lovell/sharp). Note that icodec and Sharp do not use the same code, so the output images are not exactly equal.
 
 | No. |   Name | codec |        time |   time.SD |
 |----:|-------:|------:|------------:|----------:|
-|   0 | icodec |  avif |     2.97 ms |   9.51 us |
-|   1 |  Sharp |  avif |     2.61 ms |   8.28 us |
-|   2 | icodec |  jpeg |   479.30 us |   2.10 us |
-|   3 |  Sharp |  jpeg |   894.27 us |   2.11 us |
-|   4 | icodec |   jxl |     3.18 ms | 114.32 us |
-|   5 | icodec |   png |   189.39 us |   1.36 us |
-|   6 |  Sharp |   png |   689.49 us |   2.36 us |
-|   7 | icodec |   qoi |   204.42 us |   1.26 us |
-|   8 | icodec |  webp |   555.51 us |   1.59 us |
-|   9 |  Sharp |  webp | 1,773.42 us |  10.45 us |
-|  10 | icodec |   wp2 |     2.34 ms |  50.14 us |
+|   0 | icodec |  avif |    47.47 ms |  78.77 us |
+|   1 |  Sharp |  avif |    52.77 ms |  78.89 us |
+|   2 | icodec |  jpeg | 7,664.33 us |   3.62 us |
+|   3 |  Sharp |  jpeg |   802.02 us |   2.95 us |
+|   4 | icodec |   jxl |    32.05 ms |  37.34 us |
+|   5 | icodec |   png |    70.11 ms | 132.71 us |
+|   6 |  Sharp |   png |    10.88 ms |  69.48 us |
+|   7 | icodec |   qoi |   371.47 us | 666.00 ns |
+|   8 | icodec |  webp |     4.42 ms |   3.17 us |
+|   9 |  Sharp |  webp |     4.04 ms |  13.09 us |
+|  10 | icodec |   wp2 |    90.14 ms | 295.49 us |
 
 # Contribute
 
@@ -276,21 +277,16 @@ To build WASM modules, you will need to install:
 * [Git](https://git-scm.com)
 * A proper C/C++ compiler toolchain, depending on your operating system
 
-Run the build script:
+build the project:
 
 ```shell
+pnpm exec tsc
 node scripts/build.js
 ```
-
-TODOs:
-
-* Could it be possible to remove HEIC & VVIC encoder dependency on pthread, or limit the number of threads?
-* Cannot specify vvenc & vvdec paths for libheif build.
 
 Rnn tests:
 
 ```shell
-pnpm exec tsc
 node --test test/test-*.js
 ```
 
@@ -299,3 +295,8 @@ Start web demo:
 ```shell
 node scripts/start-demo.js
 ```
+
+TODOs:
+
+* Could it be possible to remove HEIC & VVIC encoder dependency on pthread, or limit the number of threads?
+* Cannot specify vvenc & vvdec paths for libheif build.
