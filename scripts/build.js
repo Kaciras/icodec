@@ -29,6 +29,7 @@ function buildWebPLibrary() {
 	cmake({
 		outFile: "vendor/libwebp/libwebp.a",
 		src: "vendor/libwebp",
+		flags: "-msse2 -msse4.1 -DWEBP_DISABLE_STATS -DWEBP_REDUCE_CSP",
 		options: {
 			WEBP_ENABLE_SIMD: 1,
 			WEBP_BUILD_CWEBP: 0,
@@ -50,6 +51,8 @@ export function buildMozJPEG() {
 	cmake({
 		outFile: "vendor/mozjpeg/libjpeg.a",
 		src: "vendor/mozjpeg",
+		// https://github.com/libjpeg-turbo/libjpeg-turbo/issues/600
+		flags: "-DNO_GETENV -DNO_PUTENV",
 		options: {
 			WITH_SIMD: 0,
 			ENABLE_SHARED: 0,
@@ -134,6 +137,7 @@ function buildAVIFPartial(isEncode) {
 		outFile: `vendor/aom/${typeName}-build/libaom.a`,
 		src: "vendor/aom",
 		dist: `vendor/aom/${typeName}-build`,
+		flags: "-msse2 -msse4.1",
 		options: {
 			ENABLE_CCACHE: 0,
 			AOM_TARGET_CPU: "generic",
@@ -143,7 +147,7 @@ function buildAVIFPartial(isEncode) {
 			ENABLE_TESTS: 0,
 			ENABLE_EXAMPLES: 0,
 			ENABLE_TOOLS: 0,
-			CONFIG_ACCOUNTING: 1,
+			CONFIG_ACCOUNTING: 0,
 			CONFIG_INSPECTION: 0,
 			CONFIG_RUNTIME_CPU_DETECT: 0,
 			CONFIG_WEBM_IO: 0,
@@ -377,7 +381,7 @@ function buildVVIC() {
 // config.rebuild = true;
 // config.debug = true;
 
-// Equivalent to `if __name__ == "__main__":` in Python.
+// Equivalent to `if __name__ == "__main__":` in Python. 574 KB (587,796 bytes)
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
 	buildWebP();

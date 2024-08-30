@@ -174,17 +174,22 @@ export function setHardwareConcurrency(name, value) {
 }
 
 export function cmake(settings) {
-	const { outFile, src, dist = src, options = {} } = settings;
+	const { outFile, src, dist = src, flags, options = {} } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
 		return;
 	}
 
-	let cxxFlags = "-pthread -msimd128";
+	let cxxFlags = "-pthread -msimd128 -DWASM_SIMD_COMPAT_SLOW";
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}
 	if (!settings.exceptions) {
 		cxxFlags += " -fno-exceptions";
+	}
+
+	if (flags) {
+		cxxFlags += " ";
+		cxxFlags += flags;
 	}
 
 	const args = [
