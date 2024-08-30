@@ -72,7 +72,7 @@ export function removeRange(file, start, end) {
 	patchFile(file, file => {
 		const content = readFileSync(file, "utf8");
 		const i = content.indexOf(start);
-		const j = content.indexOf(end);
+		const j = content.indexOf(end, i);
 		return content.slice(0, i) + content.slice(j);
 	});
 }
@@ -173,7 +173,7 @@ export function setHardwareConcurrency(name, value) {
 	}
 }
 
-export function cmake(settings) {
+export function emcmake(settings) {
 	const { outFile, src, dist = src, flags, options = {} } = settings;
 	if (!config.rebuild && existsSync(outFile)) {
 		return;
@@ -237,6 +237,9 @@ export function emcc(input, sourceArguments) {
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
+
+		// Save ~69KB, but may affect performance.
+		// "-s", "MALLOC=emmalloc",
 
 		// Save ~10KB, but it needs some work on our part.
 		// "-s", "MINIMAL_RUNTIME=1",

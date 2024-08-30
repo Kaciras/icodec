@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
 import { renameSync, writeFileSync } from "node:fs";
-import { cmake, config, emcc, removeRange, RepositoryManager, setHardwareConcurrency, wasmPack } from "./utils.js";
+import { config, emcc, emcmake, removeRange, RepositoryManager, setHardwareConcurrency, wasmPack } from "./utils.js";
 
 // Ensure we're on the project root directory.
 process.chdir(dirname(import.meta.dirname));
@@ -26,7 +26,7 @@ const repositories = new RepositoryManager({
 
 // It also builds libsharpyuv.a which used in other encoders.
 function buildWebPLibrary() {
-	cmake({
+	emcmake({
 		outFile: "vendor/libwebp/libwebp.a",
 		src: "vendor/libwebp",
 		flags: "-msse2 -msse4.1 -DWEBP_DISABLE_STATS -DWEBP_REDUCE_CSP",
@@ -48,7 +48,7 @@ function buildWebPLibrary() {
 }
 
 export function buildMozJPEG() {
-	cmake({
+	emcmake({
 		outFile: "vendor/mozjpeg/libjpeg.a",
 		src: "vendor/mozjpeg",
 		// https://github.com/libjpeg-turbo/libjpeg-turbo/issues/600
@@ -100,7 +100,7 @@ export function buildWebP() {
 export function buildJXL() {
 	// highway uses CJS scripts in build, but our project is ESM.
 	writeFileSync("vendor/libjxl/third_party/highway/package.json", "{}");
-	cmake({
+	emcmake({
 		outFile: "vendor/libjxl/lib/libjxl.a",
 		src: "vendor/libjxl",
 		options: {
@@ -133,7 +133,7 @@ export function buildJXL() {
 
 function buildAVIFPartial(isEncode) {
 	const typeName = isEncode ? "enc" : "dec";
-	cmake({
+	emcmake({
 		outFile: `vendor/aom/${typeName}-build/libaom.a`,
 		src: "vendor/aom",
 		dist: `vendor/aom/${typeName}-build`,
@@ -161,7 +161,7 @@ function buildAVIFPartial(isEncode) {
 			CONFIG_AV1_DECODER: 1 - isEncode,
 		},
 	});
-	cmake({
+	emcmake({
 		outFile: `vendor/libavif/${typeName}-build/libavif.a`,
 		src: "vendor/libavif",
 		dist: `vendor/libavif/${typeName}-build`,
@@ -199,7 +199,7 @@ export function buildWebP2() {
 	// libwebp2 does not provide switch for imageio library.
 	removeRange("vendor/libwebp2/CMakeLists.txt",
 		"# build the imageio library", "\n# #######");
-	cmake({
+	emcmake({
 		outFile: "vendor/wp2_build/libwebp2.a",
 		src: "vendor/libwebp2",
 		dist: "vendor/wp2_build",
@@ -227,7 +227,7 @@ export function buildWebP2() {
 
 function buildHEICPartial(isEncode) {
 	const typeName  = isEncode ? "heic_enc" : "heic_dec";
-	cmake({
+	emcmake({
 		outFile: `vendor/${typeName}/libheif/libheif.a`,
 		src: "vendor/libheif",
 		dist: "vendor/" + typeName,
@@ -266,7 +266,7 @@ function buildHEIC() {
 	buildWebPLibrary();
 
 	// TODO: thread count limit
-	cmake({
+	emcmake({
 		outFile: "vendor/x265/source/libx265.a",
 		src: "vendor/x265/source",
 		options: {
@@ -276,7 +276,7 @@ function buildHEIC() {
 			ENABLE_ASSEMBLY: 0,
 		},
 	});
-	cmake({
+	emcmake({
 		outFile: "vendor/libde265/libde265/libde265.a",
 		src: "vendor/libde265",
 		options: {
@@ -291,12 +291,11 @@ function buildHEIC() {
 
 	emcc("cpp/heic_enc.cpp", [
 		"-s", "ENVIRONMENT=web,worker",
-		"-I vendor/libheif",
+		"-I vendor/heic_dec",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
 		"-s", "PTHREAD_POOL_SIZE=2",
 		"-fexceptions",
-		"-fwasm-exceptions",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
 		"vendor/heic_enc/libheif/libheif.a",
@@ -304,10 +303,9 @@ function buildHEIC() {
 
 	emcc("cpp/heic_dec.cpp", [
 		"-s", "ENVIRONMENT=web",
-		"-I vendor/libheif",
+		"-I vendor/heic_dec",
 		"-I vendor/libheif/libheif/api",
 		"-fexceptions",
-		"-fwasm-exceptions",
 		"vendor/libde265/libde265/libde265.a",
 		"vendor/heic_dec/libheif/libheif.a",
 	]);
@@ -318,14 +316,14 @@ function buildHEIC() {
 function buildVVIC() {
 	// If build failed, try to delete "use ccache" section in CMakeLists.txt
 	removeRange("vendor/vvdec/CMakeLists.txt", "\n# use ccache", "\n\n");
-	cmake({
+	emcmake({
 		outFile: "vendor/vvdec/lib/release-static/libvvdec.a",
 		src: "vendor/vvdec",
 		exceptions: true,
 	});
 
 	removeRange("vendor/vvenc/CMakeLists.txt", "\n# use ccache", "\n\n");
-	cmake({
+	emcmake({
 		outFile: "vendor/vvenc/lib/release-static/libvvenc.a",
 		src: "vendor/vvenc",
 		exceptions: true,
@@ -338,10 +336,10 @@ function buildVVIC() {
 		},
 	});
 
-	cmake({
-		outFile: "vendor/libheif-vvic/libheif/libheif.a",
+	emcmake({
+		outFile: "vendor/libheif_vvic/libheif/libheif.a",
 		src: "vendor/libheif",
-		dist: "vendor/libheif-vvic",
+		dist: "vendor/libheif_vvic",
 		options: {
 			CMAKE_DISABLE_FIND_PACKAGE_Doxygen: 1,
 			WITH_AOM_DECODER: 0,
@@ -374,14 +372,14 @@ function buildVVIC() {
 		"-I vendor/libheif",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
-		"vendor/libheif/libheif/libheif.a",
+		"vendor/libheif_vvic/libheif/libheif.a",
 		"vendor/vvenc/lib/release-static/libvvenc.a",
 		"vendor/vvdec/lib/release-static/libvvdec.a",
 	]);
 }
 
-config.rebuild = true;
-// config.debug = true; 15.4 MB (16,230,036 bytes)
+// config.rebuild = true;
+// config.debug = true;
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
@@ -392,7 +390,7 @@ if (process.argv[1] === import.meta.filename) {
 	// buildQOI();
 	// buildMozJPEG();
 	// buildWebP2();
-	// buildHEIC();
+	buildHEIC();
 	buildPNGQuant();
 
 	// buildVVIC();
