@@ -90,9 +90,6 @@ export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 	return quantize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
-/**
- * Encode the RGBA buffer to PNG format, with optional lossy compression.
- */
 export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
 	const { data, width, height } = image;

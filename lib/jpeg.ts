@@ -1,5 +1,5 @@
 import wasmFactoryEnc from "../dist/mozjpeg.js";
-import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
+import { check, encodeES, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export enum ColorSpace {
 	GRAYSCALE = 1,
@@ -138,10 +138,7 @@ export async function loadEncoder(input?: WasmSource) {
 export const loadDecoder = loadEncoder;
 
 export function encode(image: ImageDataLike, options?: Options) {
-	options = { ...defaultOptions, ...options };
-	const { data, width, height } = image;
-	const result = codecWASM.encode(data, width, height, options);
-	return check<Uint8Array>(result, "JPEG Encode");
+	return encodeES("JPEG Encode", codecWASM, defaultOptions, image, options);
 }
 
 export function decode(input: BufferSource) {

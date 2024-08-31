@@ -1,6 +1,6 @@
 import wasmFactoryEnc from "../dist/webp-enc.js";
 import wasmFactoryDec from "../dist/webp-dec.js";
-import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
+import { check, encodeES, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export enum Preprocess {
 	None,
@@ -16,8 +16,7 @@ export enum AlphaFiltering {
 
 export interface Options {
 	/**
-	 * Encode the image without any loss. For images with fully transparent area,
-	 * the invisible pixel values (R/G/B or Y/U/V) will be preserved only if the `exact` option is used.
+	 * Encode the image without any loss (pixel values of fully transparent area may different).
 	 *
 	 * @default false
 	 */
@@ -142,7 +141,7 @@ export interface Options {
 	 * The absolute minimum is 4 bits per macroblock. Skip, segment, and mode information can use up almost
 	 * all these 4 bits (although the case is unlikely), which is problematic for very large images.
 	 *
-	 * The partition_limit factor controls how frequently the most bit-costly mode (intra 4x4) will be used.
+	 * `partitionLimit` controls how frequently the most bit-costly mode (intra 4x4) will be used.
 	 * This is useful in case the 512k limit is reached.
 	 *
 	 * If using -partition_limit is not enough to meet the 512k constraint, one should use less segments
@@ -284,10 +283,7 @@ export async function loadDecoder(input?: WasmSource) {
 }
 
 export function encode(image: ImageDataLike, options?: Options) {
-	options = { ...defaultOptions, ...options };
-	const { data, width, height } = image;
-	const result = encoderWASM.encode(data, width, height, options);
-	return check<Uint8Array>(result, "Webp Encode");
+	return encodeES("Webp Encode", encoderWASM, defaultOptions, image, options);
 }
 
 export function decode(input: BufferSource) {

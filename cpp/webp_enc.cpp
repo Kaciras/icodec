@@ -38,6 +38,7 @@ EMSCRIPTEN_BINDINGS(icodec_module_WebP)
 {
 	function("encode", &encode);
 
+	// Since `value_object` uses this enum, it must be register.
 	enum_<WebPImageHint>("WebPImageHint")
 		.value("WEBP_HINT_DEFAULT", WebPImageHint::WEBP_HINT_DEFAULT)
 		.value("WEBP_HINT_PICTURE", WebPImageHint::WEBP_HINT_PICTURE)

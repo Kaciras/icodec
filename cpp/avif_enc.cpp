@@ -59,6 +59,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 		image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT601;
 	}
 
+	// Convert our RGBA format image to libavif internal YUV structure.
 	avifRGBImage srcRGB;
 	avifRGBImageSetDefaults(&srcRGB, image.get());
 	srcRGB.pixels = reinterpret_cast<uint8_t *>(pixels.data());

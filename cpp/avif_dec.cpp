@@ -17,7 +17,7 @@ val decode(std::string input)
 	auto decoder = toRAII(avifDecoderCreate(), avifDecoderDestroy);
 	if (!decoder)
 	{
-		return val("Memory allocation failure");
+		return val("Out of memory");
 	}
 
 	// Do not use `avifDecoderReadMemory`, it will do a redundant copy.
@@ -29,11 +29,13 @@ val decode(std::string input)
 	// Read the first image frame data.
 	CHECK_STATUS(avifDecoderNextImage(decoder.get()));
 
-	// Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+	// Create a RGB image structure describe the format we want.
+	// Defaults to AVIF_RGB_FORMAT_RGBA.
 	avifRGBImage rgb;
 	avifRGBImageSetDefaults(&rgb, decoder->image);
 	rgb.depth = COLOR_DEPTH;
 
+	// Convert libavif internal image structure to our RGBA format.
 	CHECK_STATUS(avifRGBImageAllocatePixels(&rgb));
 	CHECK_STATUS(avifImageYUVToRGB(decoder->image, &rgb));
 

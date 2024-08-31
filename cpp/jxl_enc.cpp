@@ -19,7 +19,8 @@
 // https://github.com/libjxl/libjxl/blob/e10fb6858fe9cb506f99b5373f64d6b639fe447d/lib/extras/enc/jxl.cc#L97
 bool ReadCompressedOutput(JxlEncoder *enc, std::vector<uint8_t> *compressed)
 {
-	compressed->resize(16384);
+	// Turn up the initial capacity a little to reduce the number of expansions.
+	compressed->resize(32768);
 	uint8_t *next_out = compressed->data();
 	size_t avail_out = compressed->size();
 	JxlEncoderStatus result = JXL_ENC_NEED_MORE_OUTPUT;

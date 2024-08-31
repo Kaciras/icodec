@@ -13,22 +13,16 @@ export function loadES(factory: any, source?: WasmSource) {
 }
 
 export interface ImageDataLike {
-	/**
-	 * representing the actual width, in pixels.
-	 */
 	width: number;
-
-	/**
-	 * representing the actual height, in pixels.
-	 */
 	height: number;
-
-	/**
-	 * Representing a one-dimensional array containing the data in the RGBA order,
-	 * with integer values between 0 and 255 (inclusive).
-	 * The order goes by rows from the top-left pixel to the bottom-right.
-	 */
 	data: Uint8Array | Uint8ClampedArray;
+}
+
+export function encodeES<T>(name: string, wasm: any, defaults: T, image: ImageDataLike, options?: T) {
+	options = { ...defaults, ...options };
+	const { data, width, height } = image;
+	const result = wasm.encode(data, width, height, options);
+	return check<Uint8Array>(result, name);
 }
 
 export function check<T>(value: string | null | T, hint: string) {

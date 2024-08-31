@@ -21,7 +21,8 @@ export const loadDecoder = loadEncoder;
 
 export function encode(image: ImageDataLike) {
 	const { data, width, height } = image;
-	return check<Uint8Array>(codecWASM.encode(data, width, height, undefined), "QOI Encode");
+	const result = codecWASM.encode(data, width, height, undefined);
+	return check<Uint8Array>(result, "QOI Encode");
 }
 
 export function decode(input: BufferSource) {

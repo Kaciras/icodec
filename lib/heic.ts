@@ -1,6 +1,6 @@
 import wasmFactoryEnc from "../dist/heic-enc.js";
 import wasmFactoryDec from "../dist/heic-dec.js";
-import { check, ImageDataLike, loadES, WasmSource } from "./common.js";
+import { check, encodeES, ImageDataLike, loadES, WasmSource } from "./common.js";
 
 export const Presets = ["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo"] as const;
 
@@ -99,10 +99,7 @@ export async function loadDecoder(input?: WasmSource) {
 }
 
 export function encode(image: ImageDataLike, options?: Options) {
-	options = { ...defaultOptions, ...options };
-	const { data, width, height } = image;
-	const result = encoderWASM.encode(data, width, height, options);
-	return check<Uint8Array>(result, "HEIC Encode");
+	return encodeES("HEIC Encode", encoderWASM, defaultOptions, image, options);
 }
 
 export function decode(input: BufferSource) {
