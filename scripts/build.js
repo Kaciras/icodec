@@ -12,7 +12,7 @@ const repositories = new RepositoryManager({
 	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
 	libjxl: ["v0.10.3", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
-	aom: ["v3.9.1", "https://aomedia.googlesource.com/aom"],
+	aom: ["v3.10.0-rc2", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
 		"b65d168d3b2b8f8ec849134da2c3a5f034f1eb42",
 		"https://chromium.googlesource.com/codecs/libwebp2",
@@ -384,12 +384,12 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
 	buildHEIC();
 	buildPNGQuant();
 
