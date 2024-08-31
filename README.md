@@ -1,6 +1,9 @@
 # icodec
 
 [![NPM Version](https://img.shields.io/npm/v/icodec?style=flat-square)](https://www.npmjs.com/package/icodec)
+![NPM Downloads](https://img.shields.io/npm/dm/icodec?style=flat-square)
+![NPM Type Definitions](https://img.shields.io/npm/types/icodec?style=flat-square)
+![No Dependency](https://img.shields.io/badge/dependencies-0-blue?style=flat-square&label=dependencies)
 
 Image encoders & decoders built with WebAssembly.
 
