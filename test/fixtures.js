@@ -53,6 +53,12 @@ export function updateSnapshot(name, codec, data) {
 	writeFileSync(`${directory}/${name}`, data);
 }
 
+function savePNG(width, height, data, filename) {
+	const raw = { width, height, channels: 4 };
+	// noinspection JSIgnoredPromiseFromCall: No need to wait.
+	sharp(data, { raw }).png().toFile(filename);
+}
+
 /**
  * Asserts that the two images are similar, that they have the same dimensions,
  * and that the differences in content are within specified limits.
@@ -73,10 +79,8 @@ export function assertSimilar(expected, actual, threshold, toleration) {
 	const diffs = pixelMatch(data, actual.data, map, width, height, { threshold });
 
 	if (diffs > width * height * toleration) {
-		// noinspection JSIgnoredPromiseFromCall: No need to wait.
-		sharp(map, { raw: { width, height, channels: 4 } })
-			.png()
-			.toFile("diff.png");
+		savePNG(width, height, actual.data, "output.png");
+		savePNG(width, height, map, "diff.png");
 		assert.fail("Output pixels is not similar, see diff.png for details");
 	}
 }
