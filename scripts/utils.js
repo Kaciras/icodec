@@ -246,6 +246,7 @@ export function emcc(input, sourceArguments) {
 	];
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
+		args.push("-s", "ASSERTIONS=2");
 	} else {
 		args.push("-fno-exceptions");
 		args.push("-s", "FILESYSTEM=0");
