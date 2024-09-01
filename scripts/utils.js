@@ -231,12 +231,14 @@ export function emcc(input, sourceArguments) {
 		"-msimd128",
 		"-flto",
 		"-std=c++23",
-		"-s", "NODEJS_CATCH_EXIT=0",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
 		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
+
+		// Default 64KB is too small, causes OOM in some cases.
+		"-s", "STACK_SIZE=2MB",
 
 		// Save ~69KB, but may affect performance.
 		// "-s", "MALLOC=emmalloc",
