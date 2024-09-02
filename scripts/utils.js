@@ -233,11 +233,13 @@ export function emcc(input, sourceArguments) {
 		"-std=c++23",
 		"-s", "NODEJS_CATCH_REJECTION=0",
 		"-s", "TEXTDECODER=2",
-		"-s", "ENVIRONMENT=web",
 		"-s", "ALLOW_MEMORY_GROWTH=1",
 		"-s", "EXPORT_ES6=1",
 
-		// Default 64KB is too small, causes OOM in some cases.
+		/*
+		 * Default 64KB is too small, causes OOM in some cases.
+		 * libwebp sets it to 5MB, but 2MB seems to be enough.
+		 */
 		"-s", "STACK_SIZE=2MB",
 
 		// Save ~69KB, but may affect performance.
@@ -246,17 +248,28 @@ export function emcc(input, sourceArguments) {
 		// Save ~10KB, but it needs some work on our part.
 		// "-s", "MINIMAL_RUNTIME=1",
 	];
+	if (config.wasm64) {
+		args.push("-s", "MEMORY64=1");
+	}
 	if (config.debug) {
 		args.push("-s", "NO_DISABLE_EXCEPTION_CATCHING");
 		args.push("-s", "ASSERTIONS=2");
 	} else {
 		args.push("-fno-exceptions");
 		args.push("-s", "FILESYSTEM=0");
+		args.push("-s", "ENVIRONMENT=web");
 	}
-	if (config.wasm64) {
-		args.push("-s", "MEMORY64=1");
-	}
+
 	args.push(...sourceArguments);
+
+	/*
+	 * Debug build add an assert for environment check, so we need to
+	 * add Node to the list, or remove the check code from generated JS.
+	 */
+	if (config.debug) {
+		args.push("-s", "ENVIRONMENT=node,web,worker");
+	}
+
 	execFileSync("emcc", args, { stdio: "inherit", shell: true });
 	console.info(`Successfully build WASM module: ${output}`);
 }
