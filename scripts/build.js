@@ -153,8 +153,6 @@ function buildAVIFPartial(isEncode) {
 			CONFIG_WEBM_IO: 0,
 
 			CONFIG_MULTITHREAD: 0,
-
-			// TODO: memory access out of bounds when decoding 12bit image
 			CONFIG_AV1_HIGHBITDEPTH: 1 - isEncode,
 
 			CONFIG_AV1_ENCODER: isEncode,

@@ -33,7 +33,7 @@ struct AvifOptions
  */
 val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions options)
 {
-	auto format = (avifPixelFormat)options.subsample;
+	auto format = static_cast<avifPixelFormat>(options.subsample);
 
 	// Smart pointer for the input image in YUV format
 	auto image = toRAII(avifImageCreate(width, height, COLOR_DEPTH, format), avifImageDestroy);

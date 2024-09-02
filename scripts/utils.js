@@ -41,8 +41,6 @@ export const config = {
 	parallel: navigator.hardwareConcurrency,
 };
 
-mkdirSync(config.outDir, { recursive: true });
-
 function gitClone(dir, branch, url) {
 	const cwd = "vendor/" + dir;
 	if (existsSync(cwd)) {
@@ -147,6 +145,7 @@ export class RepositoryManager {
 
 	constructor(repos) {
 		this.repos = Object.entries(repos);
+		mkdirSync(config.outDir, { recursive: true });
 	}
 
 	download() {
