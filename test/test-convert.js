@@ -24,11 +24,9 @@ describe("encode", () => {
 });
 
 async function testDecode() {
-	const input = getSnapshot("image", this);
 	const { loadDecoder, decode } = this;
-
 	await loadDecoder();
-	const output = decode(input);
+	const output = decode(getSnapshot("image", this));
 
 	assertSimilar(getRawPixels("image"), output, 0.2, 0.01);
 }
@@ -53,6 +51,17 @@ test("decode gray PNG", async () => {
 	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
 	const expected = { data, width: 150, height: 200 };
 	assertSimilar(expected, image, 0, 0);
+});
+
+test("AVIF decode 12 bit", async () => {
+	const buffer = getSnapshot("12bit", avif);
+	await avif.loadDecoder();
+	const image = avif.decode(buffer);
+
+	// Can't find the correct pixels of this image, the result decode by browser
+	// is different from our decoder, so we allow a small amount of difference.
+	const expected = getRawPixels("12bit");
+	assertSimilar(expected, image, 0.1, 0);
 });
 
 async function testDecodeBroken() {
