@@ -1,6 +1,6 @@
 {
 	"name": "icodec",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "Image encoders & decoders built with WebAssembly",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
