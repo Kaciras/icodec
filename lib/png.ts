@@ -86,17 +86,24 @@ export const loadDecoder = loadEncoder;
  */
 export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 	options = { ...defaultOptions, ...options };
-	const { data, width, height } = image;
+	const { data, width, height } = image.to8BitDepth();
 	return quantize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
 export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
+	if (options.quantize) {
+		image = image.to8BitDepth();
+	}
 	const { data, width, height } = image;
 	return optimize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
 export function decode(input: Uint8Array) {
-	const [data, width] = png_to_rgba(input);
-	return new _ICodec_ImageData(data, width, data.byteLength / width / 4);
+	const [data, width, depth] = png_to_rgba(input);
+	let height = data.byteLength / width / 4;
+	if (depth === 16) {
+		height /= 2;
+	}
+	return new _ICodec_ImageData(data, width, height, depth);
 }

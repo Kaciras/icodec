@@ -1,4 +1,4 @@
-import { ImageDataLike, WasmSource } from "./common.js";
+import { BitDepth, ImageDataLike, PureImageData, WasmSource } from "./common.js";
 
 export { ImageDataLike };
 
@@ -17,6 +17,23 @@ declare global {
 }
 
 globalThis._ICodec_ImageData = ImageData;
+
+class HighDepthImageData extends ImageData implements ImageDataLike {
+
+	readonly depth: BitDepth;
+
+	constructor(data: Uint8ClampedArray, sw: number, sh: number, depth: BitDepth = 8) {
+		super(data, sw, sh);
+		this.depth = depth;
+	}
+
+	to8BitDepth(): ImageDataLike {
+		if (this.depth === 8) {
+			return this;
+		}
+		return PureImageData.prototype.to8BitDepth.call(this);
+	}
+}
 
 /**
  * Provides a uniform type for codec modules that support encoding.

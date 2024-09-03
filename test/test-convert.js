@@ -53,6 +53,17 @@ test("decode gray PNG", async () => {
 	assertSimilar(expected, image, 0, 0);
 });
 
+test("decode 16bit PNG", async () => {
+	const buffer = getSnapshot("16bit", png);
+
+	await png.loadDecoder();
+	const image = png.decode(buffer).to8BitDepth();
+
+	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
+	const expected = { data, width: 32, height: 32 };
+	assertSimilar(expected, image, 0, 0);
+});
+
 test("AVIF decode 12 bit", async () => {
 	const buffer = getSnapshot("12bit", avif);
 	await avif.loadDecoder();

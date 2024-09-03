@@ -1,14 +1,11 @@
-use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
-use rgb::RGBA;
+use bytemuck::Pod;
+use std::{cmp, mem};
+
 use rgb::alt::GrayAlpha;
-use wasm_bindgen::prelude::*;
+use rgb::RGBA;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
-
-// Save ~5KB WASM size and has the same performance as std.
-#[global_allocator]
-static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
-	unsafe { AssumeSingleThreaded::new(FreeListAllocator::new()) };
+use wasm_bindgen::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
@@ -74,7 +71,10 @@ pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions
 		oxipng::BitDepth::Eight,
 		data,
 	);
-	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
+	return raw
+		.unwrap_throw()
+		.create_optimized_png(&optimization)
+		.unwrap_throw();
 }
 
 // Data needs to be copied between the managed JS heap and the WASM memory,
@@ -88,10 +88,10 @@ pub fn optimize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 	return png_encode(data, width as u32, height as u32, config);
 }
 
-fn cast_pixels(buf: &mut [u8]) {
-	let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(buf);
+fn cast_pixels<T: Pod>(buf: &mut [u8]) {
+	let rgba: &mut [RGBA<T>] = bytemuck::cast_slice_mut(buf);
 	for i in (0..rgba.len()).rev() {
-		let src: &[GrayAlpha<u8>] = bytemuck::cast_slice(rgba);
+		let src: &[GrayAlpha<T>] = bytemuck::cast_slice(rgba);
 		rgba[i] = src[i].into();
 	}
 }
@@ -101,13 +101,14 @@ fn cast_pixels(buf: &mut [u8]) {
 #[wasm_bindgen]
 pub fn png_to_rgba(data: &[u8]) -> js_sys::Array {
 	let mut decoder = png::Decoder::new(data);
-	decoder.set_transformations(png::Transformations::ALPHA | png::Transformations::STRIP_16);
+	decoder.set_transformations(png::Transformations::ALPHA);
 	let mut reader = decoder.read_info().unwrap_throw();
 
 	let info = reader.info();
 	let width = info.width;
 	let color_type = info.color_type;
-	let length = (width * info.height * 4) as usize;
+	let depth = cmp::max(8, info.bit_depth as u32);
+	let length = (width * info.height * depth / 2) as usize;
 
 	// Create the buffer without fill the default value.
 	let mut buf = Vec::<u8>::with_capacity(length);
@@ -117,11 +118,64 @@ pub fn png_to_rgba(data: &[u8]) -> js_sys::Array {
 
 	match color_type {
 		png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
-			cast_pixels(&mut buf);
+			if depth == 16 {
+				cast_pixels::<u16>(&mut buf);
+			} else {
+				cast_pixels::<u8>(&mut buf);
+			}
 		}
 		_ => { /* Transformations ensure RGB & platted image to RGBA */ }
 	}
 
+	if depth == 16 {
+		buf.chunks_exact_mut(2).for_each(|c| c.swap(0, 1));
+	}
+
 	let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
-	return js_sys::Array::of2(&data.into(), &width.into());
+	return js_sys::Array::of3(&data.into(), &width.into(), &depth.into());
+}
+
+#[cfg(test)]
+mod tests {
+	use std::fs;
+
+	use super::*;
+
+	#[test]
+	fn example1() {
+		let data: Vec<u8> = fs::read("D:\\Coding\\JavaScript\\icodec\\test\\snapshot\\16bit.png").unwrap();
+
+		let mut decoder = png::Decoder::new(data.as_slice());
+		decoder.set_transformations(png::Transformations::ALPHA);
+		let mut reader = decoder.read_info().unwrap_throw();
+
+		let info = reader.info();
+		let width = info.width;
+		let color_type = info.color_type;
+		let depth = cmp::max(8, info.bit_depth as u32);
+		let length = (width * info.height * depth / 2) as usize;
+
+		// Create the buffer without fill the default value.
+		let mut buf = Vec::<u8>::with_capacity(length);
+		unsafe { buf.set_len(length) }
+
+		reader.next_frame(&mut buf).unwrap();
+
+		match color_type {
+			png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
+				if depth == 16 {
+					cast_pixels::<u16>(&mut buf);
+				} else {
+					cast_pixels::<u8>(&mut buf);
+				}
+			}
+			_ => { /* Transformations ensure RGB & platted image to RGBA */ }
+		}
+
+		if depth == 16 {
+			buf.chunks_exact_mut(2).for_each(|c| c.swap(0, 1));
+		}
+
+		assert_eq!(1, buf.len());
+	}
 }
