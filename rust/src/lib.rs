@@ -48,14 +48,19 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 	return data; // Modifications are not propagated to JS, so we need to return the data.
 }
 
+fn swap_endian(data: &mut Vec<u8>) {
+	data.chunks_exact_mut(2).for_each(|c| c.swap(0, 1));
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct EncodeOptions {
 	pub quantize: bool,
 	pub level: u8,
 	pub interlace: bool,
+	pub bit_depth: u8,
 }
 
-pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions) -> Vec<u8> {
+pub fn png_encode(mut data: Vec<u8>, width: u32, height: u32, options: EncodeOptions) -> Vec<u8> {
 	let mut optimization = oxipng::Options::from_preset(options.level);
 	optimization.optimize_alpha = true;
 	optimization.interlace = Some(if options.interlace {
@@ -63,18 +68,21 @@ pub fn png_encode(data: Vec<u8>, width: u32, height: u32, options: EncodeOptions
 	} else {
 		oxipng::Interlacing::None
 	});
+	let depth_enum = if options.bit_depth == 8 {
+		oxipng::BitDepth::Eight
+	} else {
+		swap_endian(&mut data);
+		oxipng::BitDepth::Sixteen
+	};
 
 	let raw = oxipng::RawImage::new(
 		width,
 		height,
 		oxipng::ColorType::RGBA,
-		oxipng::BitDepth::Eight,
-		data,
+		depth_enum,
+		data
 	);
-	return raw
-		.unwrap_throw()
-		.create_optimized_png(&optimization)
-		.unwrap_throw();
+	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();
 }
 
 // Data needs to be copied between the managed JS heap and the WASM memory,
@@ -111,71 +119,27 @@ pub fn png_to_rgba(data: &[u8]) -> js_sys::Array {
 	let length = (width * info.height * depth / 2) as usize;
 
 	// Create the buffer without fill the default value.
-	let mut buf = Vec::<u8>::with_capacity(length);
-	unsafe { buf.set_len(length) }
+	let mut buffer = Vec::<u8>::with_capacity(length);
+	unsafe { buffer.set_len(length) }
 
-	reader.next_frame(&mut buf).unwrap();
+	reader.next_frame(&mut buffer).unwrap();
 
 	match color_type {
 		png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
 			if depth == 16 {
-				cast_pixels::<u16>(&mut buf);
+				cast_pixels::<u16>(&mut buffer);
 			} else {
-				cast_pixels::<u8>(&mut buf);
+				cast_pixels::<u8>(&mut buffer);
 			}
 		}
 		_ => { /* Transformations ensure RGB & platted image to RGBA */ }
 	}
 
+	// Pixels stored in PNG is big-endian, but icodec use little-endian.
 	if depth == 16 {
-		buf.chunks_exact_mut(2).for_each(|c| c.swap(0, 1));
+		swap_endian(&mut buffer);
 	}
 
-	let data = js_sys::Uint8ClampedArray::from(buf.as_slice());
+	let data = js_sys::Uint8ClampedArray::from(buffer.as_slice());
 	return js_sys::Array::of3(&data.into(), &width.into(), &depth.into());
-}
-
-#[cfg(test)]
-mod tests {
-	use std::fs;
-
-	use super::*;
-
-	#[test]
-	fn example1() {
-		let data: Vec<u8> = fs::read("D:\\Coding\\JavaScript\\icodec\\test\\snapshot\\16bit.png").unwrap();
-
-		let mut decoder = png::Decoder::new(data.as_slice());
-		decoder.set_transformations(png::Transformations::ALPHA);
-		let mut reader = decoder.read_info().unwrap_throw();
-
-		let info = reader.info();
-		let width = info.width;
-		let color_type = info.color_type;
-		let depth = cmp::max(8, info.bit_depth as u32);
-		let length = (width * info.height * depth / 2) as usize;
-
-		// Create the buffer without fill the default value.
-		let mut buf = Vec::<u8>::with_capacity(length);
-		unsafe { buf.set_len(length) }
-
-		reader.next_frame(&mut buf).unwrap();
-
-		match color_type {
-			png::ColorType::Grayscale | png::ColorType::GrayscaleAlpha => {
-				if depth == 16 {
-					cast_pixels::<u16>(&mut buf);
-				} else {
-					cast_pixels::<u8>(&mut buf);
-				}
-			}
-			_ => { /* Transformations ensure RGB & platted image to RGBA */ }
-		}
-
-		if depth == 16 {
-			buf.chunks_exact_mut(2).for_each(|c| c.swap(0, 1));
-		}
-
-		assert_eq!(1, buf.len());
-	}
 }
