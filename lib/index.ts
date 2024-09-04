@@ -13,25 +13,25 @@ export * as wp2 from "./wp2.js";
 
 declare global {
 	// eslint-disable-next-line no-var
-	var _ICodec_ImageData: typeof ImageData;
+	var _ICodec_ImageData: (data: Uint8ClampedArray, w: number, h: number, depth: BitDepth) => ImageDataLike;
 }
 
-globalThis._ICodec_ImageData = ImageData;
-
-class HighDepthImageData extends ImageData implements ImageDataLike {
-
-	readonly depth: BitDepth;
-
-	constructor(data: Uint8ClampedArray, sw: number, sh: number, depth: BitDepth = 8) {
-		super(data, sw, sh);
-		this.depth = depth;
+globalThis._ICodec_ImageData = (data, w, h, depth) => {
+	if (depth === 8) {
+		return new ImageDataEx(data, w, h);
 	}
+	return new PureImageData(data, w, h, depth);
+};
 
-	to8BitDepth(): ImageDataLike {
+class ImageDataEx extends ImageData implements ImageDataLike {
+
+	readonly depth = 8;
+
+	toBitDepth(value: BitDepth): ImageDataLike {
 		if (this.depth === 8) {
 			return this;
 		}
-		return PureImageData.prototype.to8BitDepth.call(this);
+		return PureImageData.prototype.toBitDepth.call(this, value);
 	}
 }
 

@@ -10,7 +10,7 @@ val decode(std::string input)
 	{
 		return val(WP2GetStatusText(status));
 	}
-	return toImageData(buffer.GetRow8(0), buffer.width(), buffer.height());
+	return toImageData(buffer.GetRow8(0), buffer.width(), buffer.height(), 8);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_WebP2)

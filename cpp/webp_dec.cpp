@@ -10,7 +10,7 @@ val decode(std::string input)
 	auto rgba = WebPDecodeRGBA(bytes, input.size(), &width, &height);
 	std::unique_ptr<uint8_t[]> _(rgba);
 
-	return rgba ? toImageData(rgba, width, height) : val::null();
+	return rgba ? toImageData(rgba, width, height, 8) : val::null();
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_WebP)

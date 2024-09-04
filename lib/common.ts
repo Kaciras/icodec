@@ -20,7 +20,7 @@ export interface ImageDataLike {
 	data: Uint8Array | Uint8ClampedArray;
 	depth: BitDepth;
 
-	to8BitDepth(): ImageDataLike;
+	toBitDepth(value: BitDepth): ImageDataLike;
 }
 
 /**
@@ -40,18 +40,35 @@ export class PureImageData implements ImageDataLike {
 		this.depth = depth;
 	}
 
-	to8BitDepth() {
+	toBitDepth(value: BitDepth) {
 		const { data, width, height, depth } = this;
-		if (depth === 8) {
+		if (value === depth) {
 			return this;
 		}
-		const bytes = new Uint8ClampedArray(data.length / 2);
-		const max = (1 << depth) - 1;
-		// const view = new Uint16Array(data.buffer, data.byteOffset);
-		for (let i = 0; i < bytes.length; i++) {
-			bytes[i] = data[i * 2 +1];
+
+		const pixels = Math.ceil(data.length * 8 / depth);
+		const newData = value === 8
+			? new Uint8ClampedArray(pixels)
+			: new Uint16Array(pixels);
+		const view = depth === 8
+			? data
+			: new Uint16Array(data.buffer, data.byteOffset);
+
+		if (value > depth) { // upscale
+			const shift = value - depth;
+			for (let i = 0; i < pixels; i++) {
+				newData[i] = view[i] << shift;
+			}
+		} else { // downscale
+			const from = (1 << depth) - 1;
+			const to = (1 << value) - 1;
+			for (let i = 0; i < newData.length; i++) {
+				newData[i] = view[i] / from * to + 0.5;
+			}
 		}
-		return new this.constructor(bytes, width, height, 8);
+
+		const nd = new Uint8ClampedArray(newData.buffer, newData.byteOffset, newData.byteLength);
+		return _ICodec_ImageData(nd, width, height, value);
 	}
 }
 

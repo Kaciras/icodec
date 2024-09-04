@@ -16,7 +16,7 @@ thread_local const val _ICodec_ImageData = val::global("_ICodec_ImageData");
  * Use RAII to avoid forgetting to release and make the code cleaner.
  *
  * https://stackoverflow.com/a/39176806/7065321
- * 
+ *
  * @param pointer Pointer of the object to be managed.
  * @param deletion The destroy function of the pointer.
  */
@@ -29,19 +29,19 @@ std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
 /*!
  * Convert the buffer to JS ImageDataLike object, data are copied.
  *
- * JS entries must set `_ICodec_ImageData` global variable, 
+ * JS entries must set `_ICodec_ImageData` global variable,
  * in browsers it is the builtin `ImageData` and in Node it is a custom class.
- * 
+ *
  * @param bytes A buffer containing the underlying pixel representation of the image.
  * @param width An unsigned long representing the width of the image.
  * @param width An unsigned long representing the height of the image.
  */
-val toImageData(const uint8_t *bytes, uint32_t width, uint32_t height)
+val toImageData(const uint8_t *bytes, uint32_t width, uint32_t height, uint32_t depth)
 {
-	auto length = ((size_t)CHANNELS_RGBA) * width * height;
+	auto length = ((size_t)CHANNELS_RGBA) * width * height * (depth + 7) / 8;
 	auto view = typed_memory_view(length, bytes);
 	auto data = Uint8ClampedArray.new_(view);
-	return _ICodec_ImageData.new_(data, width, height);
+	return _ICodec_ImageData(data, width, height, depth);
 }
 
 /*!

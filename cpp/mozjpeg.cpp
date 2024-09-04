@@ -174,7 +174,7 @@ val decode(std::string input)
 	jpeg_finish_decompress(&cinfo);
 	jpeg_destroy_decompress(&cinfo);
 
-	return toImageData(output.get(), cinfo.output_width, cinfo.output_height);
+	return toImageData(output.get(), cinfo.output_width, cinfo.output_height, 8);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_MozJpeg)

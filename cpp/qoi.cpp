@@ -33,7 +33,7 @@ val decode(std::string input)
 		return val::null();
 	}
 	auto result = toRAII((uint8_t *)buffer, free);
-	return toImageData(result.get(), desc.width, desc.height);
+	return toImageData(result.get(), desc.width, desc.height, 8);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_QOI)
