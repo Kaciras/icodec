@@ -13,10 +13,10 @@ export * as wp2 from "./wp2.js";
 
 declare global {
 	// eslint-disable-next-line no-var
-	var _ICodec_ImageData: (data: Uint8ClampedArray, w: number, h: number, depth: BitDepth) => ImageDataLike;
+	var _icodec_ImageData: (data: Uint8ClampedArray, w: number, h: number, depth: BitDepth) => ImageDataLike;
 }
 
-globalThis._ICodec_ImageData = (data, w, h, depth) => {
+globalThis._icodec_ImageData = (data, w, h, depth) => {
 	if (depth === 8) {
 		return new ImageDataEx(data, w, h);
 	}

@@ -68,7 +68,7 @@ export class PureImageData implements ImageDataLike {
 		}
 
 		const nd = new Uint8ClampedArray(newData.buffer, newData.byteOffset, newData.byteLength);
-		return _ICodec_ImageData(nd, width, height, value);
+		return _icodec_ImageData(nd, width, height, value);
 	}
 }
 

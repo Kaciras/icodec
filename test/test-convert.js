@@ -57,7 +57,7 @@ test("decode 16bit PNG", async () => {
 	const buffer = getSnapshot("16bit", png);
 
 	await png.loadDecoder();
-	const image = png.decode(buffer).to8BitDepth();
+	const image = png.decode(buffer).toBitDepth(8);
 
 	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
 	const expected = { data, width: 32, height: 32 };

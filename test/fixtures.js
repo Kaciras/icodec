@@ -13,7 +13,7 @@ function decodeBin(bytes) {
 	const view = new DataView(bytes.buffer, bytes.byteOffset);
 	const width = view.getUint32(0);
 	const height = view.getUint32(4);
-	return new _ICodec_ImageData(bytes.subarray(8), width, height, 8);
+	return _icodec_ImageData(bytes.subarray(8), width, height, 8);
 }
 
 /**
