@@ -24,6 +24,8 @@ struct AvifOptions
 	int tune;
 	int denoiseLevel;
 	bool sharpYUV;
+
+	uint32_t bitDepth;
 };
 
 /**
@@ -36,7 +38,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	auto format = static_cast<avifPixelFormat>(options.subsample);
 
 	// Smart pointer for the input image in YUV format
-	auto image = toRAII(avifImageCreate(width, height, COLOR_DEPTH, format), avifImageDestroy);
+	auto image = toRAII(avifImageCreate(width, height, 8, format), avifImageDestroy);
 	if (image == nullptr)
 	{
 		return val("Out of memory");
@@ -63,7 +65,8 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	avifRGBImage srcRGB;
 	avifRGBImageSetDefaults(&srcRGB, image.get());
 	srcRGB.pixels = reinterpret_cast<uint8_t *>(pixels.data());
-	srcRGB.rowBytes = width * CHANNELS_RGBA;
+	srcRGB.depth = options.bitDepth;
+	srcRGB.rowBytes = width * CHANNELS_RGBA * ((options.bitDepth + 7) / 8);
 	if (options.sharpYUV)
 	{
 		srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
@@ -121,5 +124,6 @@ EMSCRIPTEN_BINDINGS(icodec_module_AVIF)
 		.field("tune", &AvifOptions::tune)
 		.field("denoiseLevel", &AvifOptions::denoiseLevel)
 		.field("subsample", &AvifOptions::subsample)
-		.field("sharpYUV", &AvifOptions::sharpYUV);
+		.field("sharpYUV", &AvifOptions::sharpYUV)
+		.field("bitDepth", &AvifOptions::bitDepth);
 }

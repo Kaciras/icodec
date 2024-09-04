@@ -33,14 +33,13 @@ val decode(std::string input)
 	// Defaults to AVIF_RGB_FORMAT_RGBA.
 	avifRGBImage rgb;
 	avifRGBImageSetDefaults(&rgb, decoder->image);
-	rgb.depth = COLOR_DEPTH;
 
 	// Convert libavif internal image structure to our RGBA format.
 	CHECK_STATUS(avifRGBImageAllocatePixels(&rgb));
 	CHECK_STATUS(avifImageYUVToRGB(decoder->image, &rgb));
 
 	auto _ = toRAII(&rgb, avifRGBImageFreePixels);
-	return toImageData(rgb.pixels, rgb.width, rgb.height);
+	return toImageData(rgb.pixels, rgb.width, rgb.height, rgb.depth);
 }
 
 EMSCRIPTEN_BINDINGS(icodec_module_AVIF)

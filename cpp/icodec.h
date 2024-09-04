@@ -38,7 +38,7 @@ std::unique_ptr<T, Deletion> toRAII(T *pointer, Deletion deletion)
  */
 val toImageData(const uint8_t *bytes, uint32_t width, uint32_t height, uint32_t depth)
 {
-	auto length = ((size_t)CHANNELS_RGBA) * width * height * (depth + 7) / 8;
+	auto length = ((size_t)CHANNELS_RGBA) * width * height * ((depth + 7) / 8);
 	auto view = typed_memory_view(length, bytes);
 	auto data = Uint8ClampedArray.new_(view);
 	return _icodec_ImageData(data, width, height, depth);
