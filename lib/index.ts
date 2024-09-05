@@ -1,4 +1,4 @@
-import { BitDepth, ImageDataLike, PureImageData, WasmSource } from "./common.js";
+import { ImageDataLike, PureImageData, WasmSource } from "./common.js";
 
 export { ImageDataLike };
 
@@ -13,7 +13,7 @@ export * as wp2 from "./wp2.js";
 
 declare global {
 	// eslint-disable-next-line no-var
-	var _icodec_ImageData: (data: Uint8ClampedArray, w: number, h: number, depth: BitDepth) => ImageDataLike;
+	var _icodec_ImageData: (data: Uint8ClampedArray, w: number, h: number, depth: number) => ImageDataLike;
 }
 
 globalThis._icodec_ImageData = (data, w, h, depth) => {
@@ -27,7 +27,7 @@ class ImageDataEx extends ImageData implements ImageDataLike {
 
 	readonly depth = 8;
 
-	toBitDepth(value: BitDepth): ImageDataLike {
+	toBitDepth(value: number): ImageDataLike {
 		if (this.depth === 8) {
 			return this;
 		}

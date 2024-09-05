@@ -153,7 +153,7 @@ function buildAVIFPartial(isEncode) {
 			CONFIG_WEBM_IO: 0,
 
 			CONFIG_MULTITHREAD: 0,
-			CONFIG_AV1_HIGHBITDEPTH: 1 - isEncode,
+			CONFIG_AV1_HIGHBITDEPTH: 1,
 
 			CONFIG_AV1_ENCODER: isEncode,
 			CONFIG_AV1_DECODER: 1 - isEncode,
@@ -261,7 +261,7 @@ function buildHEIC() {
 			"\n    elseif(X86 AND NOT X64)", "\n    endif()");
 	}
 
-	buildWebPLibrary();
+	// buildWebPLibrary();
 
 	// TODO: thread count limit
 	emcmake({
@@ -272,6 +272,8 @@ function buildHEIC() {
 			ENABLE_SHARED: 0,
 			ENABLE_CLI: 0,
 			ENABLE_ASSEMBLY: 0,
+			MAIN12: 1,
+			HIGH_BIT_DEPTH: 1,
 		},
 	});
 	emcmake({
@@ -377,18 +379,18 @@ function buildVVIC() {
 }
 
 // config.rebuild = true;
-// config.debug = true;
+config.debug = true;
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
-	buildHEIC();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
+	// buildHEIC();
 	buildPNGQuant();
 
 	// buildVVIC();

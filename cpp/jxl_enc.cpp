@@ -60,9 +60,9 @@ struct JXLOptions
 	float iterations;
 	int modularColorspace;
 	int modularPredictor;
-};
 
-static const JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+	uint32_t bitDepth;
+};
 
 val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions options)
 {
@@ -74,7 +74,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	info.uses_original_profile = options.lossless;
 	info.xsize = width;
 	info.ysize = height;
-	info.bits_per_sample = COLOR_DEPTH;
+	info.bits_per_sample = options.bitDepth;
 	info.num_extra_channels = 1;
 	CHECK_STATUS(JxlEncoderSetBasicInfo(encoder.get(), &info));
 
@@ -114,6 +114,13 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR, options.modularPredictor);
 	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT, options.iterations);
 
+	JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
+	if (info.bits_per_sample > 8)
+	{
+		format.data_type = JXL_TYPE_UINT16;
+	}
+	JxlBitDepth inputDepth = {JXL_BIT_DEPTH_FROM_CODESTREAM, info.bits_per_sample, 0};
+	JxlEncoderSetFrameBitDepth(settings, &inputDepth);
 	CHECK_STATUS(JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length()));
 	JxlEncoderCloseInput(encoder.get());
 
@@ -148,5 +155,6 @@ EMSCRIPTEN_BINDINGS(icodec_module_JXL)
 		.field("paletteColors", &JXLOptions::paletteColors)
 		.field("iterations", &JXLOptions::iterations)
 		.field("modularColorspace", &JXLOptions::modularColorspace)
-		.field("modularPredictor", &JXLOptions::modularPredictor);
+		.field("modularPredictor", &JXLOptions::modularPredictor)
+		.field("bitDepth", &JXLOptions::bitDepth);
 }
