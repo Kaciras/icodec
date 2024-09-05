@@ -2,10 +2,6 @@
 .esbench-tmp
 node_modules
 /vendor
-/dist
-/coverage
-/rust/pkg
-/rust/target
 
 # Log files
 *.log
@@ -21,6 +17,15 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Build outputs
+/lib/*.js
+/lib/*.d.ts
+/lib/*.map
+/dist
+/coverage
+/rust/pkg
+/rust/target
 
 # Temp files
 /debug.[jt]s

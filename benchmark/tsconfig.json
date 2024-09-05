@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"paths": {
+			"../lib/node.js": ["../lib/index.ts"]
+		},
+		"strict": true,
+		"allowJs": true,
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"useUnknownInCatchVariables": false
+	}
+}
