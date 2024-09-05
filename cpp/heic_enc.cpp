@@ -13,6 +13,8 @@ struct HeicOptions
 	int complexity;
 	std::string chroma;
 	bool sharpYUV;
+
+	int bitDepth;
 };
 
 struct JSWriter : public heif::Context::Writer
@@ -41,11 +43,11 @@ struct JSWriter : public heif::Context::Writer
 val encode(std::string pixels, int width, int height, HeicOptions options)
 {
 	auto image = heif::Image();
-	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
-	image.add_plane(heif_channel_interleaved, width, height, COLOR_DEPTH);
+	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RRGGBBAA_LE);
+	image.add_plane(heif_channel_interleaved, width, height, options.bitDepth);
 
 	// Planes can have padding, so we need copy the data by row.
-	auto row_bytes = width * CHANNELS_RGBA;
+	auto row_bytes = width * CHANNELS_RGBA * ((options.bitDepth + 7) / 8);
 	int stride;
 	auto p = image.get_plane(heif_channel_interleaved, &stride);
 	for (auto y = 0; y < height; y++)
@@ -108,5 +110,6 @@ EMSCRIPTEN_BINDINGS(icodec_module_HEIC)
 		.field("tuIntraDepth", &HeicOptions::tuIntraDepth)
 		.field("complexity", &HeicOptions::complexity)
 		.field("chroma", &HeicOptions::chroma)
-		.field("sharpYUV", &HeicOptions::sharpYUV);
+		.field("sharpYUV", &HeicOptions::sharpYUV)
+		.field("bitDepth", &HeicOptions::bitDepth);
 }
