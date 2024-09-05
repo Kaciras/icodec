@@ -3,9 +3,11 @@ import * as codecs from "../lib/index.js";
 async function encode(args) {
 	const [codec, image, options] = args;
 	const encoder = codecs[codec];
-
 	await encoder.loadEncoder();
-	const output = encoder.encode(image, options);
+
+	const rich = _icodec_ImageData(image.data, image.width, image.height, image.depth);
+	const output = encoder.encode(rich, options);
+
 	postMessage(output, [output.buffer]);
 }
 

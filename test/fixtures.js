@@ -1,5 +1,6 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { createWriteStream, readFileSync, writeFileSync } from "node:fs";
 import assert from "node:assert";
+import { once } from "node:events";
 import sharp from "sharp";
 import pixelMatch from "pixelmatch";
 
@@ -8,12 +9,23 @@ const cache = new Map();
 
 Error.stackTraceLimit = Infinity;
 
-// A simple format, 4-bytes width + 4-bytes height + RGBA data.
-function decodeBin(bytes) {
-	const view = new DataView(bytes.buffer, bytes.byteOffset);
-	const width = view.getUint32(0);
-	const height = view.getUint32(4);
-	return _icodec_ImageData(bytes.subarray(8), width, height, 8);
+// A simple format, 4 bytes width + 4 bytes height + 4 bytes depth + RGBA data.
+function decodeBin(data) {
+	const { buffer, byteOffset } = data;
+	const [width, height, depth] = new Uint32Array(buffer, byteOffset);
+	return _icodec_ImageData(data.subarray(12), width, height, depth);
+}
+
+export function writeBin(name, image) {
+	const header = new Uint32Array(3);
+	header[0] = image.width;
+	header[1] = image.height;
+	header[2] = image.depth;
+
+	const stream = createWriteStream(name);
+	stream.write(header);
+	stream.write(image.data);
+	return once(stream, "finish");
 }
 
 /**

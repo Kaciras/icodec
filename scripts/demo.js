@@ -24,10 +24,10 @@ async function setFile(file) {
 
 	encodeButton.removeAttribute("disabled");
 
-	const { data, width, height } = image;
+	const { data, width, height, depth } = image;
 	canvas.width = width;
 	canvas.height = height;
-	ctx2d.putImageData(image, 0, 0);
+	ctx2d.putImageData(image.toBitDepth(8), 0, 0);
 
 	/*
 	 * Avoid copying of buffer for multiple conversions.
@@ -38,7 +38,7 @@ async function setFile(file) {
 	const shared = new SharedArrayBuffer(data.byteLength);
 	const bytes = new Uint8ClampedArray(shared);
 	bytes.set(data);
-	sharedImageData = { data: bytes, width, height };
+	sharedImageData = { data: bytes, width, height, depth };
 }
 
 function getCodec(file) {
@@ -74,11 +74,9 @@ async function decode(buffer, decoder) {
 }
 
 function decodeBin(buffer) {
-	const data = new Uint8ClampedArray(buffer, 8);
-	const view = new DataView(buffer);
-	const width = view.getUint32(0);
-	const height = view.getUint32(4);
-	return new ImageData(data, width, height);
+	const [width, height, depth] = new Uint32Array(buffer);
+	const data = new Uint8ClampedArray(buffer, 12);
+	return _icodec_ImageData(data, width, height, depth);
 }
 
 /**
