@@ -261,12 +261,13 @@ function buildHEIC() {
 			"\n    elseif(X86 AND NOT X64)", "\n    endif()");
 	}
 
-	// buildWebPLibrary();
+	buildWebPLibrary();
 
 	// TODO: thread count limit
 	emcmake({
-		outFile: "vendor/x265/source/libx265.a",
+		outFile: "vendor/x265/12bit/libx265.a",
 		src: "vendor/x265/source",
+		dist: "vendor/x265/12bit",
 		options: {
 			ENABLE_LIBNUMA: 0,
 			ENABLE_SHARED: 0,
@@ -274,8 +275,37 @@ function buildHEIC() {
 			ENABLE_ASSEMBLY: 0,
 			MAIN12: 1,
 			HIGH_BIT_DEPTH: 1,
+			EXPORT_C_API: 0,
 		},
 	});
+	emcmake({
+		outFile: "vendor/x265/10bit/libx265.a",
+		src: "vendor/x265/source",
+		dist: "vendor/x265/10bit",
+		options: {
+			ENABLE_LIBNUMA: 0,
+			ENABLE_SHARED: 0,
+			ENABLE_CLI: 0,
+			ENABLE_ASSEMBLY: 0,
+			HIGH_BIT_DEPTH: 1,
+			EXPORT_C_API: 0,
+		},
+	});
+	emcmake({
+		outFile: "vendor/x265/10bit/libx265.a",
+		src: "vendor/x265/source",
+		options: {
+			ENABLE_LIBNUMA: 0,
+			ENABLE_SHARED: 0,
+			ENABLE_CLI: 0,
+			ENABLE_ASSEMBLY: 0,
+
+			LINKED_10BIT: 1,
+			LINKED_12BIT: 1,
+			EXTRA_LIB: "vendor/x265/10bit/libx265.a;vendor/x265/12bit/libx265.a;-ldl",
+		},
+	});
+
 	emcmake({
 		outFile: "vendor/libde265/libde265/libde265.a",
 		src: "vendor/libde265",
@@ -298,6 +328,8 @@ function buildHEIC() {
 		"-fexceptions",
 		"vendor/libwebp/libsharpyuv.a",
 		"vendor/x265/source/libx265.a",
+		"vendor/x265/10bit/libx265.a",
+		"vendor/x265/12bit/libx265.a",
 		"vendor/heic_enc/libheif/libheif.a",
 	]);
 
@@ -379,18 +411,18 @@ function buildVVIC() {
 }
 
 // config.rebuild = true;
-config.debug = true;
+// config.debug = true;
 
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
-	// buildHEIC();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
+	buildHEIC();
 	buildPNGQuant();
 
 	// buildVVIC();
