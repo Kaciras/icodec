@@ -42,8 +42,12 @@ val decode(std::string input)
 	}
 	auto output = std::make_unique_for_overwrite<uint8_t[]>(length);
 
-	// 5. Read pixels data.
+	// 5. Set output buffer and format.
+	JxlBitDepth outDepth = {JXL_BIT_DEPTH_FROM_CODESTREAM, info.bits_per_sample, 0};
 	CHECK_STATUS(JxlDecoderSetImageOutBuffer(decoder.get(), &format, output.get(), length));
+	CHECK_STATUS(JxlDecoderSetImageOutBitDepth(decoder.get(), &outDepth));
+
+	// 6. Read pixels data.
 	PROCESS_NEXT_STEP(JXL_DEC_FULL_IMAGE);
 
 	return toImageData(output.get(), info.xsize, info.ysize, info.bits_per_sample);

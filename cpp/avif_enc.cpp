@@ -1,5 +1,7 @@
 #include <emscripten/bind.h>
 #include "icodec.h"
+
+#define AVIF_ENABLE_EXPERIMENTAL_SAMPLE_TRANSFORM
 #include "avif/avif.h"
 
 #define CHECK_STATUS(s) if (s != AVIF_RESULT_OK)	\
@@ -38,7 +40,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	auto format = static_cast<avifPixelFormat>(options.subsample);
 
 	// Smart pointer for the input image in YUV format
-	auto image = toRAII(avifImageCreate(width, height, 8, format), avifImageDestroy);
+	auto image = toRAII(avifImageCreate(width, height, options.bitDepth, format), avifImageDestroy);
 	if (image == nullptr)
 	{
 		return val("Out of memory");
@@ -86,6 +88,10 @@ val encode(std::string pixels, uint32_t width, uint32_t height, AvifOptions opti
 	encoder->autoTiling = options.autoTiling;
 	encoder->tileRowsLog2 = options.tileRowsLog2;
 	encoder->tileColsLog2 = options.tileColsLog2;
+
+	if (options.bitDepth == 16) {
+		encoder-> sampleTransformRecipe = AVIF_SAMPLE_TRANSFORM_BIT_DEPTH_EXTENSION_12B_4B;
+	}
 
 	// https://github.com/AOMediaCodec/libavif/blob/47f154ae4cdefbdb7f9d86c0017acfe118db260e/src/codec_aom.c#L404
 	// aq-mode has no effect, cq-level overrides quality.

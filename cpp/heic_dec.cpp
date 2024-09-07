@@ -15,7 +15,8 @@ val decode(std::string input)
 
 	auto bitDepth = handle.get_luma_bits_per_pixel();
 	auto image = handle.decode_image(heif_colorspace_RGB, bitDepth == 8
-		? heif_chroma_interleaved_RGBA : heif_chroma_interleaved_RRGGBBAA_LE);
+		? heif_chroma_interleaved_RGBA
+		: heif_chroma_interleaved_RRGGBBAA_LE);
 
 	auto width = handle.get_width();
 	auto height = handle.get_height();

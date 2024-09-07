@@ -1,11 +1,16 @@
+use lol_alloc::{AssumeSingleThreaded, FreeListAllocator};
+use std::cmp;
 use bytemuck::Pod;
-use std::{cmp, mem};
-
 use rgb::alt::GrayAlpha;
 use rgb::RGBA;
 use serde::{Deserialize, Serialize};
 use serde_wasm_bindgen::from_value;
 use wasm_bindgen::prelude::*;
+
+// Save ~5KB WASM size and has the same performance as std.
+#[global_allocator]
+static ALLOC: AssumeSingleThreaded<FreeListAllocator> =
+	unsafe { AssumeSingleThreaded::new(FreeListAllocator::new()) };
 
 #[derive(Serialize, Deserialize)]
 pub struct QuantizeOptions {
@@ -25,9 +30,7 @@ pub fn quantize(mut data: Vec<u8>, width: usize, height: usize, options: JsValue
 	quantizer.set_max_colors(options.colors).unwrap_throw();
 
 	let rgba: &mut [RGBA<u8>] = bytemuck::cast_slice_mut(data.as_mut_slice());
-	let mut image = quantizer
-		.new_image(&*rgba, width, height, 0.0)
-		.unwrap_throw();
+	let mut image = quantizer.new_image(&*rgba, width, height, 0.0).unwrap_throw();
 
 	let mut res = match quantizer.quantize(&mut image) {
 		Ok(res) => res,
@@ -68,7 +71,8 @@ pub fn png_encode(mut data: Vec<u8>, width: u32, height: u32, options: EncodeOpt
 	} else {
 		oxipng::Interlacing::None
 	});
-	let depth_enum = if options.bit_depth == 8 {
+
+	let depth = if options.bit_depth == 8 {
 		oxipng::BitDepth::Eight
 	} else {
 		swap_endian(&mut data);
@@ -79,7 +83,7 @@ pub fn png_encode(mut data: Vec<u8>, width: u32, height: u32, options: EncodeOpt
 		width,
 		height,
 		oxipng::ColorType::RGBA,
-		depth_enum,
+		depth,
 		data
 	);
 	return raw.unwrap_throw().create_optimized_png(&optimization).unwrap_throw();

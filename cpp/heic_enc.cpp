@@ -43,7 +43,9 @@ struct JSWriter : public heif::Context::Writer
 val encode(std::string pixels, int width, int height, HeicOptions options)
 {
 	auto image = heif::Image();
-	image.create(width, height, heif_colorspace_RGB, heif_chroma_interleaved_RRGGBBAA_LE);
+	image.create(width, height, heif_colorspace_RGB, options.bitDepth == 8
+		? heif_chroma_interleaved_RGBA
+		: heif_chroma_interleaved_RRGGBBAA_LE);
 	image.add_plane(heif_channel_interleaved, width, height, options.bitDepth);
 
 	// Planes can have padding, so we need copy the data by row.

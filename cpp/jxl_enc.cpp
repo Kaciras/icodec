@@ -120,7 +120,7 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 		format.data_type = JXL_TYPE_UINT16;
 	}
 	JxlBitDepth inputDepth = {JXL_BIT_DEPTH_FROM_CODESTREAM, info.bits_per_sample, 0};
-	JxlEncoderSetFrameBitDepth(settings, &inputDepth);
+	CHECK_STATUS(JxlEncoderSetFrameBitDepth(settings, &inputDepth));
 	CHECK_STATUS(JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length()));
 	JxlEncoderCloseInput(encoder.get());
 
