@@ -164,7 +164,9 @@ function buildAVIFPartial(isEncode) {
 		src: "vendor/libavif",
 		dist: `vendor/libavif/${typeName}-build`,
 		options: {
+			AVIF_ENABLE_EXPERIMENTAL_SAMPLE_TRANSFORM: 1,
 			BUILD_SHARED_LIBS: 0,
+
 			AVIF_CODEC_AOM: "SYSTEM",
 			AOM_LIBRARY: `vendor/aom/${typeName}-build/libaom.a`,
 			AOM_INCLUDE_DIR: "vendor/aom",
