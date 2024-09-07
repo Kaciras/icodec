@@ -20,7 +20,7 @@ export interface ImageDataLike {
 }
 
 export function toBitDepth(image: ImageDataLike, value: number) {
-	const { data, width, height, depth } = image;
+	const { data, width, height, depth = 8 } = image;
 	if (value === depth) {
 		return image;
 	}
