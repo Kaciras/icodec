@@ -5,11 +5,11 @@
 ![NPM Type Definitions](https://img.shields.io/npm/types/icodec?style=flat-square)
 ![No Dependency](https://img.shields.io/badge/dependencies-0-blue?style=flat-square&label=dependencies)
 
-Image encoders & decoders built with WebAssembly.
+Image encoders & decoders built with WebAssembly, support high-depth.
 
 <table>
     <thead>
-        <tr><th>Module</th><th>Encoder</th><th>Decoder</th></tr>
+        <tr><th>Module</th><th>Encoder</th><th>Decoder</th><th>Bit Depth</th></tr>
     </thead>
     <tbody>
         <tr>
@@ -17,6 +17,7 @@ Image encoders & decoders built with WebAssembly.
             <td colspan='2'>
                 <a href='https://github.com/mozilla/mozjpeg'>MozJPEG</a>
             </td>
+            <td>8</td>
         </tr>
         <tr>
             <td>png</td>
@@ -28,18 +29,21 @@ Image encoders & decoders built with WebAssembly.
             <td>
                 <a href='https://github.com/image-rs/image-png'>image-png</a>
             </td>
+            <td>8, 16</td>
         </tr>
         <tr>
             <td>qoi</td>
             <td colspan='2'>
                 <a href='https://github.com/phoboslab/qoi'>qoi</a>
             </td>
+            <td>8</td>
         </tr>
         <tr>
             <td>webp</td>
             <td colspan='2'>
                 <a href='https://chromium.googlesource.com/webm/libwebp'>libwebp</a>
-            </td>  
+            </td>
+            <td>8</td>
         </tr>
         <tr>
             <td>heic</td>
@@ -53,6 +57,7 @@ Image encoders & decoders built with WebAssembly.
                 +
                 <a href='https://github.com/strukturag/libde265'>libde265</a>
             </td>
+            <td>8, 10, 12</td>
         </tr>
         <tr>
             <td>avif</td>
@@ -61,24 +66,29 @@ Image encoders & decoders built with WebAssembly.
                 +
                 <a href='https://aomedia.googlesource.com/aom'>aom</a>
             </td>
+            <td>8, 10, 12, 16*</td>
         </tr>
         <tr>
             <td>jxl</td>
             <td colspan='2'>
                 <a href='https://github.com/libjxl/libjxl'>libjxl</a>
             </td>
+            <td>from 8 to 16</td>
         </tr>
         <tr>
             <td>wp2</td>
             <td colspan='2'>
                 <a href='https://chromium.googlesource.com/codecs/libwebp2'>libwebp2</a>
             </td>
+            <td>8</td>
         </tr>
     </tbody>
 </table>
 
 > [!WARNING]
 > Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work in webworker.
+> 
+> \* 16-bit AVIF uses experimental simple transform that store image in 12-bit + extra 4-bit hidden image item.
 
 icodec is aimed at the web platform and has some limitations:
 
@@ -209,6 +219,14 @@ The `png` module exports extra members:
 declare function reduceColors(image: ImageDataLike, options?: QuantizeOptions): Uint8Array;
 ```
 
+# High Bit-Depth
+
+icodec supports high bit-depth images, for image with bit-depth > 8, the data should be 2-bytes per channel in Little-Endian (both encode input and decode result).
+
+If you want to encode an image with bit-depth does not supported by the codec, you must scale it before.
+
+In browser, decode result of the 8-bit image is an instance of [ImageData](https://developer.mozilla.org/docs/Web/API/ImageData), otherwise is not.
+
 # Performance
 
 Decode & Encode `test/snapshot/image.*` files, 417px x 114px, `time.SD` is Standard Deviation of the time.
@@ -287,7 +305,7 @@ pnpm exec tsc
 node scripts/build.js
 ```
 
-Rnn tests:
+Run tests:
 
 ```shell
 node --test test/test-*.js
