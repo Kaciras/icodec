@@ -2,44 +2,95 @@ import { describe, test } from "node:test";
 import * as assert from "node:assert";
 import sharp from "sharp";
 import { avif, heic, jpeg, jxl, png, qoi, webp, wp2 } from "../lib/node.js";
-import { assertSimilar, getRawPixels, getSnapshot, updateSnapshot } from "./fixtures.js";
+import { assertSimilar, generateTestImage, getRawPixels, getSnapshot, updateSnapshot } from "./fixtures.js";
 
-async function testEncode() {
+async function testEncode(image, options) {
 	const { loadEncoder, encode } = this;
 	await loadEncoder();
-	const encoded = encode(getRawPixels("image"));
+	const encoded = encode(image, options);
 
-	updateSnapshot("image", this, encoded);
-	assert.ok(encoded.length < 18 * 1024);
+	updateSnapshot(`square16_${image.depth}bit`, this, encoded);
 }
 
-describe("encode", () => {
-	test("JPEG", testEncode.bind(jpeg));
-	test("PNG", testEncode.bind(png));
-	test("QOI", testEncode.bind(qoi));
-	test("WebP", testEncode.bind(webp));
-	test("AVIF", testEncode.bind(avif));
-	test("JXL", testEncode.bind(jxl));
-	test("WebP2", testEncode.bind(wp2));
+describe("encode 8bit", () => {
+	const image = generateTestImage(8);
+
+	test("JPEG", testEncode.bind(jpeg, image));
+	test("PNG", testEncode.bind(png, image));
+	test("QOI", testEncode.bind(qoi, image));
+	test("WebP", testEncode.bind(webp, image));
+	test("AVIF", testEncode.bind(avif, image));
+	test("JXL", testEncode.bind(jxl, image, { lossless: true }));
+	test("WebP2", testEncode.bind(wp2, image));
 });
 
-async function testDecode() {
+describe("encode 10bit", () => {
+	const image = generateTestImage(10);
+
+	test("AVIF", testEncode.bind(avif, image));
+	test("JXL", testEncode.bind(jxl, image));
+});
+
+describe("encode 12bit", () => {
+	const image = generateTestImage(12);
+
+	test("AVIF", testEncode.bind(avif, image));
+	test("JXL", testEncode.bind(jxl, image, { lossless: true }));
+});
+
+describe("encode 16bit", () => {
+	const image = generateTestImage(16);
+
+	test("AVIF", testEncode.bind(avif, image));
+	test("JXL", testEncode.bind(jxl, image));
+	test("PNG", testEncode.bind(png, image, { quantize: false }));
+});
+
+async function testDecode(image) {
+	const snapshot = getSnapshot(`square16_${image.depth}bit`, this);
 	const { loadDecoder, decode } = this;
 	await loadDecoder();
-	const output = decode(getSnapshot("image", this));
+	const output = decode(snapshot);
 
-	assertSimilar(getRawPixels("image"), output, 0.2, 0.01);
+	if (loadDecoder === jpeg.loadDecoder) {
+		const opacity = image.data.slice();
+		for (let i = 3; i < opacity.length ;i+=4) {
+			opacity[i] = 255;
+		}
+		image = _icodec_ImageData(opacity, image.width, image.height, 8);
+	}
+
+	assert.strictEqual(output.depth, image.depth);
+	assertSimilar(image, output, 0.2, 0.01);
 }
 
-describe("decode", () => {
-	test("JPEG", testDecode.bind(jpeg));
-	test("PNG", testDecode.bind(png));
-	test("QOI", testDecode.bind(qoi));
-	test("WebP", testDecode.bind(webp));
-	test("HEIC", testDecode.bind(heic));
-	test("AVIF", testDecode.bind(avif));
-	test("JXL", testDecode.bind(jxl));
-	test("WebP2", testDecode.bind(wp2));
+describe("decode 8bit", () => {
+	const image = generateTestImage(8);
+
+	test("JPEG", testDecode.bind(jpeg, image));
+	test("PNG", testDecode.bind(png, image));
+	test("QOI", testDecode.bind(qoi, image));
+	test("WebP", testDecode.bind(webp, image));
+	test("HEIC", testDecode.bind(heic, image));
+	test("AVIF", testDecode.bind(avif, image));
+	test("JXL", testDecode.bind(jxl, image));
+	test("WebP2", testDecode.bind(wp2, image));
+});
+
+describe("decode 12bit", () => {
+	const image = generateTestImage(12);
+
+	test("HEIC", testDecode.bind(heic, image));
+	test("AVIF", testDecode.bind(avif, image));
+	test("JXL", testDecode.bind(jxl, image));
+});
+
+describe("decode 16bit", () => {
+	const image = generateTestImage(16);
+
+	test("PNG", testDecode.bind(png, image));
+	test("AVIF", testDecode.bind(avif, image));
+	test("JXL", testDecode.bind(jxl, image));
 });
 
 test("decode gray PNG", async () => {
@@ -51,28 +102,6 @@ test("decode gray PNG", async () => {
 	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
 	const expected = { data, width: 150, height: 200 };
 	assertSimilar(expected, image, 0, 0);
-});
-
-test("decode 16bit PNG", async () => {
-	const buffer = getSnapshot("16bit", png);
-
-	await png.loadDecoder();
-	const image = png.decode(buffer).toBitDepth(8);
-
-	const data = await sharp(buffer).ensureAlpha().raw().toBuffer();
-	const expected = { data, width: 32, height: 32 };
-	assertSimilar(expected, image, 0, 0);
-});
-
-test("AVIF decode 12 bit", async () => {
-	const buffer = getSnapshot("12bit", avif);
-	await avif.loadDecoder();
-	const image = avif.decode(buffer);
-
-	// Can't find the correct pixels of this image, the result decode by browser
-	// is different from our decoder, so we allow a small amount of difference.
-	const expected = getRawPixels("12bit");
-	assertSimilar(expected, image, 0.1, 0);
 });
 
 async function testDecodeBroken() {

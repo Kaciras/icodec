@@ -3,6 +3,7 @@ import assert from "node:assert";
 import { once } from "node:events";
 import sharp from "sharp";
 import pixelMatch from "pixelmatch";
+import { toBitDepth } from "../lib/common.js";
 
 const directory = `${import.meta.dirname}/snapshot`;
 const cache = new Map();
@@ -65,6 +66,21 @@ export function updateSnapshot(name, codec, data) {
 	writeFileSync(`${directory}/${name}`, data);
 }
 
+export function generateTestImage(depth) {
+	const length = 16 * 16 * 4;
+	const data = depth === 8 ? new Uint8Array(length) : new Uint16Array(length);
+	const max = (1 << depth) - 1;
+	const step = (1 << depth) / 256;
+
+	for (let i = 0, v = 0; i < 256; i++, v += step) {
+		data[i * 4] = max - v;
+		data[i * 4 + 2] = v;
+		data[i * 4 + 3] = max - v;
+	}
+	const u8 = new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength);
+	return _icodec_ImageData(u8, 16, 16, depth);
+}
+
 function savePNG(width, height, data, filename) {
 	const raw = { width, height, channels: 4 };
 	// noinspection JSIgnoredPromiseFromCall: No need to wait.
@@ -83,7 +99,8 @@ function savePNG(width, height, data, filename) {
  * @param toleration If different pixels percentage greater than it, the assertion failed.
  */
 export function assertSimilar(expected, actual, threshold, toleration) {
-	const { width, height, data } = expected;
+	const { width, height, data } = toBitDepth(expected, 8);
+	actual = toBitDepth(actual, 8);
 	assert.strictEqual(actual.width, width);
 	assert.strictEqual(actual.height, height);
 
