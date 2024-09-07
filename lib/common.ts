@@ -17,8 +17,29 @@ export interface ImageDataLike {
 	height: number;
 	data: Uint8Array | Uint8ClampedArray;
 	depth: number;
+}
 
-	toBitDepth(value: number): ImageDataLike;
+export function toBitDepth(image: ImageDataLike, value: number) {
+	const { data, width, height, depth } = image;
+	if (value === depth) {
+		return image;
+	}
+	const pixels = width * height * 4;
+	const newData = value === 8
+		? new Uint8ClampedArray(pixels)
+		: new Uint16Array(pixels);
+	const view = depth === 8
+		? data
+		: new Uint16Array(data.buffer, data.byteOffset);
+
+	const from = (1 << depth) - 1;
+	const to = (1 << value) - 1;
+	for (let i = 0; i < pixels; i++) {
+		newData[i] = view[i] / from * to + 0.5;
+	}
+
+	const nd = new Uint8ClampedArray(newData.buffer, newData.byteOffset, newData.byteLength);
+	return _icodec_ImageData(nd, width, height, value);
 }
 
 /**
@@ -37,30 +58,6 @@ export class PureImageData implements ImageDataLike {
 		this.height = height;
 		this.depth = depth;
 	}
-
-	toBitDepth(value: number) {
-		const { data, width, height, depth } = this;
-		if (value === depth) {
-			return this;
-		}
-
-		const pixels = width * height * 4;
-		const newData = value === 8
-			? new Uint8ClampedArray(pixels)
-			: new Uint16Array(pixels);
-		const view = depth === 8
-			? data
-			: new Uint16Array(data.buffer, data.byteOffset);
-
-		const from = (1 << depth) - 1;
-		const to = (1 << value) - 1;
-		for (let i = 0; i < pixels; i++) {
-			newData[i] = view[i] / from * to + 0.5;
-		}
-
-		const nd = new Uint8ClampedArray(newData.buffer, newData.byteOffset, newData.byteLength);
-		return _icodec_ImageData(nd, width, height, value);
-	}
 }
 
 // @ts-expect-error
@@ -69,7 +66,7 @@ PureImageData.prototype.colorSpace = "srgb";
 export function encodeES<T>(name: string, wasm: any, defaults: T, image: ImageDataLike, options?: T) {
 	options = { ...defaults, ...options };
 	const { data, width, height } = image;
-	options.bitDepth = image.depth;
+	(options as any).bitDepth = image.depth;
 	const result = wasm.encode(data, width, height, options);
 	return check<Uint8Array>(result, name);
 }

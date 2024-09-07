@@ -1,4 +1,5 @@
 import * as codecs from "../lib/index.js";
+import { toBitDepth } from "../lib/common.js";
 
 const worker = new Worker("/scripts/worker.js", { type: "module" });
 
@@ -27,7 +28,7 @@ async function setFile(file) {
 	const { data, width, height, depth } = image;
 	canvas.width = width;
 	canvas.height = height;
-	ctx2d.putImageData(image.toBitDepth(8), 0, 0);
+	ctx2d.putImageData(toBitDepth(image,8), 0, 0);
 
 	/*
 	 * Avoid copying of buffer for multiple conversions.
@@ -97,6 +98,7 @@ function invokeInWorker(args, transfer) {
 async function encode(codec = select.value) {
 	encodeButton.classList.add("busy");
 	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
+	sessionStorage.setItem(`icodec:options.${codec}`, textarea.value);
 
 	const start = performance.now();
 	const output = await invokeInWorker([codec, sharedImageData, options]);
@@ -127,7 +129,8 @@ function download(file) {
 
 function refreshOptions() {
 	const { defaultOptions } = codecs[select.value];
-	textarea.value = defaultOptions
+	const saved = sessionStorage.getItem(`icodec:options.${select.value}`);
+	textarea.value = saved ?? defaultOptions
 		? JSON.stringify(defaultOptions, null, "\t") : "";
 }
 

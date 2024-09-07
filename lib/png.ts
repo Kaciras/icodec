@@ -1,5 +1,5 @@
 import wasmFactory, { optimize, png_to_rgba, quantize } from "../dist/pngquant.js";
-import { ImageDataLike, WasmSource } from "./common.js";
+import { ImageDataLike, toBitDepth, WasmSource } from "./common.js";
 
 export interface QuantizeOptions {
 	/**
@@ -96,17 +96,14 @@ export const loadDecoder = loadEncoder;
  */
 export function reduceColors(image: ImageDataLike, options?: QuantizeOptions) {
 	options = { ...defaultOptions, ...options };
-	const { data, width, height } = image.toBitDepth(8);
+	const { data, width, height } = toBitDepth(image, 8);
 	return quantize(data as Uint8Array, width, height, { ...defaultOptions, ...options });
 }
 
 export function encode(image: ImageDataLike, options?: Options) {
 	options = { ...defaultOptions, ...options };
 	if (options.quantize) {
-		image = image.toBitDepth(8);
-	}
-	if (image.depth !== 8) {
-		image = image.toBitDepth(16);
+		image = toBitDepth(image, 8);
 	}
 	const { data, width, height, depth } = image;
 	options.bit_depth = depth;

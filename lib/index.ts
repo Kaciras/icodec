@@ -26,13 +26,6 @@ globalThis._icodec_ImageData = (data, w, h, depth) => {
 class ImageDataEx extends ImageData implements ImageDataLike {
 
 	readonly depth = 8;
-
-	toBitDepth(value: number): ImageDataLike {
-		if (this.depth === 8) {
-			return this;
-		}
-		return PureImageData.prototype.toBitDepth.call(this, value);
-	}
 }
 
 /**
