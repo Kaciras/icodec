@@ -4,10 +4,7 @@ async function encode(args) {
 	const [codec, image, options] = args;
 	const encoder = codecs[codec];
 	await encoder.loadEncoder();
-
-	const rich = _icodec_ImageData(image.data, image.width, image.height, image.depth);
-	const output = encoder.encode(rich, options);
-
+	const output = encoder.encode(image, options);
 	postMessage(output, [output.buffer]);
 }
 

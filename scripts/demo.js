@@ -17,11 +17,10 @@ let sharedImageData;
 fileChooser.oninput = async event => setFile(event.currentTarget.files[0]);
 
 async function setFile(file) {
-	const buffer = await file.arrayBuffer();
+	const image = await parseFile(file);
 
-	const image = file.name.endsWith(".bin")
-		? decodeBin(buffer)
-		: await decode(buffer, getCodec(file));
+	document.getElementById("info").textContent =
+		`Type: ${file.type}, ${image.width} x ${image.height}, ${image.depth}-bit`;
 
 	encodeButton.removeAttribute("disabled");
 
@@ -40,6 +39,19 @@ async function setFile(file) {
 	const bytes = new Uint8ClampedArray(shared);
 	bytes.set(data);
 	sharedImageData = { data: bytes, width, height, depth };
+}
+
+async function parseFile(file) {
+	const buffer = await file.arrayBuffer();
+
+	if (file.name.endsWith(".bin")) {
+		Object.defineProperty(file, "type", { value: "-----/----" });
+		return decodeBin(buffer);
+	} else {
+		const codec = getCodec(file);
+		Object.defineProperty(file, "type", { value: codec.mimeType });
+		return decode(buffer, codec);
+	}
 }
 
 function getCodec(file) {

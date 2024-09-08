@@ -7,16 +7,19 @@
 	<link rel='stylesheet' href='scripts/demo.css'>
 </head>
 <body>
+<p>
+	A simple demo page to test encode/decode images.
+	For full-featured app please see
+	<a href='https://ic-analyzer.kaciras.com/'>ICAnalyzer</a>
+</p>
 <section id='input'>
-	<p>
-		A simple demo page to test encode/decode images.
-		For full-featured app please see
-		<a href='https://ic-analyzer.kaciras.com/'>ICAnalyzer</a>
-	</p>
-
 	<label id='file-label'>
 		Select a file: <input id='file' type='file'>
 	</label>
+
+	<div id='info'>
+		Type: -----/----, ---- x ----, ---bit
+	</div>
 
 	<label id='encoder-label'>
 		Encoder:
@@ -32,9 +35,10 @@
 		</select>
 	</label>
 
-	<a id='download' hidden='hidden'></a>
 	<button id='encode' disabled>Encode</button>
 	<time></time>
+
+	<a id='download' hidden='hidden'></a>
 </section>
 
 <canvas></canvas>
