@@ -268,6 +268,7 @@ export const defaultOptions: Required<Options> & Record<string, any> = {
 	useDeltaPalette: 0,
 };
 
+export const bitDepth = [8];
 export const mimeType = "image/webp";
 export const extension = "webp";
 

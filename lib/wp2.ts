@@ -87,6 +87,7 @@ export const defaultOptions: Required<Options> = {
 	useRandomMatrix: false,
 };
 
+export const bitDepth = [8];
 export const mimeType = "image/webp2";
 export const extension = "wp2";
 

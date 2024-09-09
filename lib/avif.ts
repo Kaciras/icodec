@@ -113,6 +113,7 @@ export const defaultOptions: Required<Options> = {
 
 export const mimeType = "image/avif";
 export const extension = "avif";
+export const bitDepth = [8, 10, 12, 16];
 
 let encoderWASM: any;
 let decoderWASM: any;

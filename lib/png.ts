@@ -60,14 +60,6 @@ export interface Options extends QuantizeOptions {
 	 * @default true
 	 */
 	quantize?: boolean;
-
-	/**
-	 *
-	 * If set to falsy value, icodec will select a value depend on encoder supports.
-	 *
-	 * @default NaN
-	 */
-	bit_depth?: number;
 }
 
 export const defaultOptions: Required<Options> = {
@@ -78,12 +70,11 @@ export const defaultOptions: Required<Options> = {
 	level: 3,
 	interlace: false,
 	quantize: true,
-	bit_depth: NaN,
 };
 
+export const bitDepth = [8, 16];
 export const mimeType = "image/png";
 export const extension = "png";
-export const bitDepth = [8, 16];
 
 export const loadEncoder = (module_or_path?: WasmSource) => wasmFactory({ module_or_path });
 export const loadDecoder = loadEncoder;

@@ -215,6 +215,7 @@ export const defaultOptions: Required<Options> = {
 
 export const mimeType = "image/jxl";
 export const extension = "jxl";
+export const bitDepth = [8, 9, 10, 11, 12, 13, 14, 15, 16];
 
 let encoderWASM: any;
 let decoderWASM: any;

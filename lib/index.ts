@@ -53,6 +53,11 @@ export interface ICodecModule<T = any> {
 	extension: string;
 
 	/**
+	 * List of supported bit depth, from lower to higher.
+	 */
+	bitDepth: number[];
+
+	/**
 	 * Load the decoder WASM file, must be called once before decode.
 	 * Multiple calls are ignored, and return the first result.
 	 *

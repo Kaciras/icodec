@@ -126,6 +126,7 @@ export const defaultOptions: Required<Options> = {
 	chromaQuality: 75,
 };
 
+export const bitDepth = [8];
 export const mimeType = "image/jpeg";
 export const extension = "jpg";
 

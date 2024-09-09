@@ -8,6 +8,7 @@ export type Options = never;
 
 export const defaultOptions = undefined as never;
 
+export const bitDepth = [8];
 export const mimeType = "image/qoi";
 export const extension = "qoi";
 

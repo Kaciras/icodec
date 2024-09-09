@@ -174,6 +174,11 @@ interface ICodecModule<T = any> {
   extension: string;
 
   /**
+   * List of supported bit depth, from lower to higher.
+   */
+  bitDepth: number[];
+
+  /**
    * Load the decoder WASM file, must be called once before decode.
    * Multiple calls are ignored, and return the first result.
    *
@@ -229,7 +234,7 @@ In browser, decode result of the 8-bit image is an instance of [ImageData](https
 
 # Performance
 
-Decode & Encode `test/snapshot/image.*` files, 417px x 114px, `time.SD` is Standard Deviation of the time.
+Decode & Encode `test/snapshot/image.*` files, 417px x 114px, 8-bit, `time.SD` is Standard Deviation of the time.
 
 This benchmark ignores extra code size introduced by icodec, which in practice needs to be taken into account.
 

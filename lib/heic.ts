@@ -86,6 +86,7 @@ export const defaultOptions: Required<Options> = {
 
 export const mimeType = "image/heic";
 export const extension = "heic";
+export const bitDepth = [8, 10, 12];
 
 let encoderWASM: any;
 let decoderWASM: any;
