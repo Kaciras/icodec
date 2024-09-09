@@ -429,5 +429,6 @@ if (process.argv[1] === import.meta.filename) {
 
 	// buildVVIC();
 
+	repositories.writeVersionsJSON();
 	// await repositories.checkUpdate();
 }

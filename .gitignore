@@ -26,6 +26,7 @@ pnpm-debug.log*
 /coverage
 /rust/pkg
 /rust/target
+/versions.json
 
 # Temp files
 /debug.[jt]s

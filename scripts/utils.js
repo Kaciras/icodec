@@ -75,7 +75,7 @@ export function removeRange(file, start, end) {
 	});
 }
 
-const semVerRe = /v?[0-9.]+$/;
+const semVerRe = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)(\.(0|[1-9]\d*))?(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
 async function checkUpdateGit(key, branch, repo) {
 	const cwd = "vendor/" + key;
@@ -160,6 +160,26 @@ export class RepositoryManager {
 		for (const [key, value] of this.repos) {
 			await checkUpdateGit(key, ...value);
 		}
+	}
+
+	writeVersionsJSON() {
+		const json = [];
+		for (const [name, [version, repository]] of this.repos) {
+			const entry = { name, version, repository };
+			json.push(entry);
+
+			if (semVerRe.test(version)) {
+				continue;
+			}
+			const stdout = execFileSync("git", ["log", "-1", "--format=%h %at"], {
+				cwd: `vendor/${name}`,
+				encoding: "utf8",
+			});
+			const [hash, timestamp] = stdout.split(" ");
+			const date = new Date(parseInt(timestamp) * 1000);
+			entry.version = `${hash} ${date.toISOString().split("T")[0]}`;
+		}
+		writeFileSync("versions.json", JSON.stringify(json));
 	}
 }
 

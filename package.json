@@ -29,6 +29,7 @@
 		"lib/**/*.{js,d.ts}"
 	],
 	"exports": {
+		"./version.json": "./version.json",
 		".": "./lib/index.js",
 		"./node": {
 			"types": "./lib/index.d.ts",
