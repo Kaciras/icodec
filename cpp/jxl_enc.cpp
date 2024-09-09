@@ -114,13 +114,14 @@ val encode(std::string pixels, uint32_t width, uint32_t height, JXLOptions optio
 	SET_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR, options.modularPredictor);
 	SET_FLOAT_OPTION(JXL_ENC_FRAME_SETTING_MODULAR_MA_TREE_LEARNING_PERCENT, options.iterations);
 
+	JxlBitDepth inputDepth = {JXL_BIT_DEPTH_FROM_CODESTREAM, info.bits_per_sample, 0};
+	CHECK_STATUS(JxlEncoderSetFrameBitDepth(settings, &inputDepth));
+
 	JxlPixelFormat format = {CHANNELS_RGBA, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 	if (info.bits_per_sample > 8)
 	{
 		format.data_type = JXL_TYPE_UINT16;
 	}
-	JxlBitDepth inputDepth = {JXL_BIT_DEPTH_FROM_CODESTREAM, info.bits_per_sample, 0};
-	CHECK_STATUS(JxlEncoderSetFrameBitDepth(settings, &inputDepth));
 	CHECK_STATUS(JxlEncoderAddImageFrame(settings, &format, pixels.data(), pixels.length()));
 	JxlEncoderCloseInput(encoder.get());
 

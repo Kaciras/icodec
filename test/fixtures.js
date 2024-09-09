@@ -66,6 +66,18 @@ export function updateSnapshot(name, codec, data) {
 	writeFileSync(`${directory}/${name}`, data);
 }
 
+/**
+ * Create new image from input with alpha channel set to opaque. only support 8-bit depth.
+ */
+export function makeOpaque(image) {
+	const { width, height, data } = image;
+	const opacity = data.slice();
+	for (let i = 3; i < opacity.length ;i+=4) {
+		opacity[i] = 255;
+	}
+	return _icodec_ImageData(opacity, width, height, 8);
+}
+
 export function generateTestImage(depth) {
 	const length = 16 * 16 * 4;
 	const data = depth === 8 ? new Uint8Array(length) : new Uint16Array(length);

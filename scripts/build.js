@@ -14,14 +14,14 @@ const repositories = new RepositoryManager({
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.10.0-rc2", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"b65d168d3b2b8f8ec849134da2c3a5f034f1eb42",
+		"ff8030db60b3ebe131917f98ee8d9dda1c35afd4",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
 	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
-	vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
-	vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
+	// vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
+	// vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 });
 
 // It also builds libsharpyuv.a which used in other encoders.
@@ -247,7 +247,7 @@ function buildHEICPartial(isEncode) {
 				LIBSHARPYUV_LIBRARY: "vendor/libwebp/libsharpyuv.a",
 
 				X265_INCLUDE_DIR: "vendor/x265/source",
-				X265_LIBRARY: "vendor/x265/source/libx265.a",
+				X265_LIBRARY: "vendor/x265/8bit/libx265.a",
 			}: {
 				LIBDE265_INCLUDE_DIR: "vendor/libde265",
 				LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
@@ -263,20 +263,23 @@ function buildHEIC() {
 			"\n    elseif(X86 AND NOT X64)", "\n    endif()");
 	}
 
-	buildWebPLibrary();
+	// buildWebPLibrary();
 
-	// TODO: thread count limit
+	const x265Options = {
+		ENABLE_LIBNUMA: 0,
+		ENABLE_SHARED: 0,
+		ENABLE_CLI: 0,
+		ENABLE_ASSEMBLY: 0,
+	};
+
 	emcmake({
 		outFile: "vendor/x265/12bit/libx265.a",
 		src: "vendor/x265/source",
 		dist: "vendor/x265/12bit",
 		options: {
-			ENABLE_LIBNUMA: 0,
-			ENABLE_SHARED: 0,
-			ENABLE_CLI: 0,
-			ENABLE_ASSEMBLY: 0,
-			MAIN12: 1,
+			...x265Options,
 			HIGH_BIT_DEPTH: 1,
+			MAIN12: 1,
 			EXPORT_C_API: 0,
 		},
 	});
@@ -285,23 +288,16 @@ function buildHEIC() {
 		src: "vendor/x265/source",
 		dist: "vendor/x265/10bit",
 		options: {
-			ENABLE_LIBNUMA: 0,
-			ENABLE_SHARED: 0,
-			ENABLE_CLI: 0,
-			ENABLE_ASSEMBLY: 0,
+			...x265Options,
 			HIGH_BIT_DEPTH: 1,
 			EXPORT_C_API: 0,
 		},
 	});
 	emcmake({
-		outFile: "vendor/x265/10bit/libx265.a",
+		outFile: "vendor/x265/source/libx265.a",
 		src: "vendor/x265/source",
 		options: {
-			ENABLE_LIBNUMA: 0,
-			ENABLE_SHARED: 0,
-			ENABLE_CLI: 0,
-			ENABLE_ASSEMBLY: 0,
-
+			...x265Options,
 			LINKED_10BIT: 1,
 			LINKED_12BIT: 1,
 			EXTRA_LIB: "vendor/x265/10bit/libx265.a;vendor/x265/12bit/libx265.a;-ldl",
@@ -318,12 +314,13 @@ function buildHEIC() {
 		},
 	});
 
+	// TODO: single thread
 	buildHEICPartial(true);
 	buildHEICPartial(false);
 
 	emcc("cpp/heic_enc.cpp", [
 		"-s", "ENVIRONMENT=web,worker",
-		"-I vendor/heic_dec",
+		"-I vendor/heic_enc",
 		"-I vendor/libheif/libheif/api",
 		"-pthread",
 		"-s", "PTHREAD_POOL_SIZE=2",
@@ -418,12 +415,12 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
 	buildHEIC();
 	buildPNGQuant();
 
