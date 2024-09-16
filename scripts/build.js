@@ -10,11 +10,11 @@ const repositories = new RepositoryManager({
 	mozjpeg: ["v4.1.5", "https://github.com/mozilla/mozjpeg"],
 	qoi: ["master", "https://github.com/phoboslab/qoi"],
 	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
-	libjxl: ["v0.10.3", "https://github.com/libjxl/libjxl"],
+	libjxl: ["v0.11.0", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
-	aom: ["v3.10.0-rc2", "https://aomedia.googlesource.com/aom"],
+	aom: ["v3.10.0", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"ff8030db60b3ebe131917f98ee8d9dda1c35afd4",
+		"96720e6410284ebebff2007d4d87d7557361b952",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
@@ -196,7 +196,7 @@ export function buildAVIF() {
 }
 
 export function buildWebP2() {
-	// libwebp2 does not provide switch for imageio library.
+	// libwebp2 does not provide a switch for imageio library.
 	removeRange("vendor/libwebp2/CMakeLists.txt",
 		"# build the imageio library", "\n# #######");
 	emcmake({
@@ -415,12 +415,12 @@ function buildVVIC() {
 // Equivalent to `if __name__ == "__main__":` in Python.
 if (process.argv[1] === import.meta.filename) {
 	repositories.download();
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
 	buildHEIC();
 	buildPNGQuant();
 
