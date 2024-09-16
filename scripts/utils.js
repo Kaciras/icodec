@@ -75,29 +75,41 @@ export function removeRange(file, start, end) {
 	});
 }
 
-const semVerRe = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)(\.(0|[1-9]\d*))?(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+const semverRE = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)(\.(0|[1-9]\d*))?(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+
+/*
+ * `compare-versions` does not support "v3.0-pre"
+ * `version-compare` does not strip leading "v"
+ */
+function resolveVersion(tag) {
+	const matches = semverRE.exec(tag);
+	if (!matches) {
+		return null;
+	}
+	const v = matches[0];
+	return v.charCodeAt(0) === 118 ? v.slice(1) : v;
+}
 
 async function checkUpdateGit(key, branch, repo) {
 	const cwd = "vendor/" + key;
-	const tag = semVerRe.exec(branch);
+	const version = resolveVersion(branch);
 
-	if (tag) {
+	if (version) {
+		// Returns in strings order, which is equivalent to unordered.
 		const stdout = execFileSync("git", ["ls-remote", "--tags", "origin"], { cwd, encoding: "utf8" });
-		const current = tag[0];
-		let latest = current;
+
+		let latest = version;
 		for (const line of stdout.split("\n")) {
-			const matches = semVerRe.exec(line);
-			if (!matches || line.at(-matches[0].length) !== "/") {
+			// 40 hash + \t + refs/tags/ = 51 chars
+			const remote = resolveVersion(line.slice(51));
+			if (!remote) {
 				continue;
 			}
-			if (matches[1] === current) {
-				break;
-			}
-			if (versionCompare(matches[1], latest) === 1) {
-				latest = matches[1];
+			if (versionCompare(remote, latest) === 1) {
+				latest = remote;
 			}
 		}
-		if (latest !== current) {
+		if (latest !== version) {
 			console.log(`${repo} ${branch} -> ${latest}`);
 		}
 	} else {
@@ -168,7 +180,7 @@ export class RepositoryManager {
 			const entry = { name, version, repository };
 			json.push(entry);
 
-			if (semVerRe.test(version)) {
+			if (semverRE.test(version)) {
 				continue;
 			}
 			const stdout = execFileSync("git", ["log", "-1", "--format=%h %at"], {
