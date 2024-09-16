@@ -1,19 +1,11 @@
+import { RPC } from "../node_modules/@kaciras/utilities/lib/browser.js";
 import * as codecs from "../lib/index.js";
 
-async function encode(args) {
-	const [codec, image, options] = args;
+async function encode(codec, image, options) {
 	const encoder = codecs[codec];
 	await encoder.loadEncoder();
 	const output = encoder.encode(image, options);
-	postMessage(output, [output.buffer]);
+	return RPC.transfer(output, [output.buffer]);
 }
 
-/**
- * Must post the error to main thread to print,
- * as `console` behaves strangely in workers.
- *
- * https://stackoverflow.com/a/24284796/7065321
- */
-self.addEventListener("message", event => {
-	encode(event.data).catch(postMessage);
-});
+RPC.probeServer({ encode }, self);

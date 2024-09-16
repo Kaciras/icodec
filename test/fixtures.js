@@ -1,6 +1,7 @@
 import { createWriteStream, readFileSync, writeFileSync } from "node:fs";
 import assert from "node:assert";
 import { once } from "node:events";
+import { getCached } from "@kaciras/utilities/browser";
 import sharp from "sharp";
 import pixelMatch from "pixelmatch";
 import { toBitDepth } from "../lib/common.js";
@@ -11,7 +12,8 @@ const cache = new Map();
 Error.stackTraceLimit = Infinity;
 
 // A simple format, 4 bytes width + 4 bytes height + 4 bytes depth + RGBA data.
-function decodeBin(data) {
+function readBin(path) {
+	const data = readFileSync(path);
 	const { buffer, byteOffset } = data;
 	const [width, height, depth] = new Uint32Array(buffer, byteOffset);
 	return _icodec_ImageData(data.subarray(12), width, height, depth);
@@ -37,23 +39,12 @@ export function writeBin(name, image) {
  * @return {ImageDataLike} The image data.
  */
 export function getRawPixels(name) {
-	const path = `${directory}/${name}.bin`;
-	let image = cache.get(path);
-	if (image) {
-		return image;
-	}
-	image = decodeBin(readFileSync(path));
-	return cache.set(name, image) && image;
+	return getCached(cache, `${directory}/${name}.bin`, readBin);
 }
 
 export function getSnapshot(name, codec) {
-	name = `${name}.${codec.extension}`;
-	let item = cache.get(name);
-	if (item) {
-		return item;
-	}
-	item = readFileSync(`${directory}/${name}`);
-	return cache.set(name, item) && item;
+	const path = `${directory}/${name}.${codec.extension}`;
+	return getCached(cache, path, readFileSync);
 }
 
 /**
@@ -61,9 +52,9 @@ export function getSnapshot(name, codec) {
  * we do not compare snapshots; they are only used to judge quality.
  */
 export function updateSnapshot(name, codec, data) {
-	name = `${name}.${codec.extension}`;
+	name = `${directory}/${name}.${codec.extension}`;
 	cache.set(name, data);
-	writeFileSync(`${directory}/${name}`, data);
+	writeFileSync(name, data);
 }
 
 /**
@@ -72,7 +63,7 @@ export function updateSnapshot(name, codec, data) {
 export function makeOpaque(image) {
 	const { width, height, data } = image;
 	const opacity = data.slice();
-	for (let i = 3; i < opacity.length ;i+=4) {
+	for (let i = 3; i < opacity.length; i += 4) {
 		opacity[i] = 255;
 	}
 	return _icodec_ImageData(opacity, width, height, 8);

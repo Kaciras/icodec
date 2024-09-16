@@ -1,13 +1,14 @@
+import { pathPrefix, RPC, saveFile } from "../node_modules/@kaciras/utilities/lib/browser.js";
 import * as codecs from "../lib/index.js";
 import { toBitDepth } from "../lib/common.js";
 
 const worker = new Worker("/scripts/worker.js", { type: "module" });
+const workerRPC = RPC.probeClient(worker);
 
 const fileChooser = document.getElementById("file");
 const select = document.querySelector("select");
 const encodeButton = document.getElementById("encode");
 const textarea = document.querySelector("textarea");
-const dlButton = document.getElementById("download");
 const canvas = document.querySelector("canvas");
 
 const ctx2d = canvas.getContext("2d");
@@ -27,7 +28,7 @@ async function setFile(file) {
 	const { data, width, height, depth } = image;
 	canvas.width = width;
 	canvas.height = height;
-	ctx2d.putImageData(toBitDepth(image,8), 0, 0);
+	ctx2d.putImageData(toBitDepth(image, 8), 0, 0);
 
 	/*
 	 * Avoid copying of buffer for multiple conversions.
@@ -92,51 +93,21 @@ function decodeBin(buffer) {
 	return _icodec_ImageData(data, width, height, depth);
 }
 
-/**
- * Call encode function in the worker thread, prevents block the UI thread.
- * Multithreaded encoder is also need to run in Worker.
- *
- * @param args {unknown[]} Arguments passed to worker.
- * @param transfer {Transferable[]} An optional array of transferable objects to transfer ownership of.
- */
-function invokeInWorker(args, transfer) {
-	return new Promise((resolve, reject) => {
-		worker.onerror = reject;
-		worker.onmessage = e => resolve(e.data);
-		worker.postMessage(args, transfer);
-	});
-}
-
 async function encode(codec = select.value) {
 	encodeButton.classList.add("busy");
 	const options = textarea.value ? JSON.parse(textarea.value) : undefined;
 	sessionStorage.setItem(`icodec:options.${codec}`, textarea.value);
 
 	const start = performance.now();
-	const output = await invokeInWorker([codec, sharedImageData, options]);
+	const output = await workerRPC.encode(codec, sharedImageData, options);
 	const time = (performance.now() - start) / 1000;
 
 	document.querySelector("time").textContent = `${time.toFixed(2)}s`;
 	encodeButton.classList.remove("busy");
 
-	if (output.stack) {
-		console.error(output);
-		return window.alert("Failed, see console for reason");
-	}
-
-	let { name } = fileChooser.files[0];
-	const dot = name.lastIndexOf(".");
-	if (dot !== -1) {
-		name = name.slice(0, dot + 1);
-	}
-	download(new File([output], name + codecs[codec].extension));
-}
-
-function download(file) {
-	dlButton.href = URL.createObjectURL(file);
-	dlButton.download = file.name;
-	dlButton.click();
-	URL.revokeObjectURL(dlButton.href);
+	const baseName = pathPrefix(fileChooser.files[0].name, ".");
+	const ext = codecs[codec].extension;
+	saveFile(new File([output], `${baseName}.${ext}`));
 }
 
 function refreshOptions() {
