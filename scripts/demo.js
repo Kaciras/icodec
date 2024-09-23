@@ -1,4 +1,4 @@
-import { pathPrefix, RPC, saveFile } from "../node_modules/@kaciras/utilities/lib/browser.js";
+import { pathPrefix, pathSuffix, RPC, saveFile } from "../node_modules/@kaciras/utilities/lib/browser.js";
 import * as codecs from "../lib/index.js";
 import { toBitDepth } from "../lib/common.js";
 
@@ -56,26 +56,15 @@ async function parseFile(file) {
 }
 
 function getCodec(file) {
-	switch (file.type.toLowerCase()) {
-		case "image/jxl":
-			return codecs.jxl;
-		case "image/avif":
-			return codecs.avif;
-		case "image/jpeg":
-			return codecs.jpeg;
-		case "image/png":
-			return codecs.png;
-		case "image/webp":
-			return codecs.webp;
-	}
-	if (file.name.endsWith(".heic")) {
-		return codecs.heic;
-	}
-	if (file.name.endsWith(".wp2")) {
-		return codecs.wp2;
-	}
-	if (file.name.endsWith(".qoi")) {
-		return codecs.qoi;
+	const mime = file.type.toLowerCase();
+	const ext = pathSuffix(file.name, ".");
+
+	const codec = Object.values(codecs).find(member =>
+		mime === member.mimeType ||
+		ext === member.extension,
+	);
+	if (codec) {
+		return codec;
 	}
 	const message = "Unsupported image type";
 	window.alert(message);

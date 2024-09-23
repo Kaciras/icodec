@@ -20,7 +20,7 @@ const moduleMime = {
 };
 
 const server = createServer((request, response) => {
-	let path = request.url.split("?", 2)[0];
+	let path = request.url.split("?", 2)[0].slice(1);
 	if (path.startsWith("@")) {
 		path = fileURLToPath(import.meta.resolve(path));
 	}

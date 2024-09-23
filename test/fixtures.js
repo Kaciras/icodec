@@ -12,7 +12,7 @@ const cache = new Map();
 Error.stackTraceLimit = Infinity;
 
 // A simple format, 4 bytes width + 4 bytes height + 4 bytes depth + RGBA data.
-function readBin(path) {
+function readBinFormat(path) {
 	const data = readFileSync(path);
 	const { buffer, byteOffset } = data;
 	const [width, height, depth] = new Uint32Array(buffer, byteOffset);
@@ -39,7 +39,7 @@ export function writeBin(name, image) {
  * @return {ImageDataLike} The image data.
  */
 export function getRawPixels(name) {
-	return getCached(cache, `${directory}/${name}.bin`, readBin);
+	return getCached(cache, `${directory}/${name}.bin`, readBinFormat);
 }
 
 export function getSnapshot(name, codec) {
