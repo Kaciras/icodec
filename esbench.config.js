@@ -1,6 +1,9 @@
 import { defineConfig, inProcessExecutor, WebRemoteExecutor } from "esbench/host";
 
-const web = new WebRemoteExecutor({ assets: { "/test": "test" } });
+const webExecutor = new WebRemoteExecutor({
+	open: {},
+	assets: { "/test": "test" },
+});
 
 export default defineConfig({
 	toolchains: [{
@@ -8,6 +11,6 @@ export default defineConfig({
 		executors: [inProcessExecutor],
 	},{
 		include: ["./benchmark/decode.ts"],
-		executors: [inProcessExecutor, web],
+		executors: [inProcessExecutor, webExecutor],
 	}],
 });

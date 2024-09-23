@@ -47,7 +47,6 @@ function browserDecode(blob: Blob, extract: typeof extract2D) {
  * Run benchmark on browser:
  *     `set NODE_OPTIONS=--experimental-import-meta-resolve`
  *     `pnpm exec esbench --file decode.ts --executor web`
- *     Then open the URL displayed in console with your browser.
  */
 export default defineSuite({
 	params: {
