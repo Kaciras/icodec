@@ -14,12 +14,12 @@ const repositories = new RepositoryManager({
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.10.0", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"96720e6410284ebebff2007d4d87d7557361b952",
+		"a396df4203951ad41ded3e1d6dc2a4d4f000e88a",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
-	libheif: ["v1.18.1", "https://github.com/strukturag/libheif"],
+	libheif: ["v1.18.2", "https://github.com/strukturag/libheif"],
 	// vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
 	// vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 });
