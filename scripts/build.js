@@ -14,7 +14,7 @@ const repositories = new RepositoryManager({
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.10.0", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"a396df4203951ad41ded3e1d6dc2a4d4f000e88a",
+		"7edcc302cd4dc185d80be2101e1f199ffa8c61bf",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
@@ -409,7 +409,7 @@ function buildVVIC() {
 	]);
 }
 
-// config.rebuild = true;
+config.rebuild = true;
 // config.debug = true;
 
 // Equivalent to `if __name__ == "__main__":` in Python.
