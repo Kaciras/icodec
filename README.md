@@ -307,7 +307,7 @@ build the project:
 
 ```shell
 pnpm exec tsc
-node scripts/build.js
+node scripts/build.js [--debug] [--rebuild] [--parallel=<int>] [--cmakeBuilder=<Ninja|...>]
 ```
 
 Run tests:

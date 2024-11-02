@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
+import { argv } from "node:process";
 import { renameSync, writeFileSync } from "node:fs";
 import { config, emcc, emcmake, removeRange, RepositoryManager, setHardwareConcurrency, wasmPack } from "./utils.js";
 
@@ -409,12 +410,13 @@ function buildVVIC() {
 	]);
 }
 
-config.rebuild = true;
-// config.debug = true;
+repositories.download();
 
-// Equivalent to `if __name__ == "__main__":` in Python.
-if (process.argv[1] === import.meta.filename) {
-	repositories.download();
+if (process.argv[2] === "update") {
+	await repositories.checkUpdate();
+} else {
+	config.updateFromArgs(argv.slice(2));
+
 	buildWebP();
 	buildAVIF();
 	buildJXL();
@@ -423,9 +425,7 @@ if (process.argv[1] === import.meta.filename) {
 	buildWebP2();
 	buildHEIC();
 	buildPNGQuant();
-
 	// buildVVIC();
 
 	repositories.writeVersionsJSON();
-	// await repositories.checkUpdate();
 }

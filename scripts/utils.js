@@ -39,6 +39,24 @@ export const config = {
 	 * The maximum number of concurrent processes to use when building.
 	 */
 	parallel: navigator.hardwareConcurrency,
+
+	updateFromArgs(args) {
+		for (const arg of args) {
+			const match = /--([^=]+)(?:=(.+))?/.exec(arg);
+			if (!match) {
+				console.error("Invalid argument: " + arg);
+				process.exit(1);
+			}
+			const old = this[match[1]];
+			if (typeof old === "number") {
+				this[match[1]] = parseInt(match[2]);
+			} else if (typeof old === "boolean")  {
+				this[match[1]] = true;
+			} else {
+				this[match[1]] = match[2];
+			}
+		}
+	},
 };
 
 function gitClone(dir, branch, url) {
