@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
 import { argv } from "node:process";
-import { renameSync, writeFileSync } from "node:fs";
-import { config, emcc, emcmake, removeRange, RepositoryManager, setHardwareConcurrency, wasmPack } from "./utils.js";
+import { mkdirSync, renameSync, writeFileSync } from "node:fs";
+import { config, emcc, emcmake, setHardwareConcurrency, wasmPack } from "./toolchain.js";
+import { removeRange, RepositoryManager } from "./repository.js";
 
 // Ensure we're on the project root directory.
 process.chdir(dirname(import.meta.dirname));
@@ -18,9 +19,9 @@ const repositories = new RepositoryManager({
 		"7edcc302cd4dc185d80be2101e1f199ffa8c61bf",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
-	x265: ["3.6", "https://bitbucket.org/multicoreware/x265_git"],
+	x265: ["4.0", "https://bitbucket.org/multicoreware/x265_git"],
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
-	libheif: ["v1.18.2", "https://github.com/strukturag/libheif"],
+	libheif: ["v1.19.1", "https://github.com/strukturag/libheif"],
 	// vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
 	// vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 });
@@ -227,7 +228,7 @@ export function buildWebP2() {
 }
 
 function buildHEICPartial(isEncode) {
-	const typeName  = isEncode ? "heic_enc" : "heic_dec";
+	const typeName = isEncode ? "heic_enc" : "heic_dec";
 	emcmake({
 		outFile: `vendor/${typeName}/libheif/libheif.a`,
 		src: "vendor/libheif",
@@ -249,7 +250,7 @@ function buildHEICPartial(isEncode) {
 
 				X265_INCLUDE_DIR: "vendor/x265/source",
 				X265_LIBRARY: "vendor/x265/8bit/libx265.a",
-			}: {
+			} : {
 				LIBDE265_INCLUDE_DIR: "vendor/libde265",
 				LIBDE265_LIBRARY: "vendor/libde265/libde265/libde265.a",
 			}),
@@ -416,6 +417,7 @@ if (process.argv[2] === "update") {
 	await repositories.checkUpdate();
 } else {
 	config.updateFromArgs(argv.slice(2));
+	mkdirSync(config.outDir, { recursive: true });
 
 	buildWebP();
 	buildAVIF();
