@@ -41,4 +41,4 @@ const server = createServer((request, response) => {
 	stream.on("error", () => response.writeHead(404).end());
 });
 
-server.listen(80, () => console.log("Demo hosted at http://localhost/demo.html"));
+server.listen(80, () => console.log("Demo hosted at http://localhost/demo/index.html"));

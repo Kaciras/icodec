@@ -88,6 +88,8 @@ export const defaultOptions: Required<Options> = {
 };
 
 export const bitDepth = [8];
+
+// WebP 2 will not be released as an image format, but wee need define these properties.
 export const mimeType = "image/webp2";
 export const extension = "wp2";
 
