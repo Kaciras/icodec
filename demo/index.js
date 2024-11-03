@@ -2,7 +2,7 @@ import { pathPrefix, pathSuffix, RPC, saveFile } from "../node_modules/@kaciras/
 import * as codecs from "../lib/index.js";
 import { toBitDepth } from "../lib/common.js";
 
-const worker = new Worker("/scripts/worker.js", { type: "module" });
+const worker = new Worker("/demo/worker.js", { type: "module" });
 const workerRPC = RPC.probeClient(worker);
 
 const fileChooser = document.getElementById("file");
