@@ -61,19 +61,22 @@ async function checkUpdateGit(key, branch, repo) {
 		// Returns in strings order, which is equivalent to unordered.
 		const stdout = execFileSync("git", ["ls-remote", "--tags", "origin"], { cwd, encoding: "utf8" });
 
+		let latestTag = branch;
 		let latest = version;
 		for (const line of stdout.split("\n")) {
 			// 40 hash + \t + refs/tags/ = 51 chars
-			const remote = resolveVersion(line.slice(51));
+			const tagName = line.slice(51);
+			const remote = resolveVersion(tagName);
 			if (!remote) {
 				continue;
 			}
 			if (versionCompare(remote, latest) === 1) {
 				latest = remote;
+				latestTag = tagName;
 			}
 		}
 		if (latest !== version) {
-			console.log(`${repo} ${branch} -> ${latest}`);
+			console.log(`${repo} ${branch} -> ${latestTag}`);
 		}
 	} else {
 		execFileSync("git", ["fetch", "--quiet"], { cwd });
