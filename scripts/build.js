@@ -14,9 +14,9 @@ const repositories = new RepositoryManager({
 	libwebp: ["v1.4.0", "https://github.com/webmproject/libwebp"],
 	libjxl: ["v0.11.0", "https://github.com/libjxl/libjxl"],
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
-	aom: ["v3.10.0", "https://aomedia.googlesource.com/aom"],
+	aom: ["v3.11.0-rc1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"7edcc302cd4dc185d80be2101e1f199ffa8c61bf",
+		"e20d4e7381578f1e3020cd62c05c4ae550e39c74",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["4.0", "https://bitbucket.org/multicoreware/x265_git"],
