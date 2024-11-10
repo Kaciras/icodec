@@ -16,12 +16,12 @@ const repositories = new RepositoryManager({
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.11.0-rc1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"e20d4e7381578f1e3020cd62c05c4ae550e39c74",
+		"6d69bc5c8220643fa328dd00185bef6a99c5b9e1",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["4.0", "https://bitbucket.org/multicoreware/x265_git"],
 	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
-	libheif: ["v1.19.1", "https://github.com/strukturag/libheif"],
+	libheif: ["v1.19.2", "https://github.com/strukturag/libheif"],
 	// vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
 	// vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 });
@@ -419,14 +419,14 @@ if (process.argv[2] === "update") {
 	config.updateFromArgs(argv.slice(2));
 	mkdirSync(config.outDir, { recursive: true });
 
-	// buildWebP();
-	// buildAVIF();
-	// buildJXL();
-	// buildQOI();
-	// buildMozJPEG();
-	// buildWebP2();
+	buildWebP();
+	buildAVIF();
+	buildJXL();
+	buildQOI();
+	buildMozJPEG();
+	buildWebP2();
 	buildHEIC();
-	// buildPNGQuant();
+	buildPNGQuant();
 	// buildVVIC();
 
 	// repositories.writeVersionsJSON();
