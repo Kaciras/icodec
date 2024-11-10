@@ -1,6 +1,6 @@
-import { ImageDataLike, PureImageData, WasmSource } from "./common.js";
+import { ImageDataLike, PureImageData, toBitDepth, WasmSource } from "./common.js";
 
-export { ImageDataLike };
+export { ImageDataLike, toBitDepth };
 
 export * as avif from "./avif.js";
 export * as png from "./png.js";
