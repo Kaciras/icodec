@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { dirname } from "node:path";
 import { argv } from "node:process";
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
-import { config, emcc, emcmake, setHardwareConcurrency, wasmPack } from "./toolchain.js";
+import { config, emcc, emcmake, fixPThreadImpl, wasmPack } from "./toolchain.js";
 import { removeRange, RepositoryManager } from "./repository.js";
 
 // Ensure we're on the project root directory.
@@ -343,7 +343,7 @@ function buildHEIC() {
 		"vendor/heic_dec/libheif/libheif.a",
 	]);
 
-	setHardwareConcurrency("dist/heic-enc.js", 1);
+	fixPThreadImpl("dist/heic-enc.js", 1);
 }
 
 function buildVVIC() {
@@ -419,15 +419,15 @@ if (process.argv[2] === "update") {
 	config.updateFromArgs(argv.slice(2));
 	mkdirSync(config.outDir, { recursive: true });
 
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
 	buildHEIC();
-	buildPNGQuant();
+	// buildPNGQuant();
 	// buildVVIC();
 
-	repositories.writeVersionsJSON();
+	// repositories.writeVersionsJSON();
 }
