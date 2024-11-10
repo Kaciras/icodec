@@ -60,6 +60,9 @@ export interface Options extends QuantizeOptions {
 	 * @default true
 	 */
 	quantize?: boolean;
+
+	/** @internal */
+	bit_depth?: number;
 }
 
 export const defaultOptions: Required<Options> = {
@@ -70,6 +73,8 @@ export const defaultOptions: Required<Options> = {
 	level: 3,
 	interlace: false,
 	quantize: true,
+
+	bit_depth: 8,
 };
 
 export const bitDepth = [8, 16];

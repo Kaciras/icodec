@@ -1,7 +1,6 @@
 import { createServer } from "node:http";
 import { createReadStream } from "node:fs";
 import { dirname, extname } from "node:path";
-import { fileURLToPath } from "node:url";
 
 // Ensure we're on the project root directory.
 process.chdir(dirname(import.meta.dirname));
@@ -20,10 +19,7 @@ const moduleMime = {
 };
 
 const server = createServer((request, response) => {
-	let path = request.url.split("?", 2)[0].slice(1);
-	if (path.startsWith("@")) {
-		path = fileURLToPath(import.meta.resolve(path));
-	}
+	const path = request.url.split("?", 2)[0].slice(1);
 	const stream = createReadStream(path);
 
 	const headers = {

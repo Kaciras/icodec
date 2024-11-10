@@ -26,7 +26,7 @@
 	],
 	"files": [
 		"dist/*.{js,wasm}",
-		"lib/**/*.{js,d.ts}"
+		"lib/*.{js,d.ts}"
 	],
 	"exports": {
 		"./version.json": "./version.json",

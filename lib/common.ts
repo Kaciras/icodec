@@ -15,8 +15,8 @@ export function loadES(factory: any, source?: WasmSource) {
 export interface ImageDataLike {
 	width: number;
 	height: number;
-	data: Uint8Array | Uint8ClampedArray;
 	depth: number;
+	data: Uint8Array | Uint8ClampedArray;
 }
 
 export function toBitDepth(image: ImageDataLike, value: number) {
@@ -25,7 +25,7 @@ export function toBitDepth(image: ImageDataLike, value: number) {
 		return image;
 	}
 	const pixels = width * height * 4;
-	const newData = value === 8
+	const dist = value === 8
 		? new Uint8ClampedArray(pixels)
 		: new Uint16Array(pixels);
 	const view = depth === 8
@@ -35,10 +35,10 @@ export function toBitDepth(image: ImageDataLike, value: number) {
 	const from = (1 << depth) - 1;
 	const to = (1 << value) - 1;
 	for (let i = 0; i < pixels; i++) {
-		newData[i] = view[i] / from * to + 0.5;
+		dist[i] = view[i] / from * to + 0.5;
 	}
 
-	const nd = new Uint8ClampedArray(newData.buffer, newData.byteOffset, newData.byteLength);
+	const nd = new Uint8ClampedArray(dist.buffer, dist.byteOffset, dist.byteLength);
 	return _icodec_ImageData(nd, width, height, value);
 }
 
@@ -63,10 +63,14 @@ export class PureImageData implements ImageDataLike {
 // @ts-expect-error
 PureImageData.prototype.colorSpace = "srgb";
 
+interface ExtraDataES {
+	bitDepth: number;
+}
+
 export function encodeES<T>(name: string, wasm: any, defaults: T, image: ImageDataLike, options?: T) {
 	options = { ...defaults, ...options };
 	const { data, width, height } = image;
-	(options as any).bitDepth = image.depth;
+	(options as ExtraDataES).bitDepth = image.depth ?? 8;
 	const result = wasm.encode(data, width, height, options);
 	return check<Uint8Array>(result, name);
 }
