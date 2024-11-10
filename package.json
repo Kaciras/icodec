@@ -1,6 +1,6 @@
 {
 	"name": "icodec",
-	"version": "0.5.2",
+	"version": "0.6.0",
 	"description": "Image encoders & decoders built with WebAssembly",
 	"license": "MIT",
 	"author": "Kaciras <Kaciras@outlook.com>",
@@ -25,6 +25,7 @@
 		"pngquant"
 	],
 	"files": [
+		"versions.json",
 		"dist/*.{js,wasm}",
 		"lib/*.{js,d.ts}"
 	],

@@ -88,6 +88,8 @@ Image encoders & decoders built with WebAssembly, support high-depth.
 > [!WARNING]
 > Since libheif does not support specify thread count for x265 encoder, The `encode` of the `heic` module only work in webworker.
 > 
+> `wp2` is experimental, file encoded in old version may be invalid for newer decoder.
+> 
 > \* 16-bit AVIF uses experimental simple transform that store image in 12-bit + extra 4-bit hidden image item.
 
 icodec is aimed at the web platform and has some limitations:
