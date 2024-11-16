@@ -30,7 +30,7 @@
 		"lib/*.{js,d.ts}"
 	],
 	"exports": {
-		"./version.json": "./version.json",
+		"./versions.json": "./versions.json",
 		".": "./lib/index.js",
 		"./node": {
 			"types": "./lib/index.d.ts",
