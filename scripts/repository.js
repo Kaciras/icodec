@@ -145,16 +145,22 @@ export class RepositoryManager {
 			const entry = { name, version, repository };
 			json.push(entry);
 
-			if (semverRE.test(version)) {
-				continue;
-			}
-			const stdout = execFileSync("git", ["log", "-1", "--format=%h %at"], {
+			const stdout = execFileSync("git", [
+				"log",
+				"-1",
+				"--format=%h %at",
+			], {
 				cwd: `vendor/${name}`,
 				encoding: "utf8",
 			});
 			const [hash, timestamp] = stdout.split(" ");
+
+			// Resolve branch name to commit hash.
+			if (!semverRE.test(version)) {
+				entry.version = hash;
+			}
 			const date = new Date(parseInt(timestamp) * 1000);
-			entry.version = `${hash} ${date.toISOString().split("T")[0]}`;
+			entry.date = date.toISOString().split("T")[0];
 		}
 		writeFileSync("versions.json", JSON.stringify(json));
 	}

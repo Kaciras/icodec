@@ -413,6 +413,7 @@ function buildVVIC() {
 
 repositories.download();
 
+// To update a module, delete the directory then build.
 if (process.argv[2] === "update") {
 	await repositories.checkUpdate();
 } else {
@@ -429,5 +430,5 @@ if (process.argv[2] === "update") {
 	buildPNGQuant();
 	// buildVVIC();
 
-	// repositories.writeVersionsJSON();
+	repositories.writeVersionsJSON();
 }
