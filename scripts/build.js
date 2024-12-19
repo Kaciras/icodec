@@ -16,7 +16,7 @@ const repositories = new RepositoryManager({
 	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
 	aom: ["v3.11.0", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"6d69bc5c8220643fa328dd00185bef6a99c5b9e1",
+		"ef2b3cce7138b61ae764285c45afd03f3f3bb7f4",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["4.1", "https://bitbucket.org/multicoreware/x265_git"],
