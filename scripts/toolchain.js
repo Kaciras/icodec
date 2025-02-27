@@ -83,7 +83,7 @@ export function emcmake(settings) {
 		return;
 	}
 
-	let cxxFlags = "-mnontrapping-fptoint -pthread -msimd128";
+	let cxxFlags = "-pthread -msimd128";
 	if (config.wasm64) {
 		cxxFlags += " -sMEMORY64";
 	}

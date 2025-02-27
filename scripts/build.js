@@ -13,10 +13,10 @@ const repositories = new RepositoryManager({
 	qoi: ["master", "https://github.com/phoboslab/qoi"],
 	libwebp: ["v1.5.0", "https://github.com/webmproject/libwebp"],
 	libjxl: ["v0.11.1", "https://github.com/libjxl/libjxl"],
-	libavif: ["v1.1.1", "https://github.com/AOMediaCodec/libavif"],
-	aom: ["v3.11.0", "https://aomedia.googlesource.com/aom"],
+	libavif: ["v1.2.0", "https://github.com/AOMediaCodec/libavif"],
+	aom: ["v3.12.0", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"169f4159a465b7b4241c0d60ae7f37b15a9b2d65",
+		"664da0e1806085223e9c0b3deb920ca6fb504667",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["4.1", "https://bitbucket.org/multicoreware/x265_git"],
