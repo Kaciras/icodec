@@ -62,7 +62,12 @@ export function buildMozJPEG() {
 			PNG_SUPPORTED: 0,
 		},
 	});
-	execFileSync("emcc", ["rdswitch.c", "-O3", "-c"], {
+	execFileSync("emcc", [
+		"rdswitch.c",
+		"-O3",
+		"-c",
+		config.wasm64 ? "-sMEMORY64" : "",
+	], {
 		stdio: "inherit",
 		shell: true,
 		cwd: "vendor/mozjpeg",

@@ -25,7 +25,7 @@ export const config = {
 	 *
 	 * You'll also need to rebuild if you previously built 32-bit version.
 	 */
-	wasm64: false,
+	wasm64: true,
 
 	/**
 	 * Specify -G parameter of cmake, e.g. "Ninja"
