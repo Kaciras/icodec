@@ -13,15 +13,15 @@ const repositories = new RepositoryManager({
 	qoi: ["master", "https://github.com/phoboslab/qoi"],
 	libwebp: ["v1.5.0", "https://github.com/webmproject/libwebp"],
 	libjxl: ["v0.11.1", "https://github.com/libjxl/libjxl"],
-	libavif: ["v1.2.0", "https://github.com/AOMediaCodec/libavif"],
-	aom: ["v3.12.0", "https://aomedia.googlesource.com/aom"],
+	libavif: ["v1.3.0", "https://github.com/AOMediaCodec/libavif"],
+	aom: ["v3.12.1", "https://aomedia.googlesource.com/aom"],
 	libwebp2: [
-		"664da0e1806085223e9c0b3deb920ca6fb504667",
+		"75878e84787870b62786e3de1f02da7ba0e40b5c",
 		"https://chromium.googlesource.com/codecs/libwebp2",
 	],
 	x265: ["4.1", "https://bitbucket.org/multicoreware/x265_git"],
-	libde265: ["v1.0.15", "https://github.com/strukturag/libde265"],
-	libheif: ["v1.19.7", "https://github.com/strukturag/libheif"],
+	libde265: ["v1.0.16", "https://github.com/strukturag/libde265"],
+	libheif: ["v1.19.8", "https://github.com/strukturag/libheif"],
 	// vvenc: ["v1.12.0", "https://github.com/fraunhoferhhi/vvenc"],
 	// vvdec: ["v2.3.0", "https://github.com/fraunhoferhhi/vvdec"],
 });
@@ -425,14 +425,14 @@ if (process.argv[2] === "update") {
 	config.updateFromArgs(argv.slice(2));
 	mkdirSync(config.outDir, { recursive: true });
 
-	buildWebP();
-	buildAVIF();
-	buildJXL();
-	buildQOI();
-	buildMozJPEG();
-	buildWebP2();
+	// buildWebP();
+	// buildAVIF();
+	// buildJXL();
+	// buildQOI();
+	// buildMozJPEG();
+	// buildWebP2();
 	buildHEIC();
-	buildPNGQuant();
+	// buildPNGQuant();
 	// buildVVIC();
 
 	repositories.writeVersionsJSON();
